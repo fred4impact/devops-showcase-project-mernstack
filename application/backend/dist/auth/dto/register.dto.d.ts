@@ -1,4 +1,4 @@
-import { UserRole } from '../schemas/user.schema';
+import { UserRole } from '../../schemas/user.schema';
 export declare class RegisterDto {
     name: string;
     email: string;

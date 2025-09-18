@@ -28,7 +28,7 @@ let TicketTypesService = class TicketTypesService {
         if (!event) {
             throw new common_1.NotFoundException('Event not found');
         }
-        if (event.organizerId.toString() !== userId) {
+        if (event.organizerId.toString() !== userId.toString()) {
             throw new common_1.ForbiddenException('You can only create ticket types for your own events');
         }
         const salesStart = new Date(createTicketTypeDto.salesStart);
@@ -70,7 +70,7 @@ let TicketTypesService = class TicketTypesService {
             throw new common_1.NotFoundException('Ticket type not found');
         }
         const event = await this.eventModel.findById(ticketType.eventId);
-        if (!event || event.organizerId.toString() !== userId) {
+        if (!event || event.organizerId.toString() !== userId.toString()) {
             throw new common_1.ForbiddenException('You can only update ticket types for your own events');
         }
         if (updateTicketTypeDto.salesStart || updateTicketTypeDto.salesEnd) {
@@ -93,7 +93,7 @@ let TicketTypesService = class TicketTypesService {
             throw new common_1.NotFoundException('Ticket type not found');
         }
         const event = await this.eventModel.findById(ticketType.eventId);
-        if (!event || event.organizerId.toString() !== userId) {
+        if (!event || event.organizerId.toString() !== userId.toString()) {
             throw new common_1.ForbiddenException('You can only delete ticket types for your own events');
         }
         if (ticketType.soldCount > 0) {

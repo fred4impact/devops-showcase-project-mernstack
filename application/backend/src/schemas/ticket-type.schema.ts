@@ -11,6 +11,9 @@ export class TicketType {
   @Prop({ required: true, trim: true })
   name: string;
 
+  @Prop({ required: false, trim: true })
+  description?: string;
+
   @Prop({ required: true })
   priceCents: number;
 

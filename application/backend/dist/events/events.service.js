@@ -17,9 +17,11 @@ const common_1 = require("@nestjs/common");
 const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
 const event_schema_1 = require("../schemas/event.schema");
+const ticket_type_schema_1 = require("../schemas/ticket-type.schema");
 let EventsService = class EventsService {
-    constructor(eventModel) {
+    constructor(eventModel, ticketTypeModel) {
         this.eventModel = eventModel;
+        this.ticketTypeModel = ticketTypeModel;
     }
     async create(createEventDto, organizerId) {
         const existingEvent = await this.eventModel.findOne({ slug: createEventDto.slug });
@@ -105,7 +107,7 @@ let EventsService = class EventsService {
         if (!event) {
             throw new common_1.NotFoundException('Event not found');
         }
-        if (event.organizerId.toString() !== userId) {
+        if (event.organizerId.toString() !== userId.toString()) {
             throw new common_1.ForbiddenException('You can only update your own events');
         }
         if (updateEventDto.startAt || updateEventDto.endAt) {
@@ -132,7 +134,7 @@ let EventsService = class EventsService {
         if (!event) {
             throw new common_1.NotFoundException('Event not found');
         }
-        if (event.organizerId.toString() !== userId) {
+        if (event.organizerId.toString() !== userId.toString()) {
             throw new common_1.ForbiddenException('You can only delete your own events');
         }
         await this.eventModel.findByIdAndDelete(id);
@@ -142,7 +144,7 @@ let EventsService = class EventsService {
         if (!event) {
             throw new common_1.NotFoundException('Event not found');
         }
-        if (event.organizerId.toString() !== userId) {
+        if (event.organizerId.toString() !== userId.toString()) {
             throw new common_1.ForbiddenException('You can only publish your own events');
         }
         event.status = event_schema_1.EventStatus.PUBLISHED;
@@ -161,8 +163,15 @@ let EventsService = class EventsService {
                 .exec(),
             this.eventModel.countDocuments(filter)
         ]);
+        const eventsWithTicketTypes = await Promise.all(events.map(async (event) => {
+            const ticketTypes = await this.ticketTypeModel.find({ eventId: event._id });
+            return {
+                ...event.toObject(),
+                ticketTypes
+            };
+        }));
         return {
-            events,
+            events: eventsWithTicketTypes,
             pagination: {
                 page: parseInt(page),
                 limit: parseInt(limit),
@@ -176,7 +185,7 @@ let EventsService = class EventsService {
         if (!originalEvent) {
             throw new common_1.NotFoundException('Event not found');
         }
-        if (originalEvent.organizerId.toString() !== organizerId) {
+        if (originalEvent.organizerId.toString() !== organizerId.toString()) {
             throw new common_1.ForbiddenException('Access denied');
         }
         const duplicatedEvent = new this.eventModel({
@@ -197,6 +206,8 @@ exports.EventsService = EventsService;
 exports.EventsService = EventsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(event_schema_1.Event.name)),
-    __metadata("design:paramtypes", [mongoose_2.Model])
+    __param(1, (0, mongoose_1.InjectModel)(ticket_type_schema_1.TicketType.name)),
+    __metadata("design:paramtypes", [mongoose_2.Model,
+        mongoose_2.Model])
 ], EventsService);
 //# sourceMappingURL=events.service.js.map

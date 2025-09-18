@@ -3,6 +3,7 @@ export type TicketTypeDocument = TicketType & Document;
 export declare class TicketType {
     eventId: Types.ObjectId;
     name: string;
+    description?: string;
     priceCents: number;
     currency: string;
     capacity: number;

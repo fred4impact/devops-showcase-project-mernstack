@@ -61,7 +61,7 @@ export default function OrganizerEvents() {
     try {
       setLoadingData(true);
       const response = await api.get('/events/my-events');
-      setEvents(response.data);
+      setEvents(response.data.events || []);
     } catch (error) {
       console.error('Error fetching events:', error);
       toast.error('Failed to load events');
@@ -136,18 +136,24 @@ export default function OrganizerEvents() {
   };
 
   const getTotalRevenue = (event: Event) => {
+    if (!event.ticketTypes || !Array.isArray(event.ticketTypes)) {
+      return 0;
+    }
     return event.ticketTypes.reduce((total, ticketType) => {
       return total + (ticketType.priceCents * ticketType.soldCount);
     }, 0);
   };
 
   const getTotalTicketsSold = (event: Event) => {
+    if (!event.ticketTypes || !Array.isArray(event.ticketTypes)) {
+      return 0;
+    }
     return event.ticketTypes.reduce((total, ticketType) => {
       return total + ticketType.soldCount;
     }, 0);
   };
 
-  const filteredEvents = events.filter(event => {
+  const filteredEvents = (events || []).filter(event => {
     const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          event.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || event.status === statusFilter;
@@ -286,50 +292,58 @@ export default function OrganizerEvents() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center space-x-2">
-                  <Button
-                    onClick={() => router.push(`/events/${event._id}/manage`)}
-                    variant="outline"
-                    size="sm"
-                    className="flex-1"
-                  >
-                    Manage
-                  </Button>
-                  <Button
-                    onClick={() => router.push(`/events/${event._id}`)}
-                    variant="outline"
-                    size="sm"
-                    className="flex-1"
-                  >
-                    View
-                  </Button>
-                  <Button
-                    onClick={() => duplicateEvent(event._id)}
-                    variant="outline"
-                    size="sm"
-                    className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                  >
-                    Duplicate
-                  </Button>
-                  <div className="relative">
-                    <select
-                      value={event.status}
-                      onChange={(e) => updateEventStatus(event._id, e.target.value)}
-                      className="text-xs px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                <div className="space-y-3">
+                  {/* Primary Actions Row */}
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      onClick={() => router.push(`/events/${event._id}/manage`)}
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
                     >
-                      <option value="draft">Draft</option>
-                      <option value="published">Published</option>
-                      <option value="cancelled">Cancelled</option>
-                    </select>
+                      Manage
+                    </Button>
+                    <Button
+                      onClick={() => router.push(`/events/${event._id}`)}
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                    >
+                      View
+                    </Button>
+                    <Button
+                      onClick={() => duplicateEvent(event._id)}
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                    >
+                      Duplicate
+                    </Button>
                   </div>
-                  <Button
-                    onClick={() => deleteEvent(event._id)}
-                    variant="outline"
-                    size="sm"
-                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                  >
-                    Delete
-                  </Button>
+                  
+                  {/* Secondary Actions Row */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <label className="text-xs text-gray-500">Status:</label>
+                      <select
+                        value={event.status}
+                        onChange={(e) => updateEventStatus(event._id, e.target.value)}
+                        className="text-xs px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                      >
+                        <option value="draft">Draft</option>
+                        <option value="published">Published</option>
+                        <option value="cancelled">Cancelled</option>
+                      </select>
+                    </div>
+                    <Button
+                      onClick={() => deleteEvent(event._id)}
+                      variant="outline"
+                      size="sm"
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-300"
+                    >
+                      Delete
+                    </Button>
+                  </div>
                 </div>
               </Card>
             ))}

@@ -8,6 +8,12 @@ export class CreateTicketTypeDto {
   @MaxLength(50)
   name: string;
 
+  @ApiProperty({ example: 'General admission ticket for the event', required: false })
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  description?: string;
+
   @ApiProperty({ example: 5000, description: 'Price in cents' })
   @IsNumber()
   @Min(0)

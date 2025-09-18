@@ -20,7 +20,7 @@ export class TicketTypesService {
       throw new NotFoundException('Event not found');
     }
 
-    if (event.organizerId.toString() !== userId) {
+    if (event.organizerId.toString() !== userId.toString()) {
       throw new ForbiddenException('You can only create ticket types for your own events');
     }
 
@@ -74,7 +74,7 @@ export class TicketTypesService {
 
     // Verify user is the event organizer
     const event = await this.eventModel.findById(ticketType.eventId);
-    if (!event || event.organizerId.toString() !== userId) {
+    if (!event || event.organizerId.toString() !== userId.toString()) {
       throw new ForbiddenException('You can only update ticket types for your own events');
     }
 
@@ -105,7 +105,7 @@ export class TicketTypesService {
 
     // Verify user is the event organizer
     const event = await this.eventModel.findById(ticketType.eventId);
-    if (!event || event.organizerId.toString() !== userId) {
+    if (!event || event.organizerId.toString() !== userId.toString()) {
       throw new ForbiddenException('You can only delete ticket types for your own events');
     }
 

@@ -174,7 +174,7 @@ export class TicketsService {
   async getEventAttendees(eventId: string, userId: string) {
     // Check if user is organizer of this event
     const event = await this.eventModel.findById(eventId);
-    if (!event || event.organizerId.toString() !== userId) {
+    if (!event || event.organizerId.toString() !== userId.toString()) {
       throw new ForbiddenException('Access denied');
     }
 

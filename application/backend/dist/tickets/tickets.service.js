@@ -139,7 +139,7 @@ let TicketsService = class TicketsService {
     }
     async getEventAttendees(eventId, userId) {
         const event = await this.eventModel.findById(eventId);
-        if (!event || event.organizerId.toString() !== userId) {
+        if (!event || event.organizerId.toString() !== userId.toString()) {
             throw new common_1.ForbiddenException('Access denied');
         }
         const tickets = await this.ticketModel

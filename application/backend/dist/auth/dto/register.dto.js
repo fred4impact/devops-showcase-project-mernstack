@@ -8,12 +8,11 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RegisterDto = void 0;
 const class_validator_1 = require("class-validator");
 const swagger_1 = require("@nestjs/swagger");
-const user_schema_1 = require("../schemas/user.schema");
+const user_schema_1 = require("../../schemas/user.schema");
 class RegisterDto {
 }
 exports.RegisterDto = RegisterDto;
@@ -55,6 +54,6 @@ __decorate([
     }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsEnum)(user_schema_1.UserRole),
-    __metadata("design:type", typeof (_a = typeof user_schema_1.UserRole !== "undefined" && user_schema_1.UserRole) === "function" ? _a : Object)
+    __metadata("design:type", String)
 ], RegisterDto.prototype, "role", void 0);
 //# sourceMappingURL=register.dto.js.map

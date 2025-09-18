@@ -49,7 +49,7 @@ interface Event {
       accessible: boolean;
     }>;
   };
-  organizer: {
+  organizerId: {
     _id: string;
     name: string;
     email: string;
@@ -77,10 +77,27 @@ export default function EventDetails() {
   const fetchEventDetails = async () => {
     try {
       setLoading(true);
-      const [eventResponse, ticketTypesResponse] = await Promise.all([
-        api.get(`/events/${params.id}`),
-        api.get(`/events/${params.id}/ticket-types`)
-      ]);
+      
+      // Try to fetch by ID first, then by slug if ID fails
+      let eventResponse;
+      let eventId;
+      
+      try {
+        // First try as ID
+        eventResponse = await api.get(`/events/${params.id}`);
+        eventId = eventResponse.data._id;
+      } catch (idError) {
+        // If ID fails, try as slug
+        try {
+          eventResponse = await api.get(`/events/slug/${params.id}`);
+          eventId = eventResponse.data._id;
+        } catch (slugError) {
+          throw new Error('Event not found');
+        }
+      }
+      
+      // Fetch ticket types using the event ID
+      const ticketTypesResponse = await api.get(`/ticket-types/event/${eventId}`);
       
       setEvent(eventResponse.data);
       setTicketTypes(ticketTypesResponse.data);
@@ -88,9 +105,13 @@ export default function EventDetails() {
       if (ticketTypesResponse.data.length > 0) {
         setSelectedTicketType(ticketTypesResponse.data[0]._id);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching event details:', error);
-      toast.error('Failed to load event details');
+      if (error.response?.status === 404) {
+        toast.error('Event not found');
+      } else {
+        toast.error('Failed to load event details');
+      }
     } finally {
       setLoading(false);
     }
@@ -124,19 +145,17 @@ export default function EventDetails() {
       if (event?.seatmap?.type === 'reserved') {
         // Add each selected seat as a separate cart item
         for (const seatId of selectedSeats) {
-          await api.post('/cart', {
+          await api.post(`/cart/add?sessionId=${sessionId}`, {
             ticketTypeId: selectedTicketType,
             quantity: 1,
             seatId,
-            sessionId,
           });
         }
       } else {
         // General admission - add quantity
-        await api.post('/cart', {
+        await api.post(`/cart/add?sessionId=${sessionId}`, {
           ticketTypeId: selectedTicketType,
           quantity,
-          sessionId,
         });
       }
 
@@ -255,12 +274,12 @@ export default function EventDetails() {
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
                   <span className="text-sm font-medium text-primary-600">
-                    {event.organizer.name.charAt(0).toUpperCase()}
+                    {event.organizerId.name.charAt(0).toUpperCase()}
                   </span>
                 </div>
                 <div>
-                  <p className="font-medium text-gray-900">{event.organizer.name}</p>
-                  <p className="text-sm text-gray-500">{event.organizer.email}</p>
+                  <p className="font-medium text-gray-900">{event.organizerId.name}</p>
+                  <p className="text-sm text-gray-500">{event.organizerId.email}</p>
                 </div>
               </div>
             </Card>

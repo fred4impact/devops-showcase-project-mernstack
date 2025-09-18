@@ -119,7 +119,7 @@ export default function EventManagement() {
       setLoadingData(true);
       const [eventResponse, ticketTypesResponse] = await Promise.all([
         api.get(`/events/${params.id}`),
-        api.get(`/events/${params.id}/ticket-types`)
+        api.get(`/ticket-types/event/${params.id}`)
       ]);
       
       setEvent(eventResponse.data);
@@ -158,13 +158,32 @@ export default function EventManagement() {
 
   const handleTicketCreate = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate required fields
+    if (!ticketForm.name || !ticketForm.priceCents || !ticketForm.capacity) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    if (!ticketForm.salesStart || !ticketForm.salesEnd) {
+      toast.error('Please select both sales start and end dates');
+      return;
+    }
+
     try {
+      // Convert datetime-local format to ISO 8601
+      const formData = {
+        ...ticketForm,
+        salesStart: ticketForm.salesStart ? new Date(ticketForm.salesStart).toISOString() : '',
+        salesEnd: ticketForm.salesEnd ? new Date(ticketForm.salesEnd).toISOString() : '',
+      };
+
       if (editingTicketType) {
-        await api.put(`/ticket-types/${editingTicketType}`, ticketForm);
+        await api.put(`/ticket-types/${editingTicketType}`, formData);
         toast.success('Ticket type updated successfully');
         setEditingTicketType(null);
       } else {
-        await api.post(`/events/${params.id}/ticket-types`, ticketForm);
+        await api.post(`/ticket-types/event/${params.id}`, formData);
         toast.success('Ticket type created successfully');
       }
       setShowTicketForm(false);

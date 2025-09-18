@@ -65,7 +65,7 @@ export default function Dashboard() {
       // Fetch user's events (if organizer)
       if (user?.role === 'organizer') {
         const eventsResponse = await api.get('/events/my-events');
-        setEvents(eventsResponse.data);
+        setEvents(eventsResponse.data.events || []);
       }
 
       // Fetch user's orders

@@ -119,8 +119,14 @@ export default function Checkout() {
 
       const response = await api.post('/orders', orderData);
       
+      // Payment placeholder for testing - bypass actual payment
       if (response.data.paymentIntent) {
-        // Redirect to Stripe Checkout
+        // In development mode, skip Stripe and go directly to success
+        toast.success('Payment processed successfully (Development Mode)');
+        router.push(`/orders/${response.data.orderId}/success`);
+        
+        // TODO: In production, uncomment the Stripe integration below
+        /*
         const stripe = (window as any).Stripe;
         if (stripe) {
           const { error } = await stripe.redirectToCheckout({
@@ -133,6 +139,7 @@ export default function Checkout() {
         } else {
           toast.error('Payment system not available');
         }
+        */
       } else {
         // Free tickets - redirect to success
         router.push(`/orders/${response.data.orderId}/success`);
@@ -345,12 +352,24 @@ export default function Checkout() {
             {/* Payment Method */}
             <Card className="p-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Payment Method</h2>
+              
+              {/* Payment Placeholder for Testing */}
+              <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <div className="flex items-center space-x-2 mb-2">
+                  <div className="w-4 h-4 bg-yellow-500 rounded-full"></div>
+                  <span className="font-medium text-yellow-800">Payment System - Development Mode</span>
+                </div>
+                <p className="text-sm text-yellow-700">
+                  Payment processing is disabled for testing. In production, this will integrate with Stripe.
+                </p>
+              </div>
+              
               <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg">
                 <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center">
                   <span className="text-white text-sm font-bold">S</span>
                 </div>
                 <div>
-                  <p className="font-medium text-gray-900">Stripe</p>
+                  <p className="font-medium text-gray-900">Stripe (Coming Soon)</p>
                   <p className="text-sm text-gray-600">Secure payment processing</p>
                 </div>
               </div>

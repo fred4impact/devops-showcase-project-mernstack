@@ -12,7 +12,11 @@ export interface User {
 
 export interface Event {
   _id: string
-  organizerId: string
+  organizerId: {
+    _id: string
+    name: string
+    email: string
+  }
   title: string
   slug: string
   description: string

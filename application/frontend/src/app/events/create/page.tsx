@@ -9,47 +9,29 @@ import { Input } from '@/components/ui/Input';
 import { eventsApi } from '@/lib/api';
 import toast from 'react-hot-toast';
 
-interface TicketType {
-  name: string;
-  description: string;
-  price: number;
-  quantity: number;
-  salesStartDate: string;
-  salesEndDate: string;
-}
 
 export default function CreateEvent() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [ticketTypes, setTicketTypes] = useState<TicketType[]>([
-    {
-      name: '',
-      description: '',
-      price: 0,
-      quantity: 0,
-      salesStartDate: '',
-      salesEndDate: '',
-    },
-  ]);
 
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    date: '',
-    time: '',
-    location: '',
-    address: '',
-    city: '',
-    state: '',
-    zipCode: '',
-    country: '',
-    image: '',
+    slug: '',
     category: '',
-    tags: '',
-    capacity: '',
-    isPublic: true,
+    startAt: '',
+    endAt: '',
+    venue: {
+      name: '',
+      address: '',
+      capacity: 0,
+      timezone: 'UTC',
+    },
+    images: [],
   });
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -159,34 +141,35 @@ export default function CreateEvent() {
     }));
   };
 
-  const handleTicketTypeChange = (index: number, field: keyof TicketType, value: string | number) => {
-    setTicketTypes(prev => prev.map((ticketType, i) => 
-      i === index ? { ...ticketType, [field]: value } : ticketType
-    ));
-  };
-
-  const addTicketType = () => {
-    setTicketTypes(prev => [...prev, {
-      name: '',
-      description: '',
-      price: 0,
-      quantity: 0,
-      salesStartDate: '',
-      salesEndDate: '',
-    }]);
-  };
-
-  const removeTicketType = (index: number) => {
-    if (ticketTypes.length > 1) {
-      setTicketTypes(prev => prev.filter((_, i) => i !== index));
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedImage(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
     }
   };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (ticketTypes.some(ticket => !ticket.name || ticket.price < 0 || ticket.quantity <= 0)) {
-      toast.error('Please fill in all ticket type fields correctly');
+    // Validate required fields
+    if (!formData.title || !formData.slug || !formData.description || !formData.category) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    if (!formData.startAt || !formData.endAt) {
+      toast.error('Please select start and end dates');
+      return;
+    }
+
+    if (!formData.venue.name || !formData.venue.address) {
+      toast.error('Please fill in venue information');
       return;
     }
 
@@ -194,22 +177,40 @@ export default function CreateEvent() {
       setIsSubmitting(true);
       
       const eventData = {
-        ...formData,
-        date: new Date(`${formData.date}T${formData.time}`).toISOString(),
-        location: {
-          name: formData.location,
-          address: formData.address,
-          city: formData.city,
-          state: formData.state,
-          zipCode: formData.zipCode,
-          country: formData.country,
+        title: formData.title,
+        slug: formData.slug,
+        description: formData.description,
+        category: formData.category,
+        startAt: new Date(formData.startAt).toISOString(),
+        endAt: new Date(formData.endAt).toISOString(),
+        venue: {
+          name: formData.venue.name,
+          address: formData.venue.address,
+          capacity: formData.venue.capacity,
+          timezone: formData.venue.timezone,
         },
-        capacity: parseInt(formData.capacity) || 0,
-        tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
-        ticketTypes: ticketTypes.filter(ticket => ticket.name),
+        images: formData.images,
       };
 
       const response = await eventsApi.createEvent(eventData);
+      
+      // Upload image if selected
+      if (selectedImage) {
+        const formData = new FormData();
+        formData.append('image', selectedImage);
+        
+        try {
+          await api.post(`/events/${response.data._id}/upload-image`, formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          });
+        } catch (imageError) {
+          console.error('Error uploading image:', imageError);
+          toast.error('Event created but image upload failed');
+        }
+      }
+      
       toast.success('Event created successfully!');
       router.push(`/events/${response.data._id}`);
     } catch (error: any) {
@@ -263,6 +264,22 @@ export default function CreateEvent() {
                   placeholder="Enter event title"
                 />
               </div>
+
+              <div className="md:col-span-2">
+                <label htmlFor="slug" className="block text-sm font-medium text-gray-700 mb-2">
+                  Event Slug *
+                </label>
+                <Input
+                  id="slug"
+                  name="slug"
+                  type="text"
+                  value={formData.slug}
+                  onChange={handleInputChange}
+                  required
+                  placeholder="event-slug-url"
+                />
+                <p className="text-sm text-gray-500 mt-1">URL-friendly identifier (5-50 characters)</p>
+              </div>
               
               <div className="md:col-span-2">
                 <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
@@ -276,33 +293,33 @@ export default function CreateEvent() {
                   required
                   rows={4}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                  placeholder="Describe your event"
+                  placeholder="Describe your event (20-1000 characters)"
                 />
               </div>
               
               <div>
-                <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2">
-                  Event Date *
+                <label htmlFor="startAt" className="block text-sm font-medium text-gray-700 mb-2">
+                  Start Date & Time *
                 </label>
                 <Input
-                  id="date"
-                  name="date"
-                  type="date"
-                  value={formData.date}
+                  id="startAt"
+                  name="startAt"
+                  type="datetime-local"
+                  value={formData.startAt}
                   onChange={handleInputChange}
                   required
                 />
               </div>
               
               <div>
-                <label htmlFor="time" className="block text-sm font-medium text-gray-700 mb-2">
-                  Event Time *
+                <label htmlFor="endAt" className="block text-sm font-medium text-gray-700 mb-2">
+                  End Date & Time *
                 </label>
                 <Input
-                  id="time"
-                  name="time"
-                  type="time"
-                  value={formData.time}
+                  id="endAt"
+                  name="endAt"
+                  type="datetime-local"
+                  value={formData.endAt}
                   onChange={handleInputChange}
                   required
                 />
@@ -310,7 +327,7 @@ export default function CreateEvent() {
               
               <div>
                 <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">
-                  Category
+                  Category *
                 </label>
                 <select
                   id="category"
@@ -318,6 +335,7 @@ export default function CreateEvent() {
                   value={formData.category}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  required
                 >
                   <option value="">Select category</option>
                   <option value="conference">Conference</option>
@@ -328,220 +346,135 @@ export default function CreateEvent() {
                   <option value="other">Other</option>
                 </select>
               </div>
-              
-              <div>
-                <label htmlFor="capacity" className="block text-sm font-medium text-gray-700 mb-2">
-                  Capacity
+
+              <div className="md:col-span-2">
+                <label htmlFor="image" className="block text-sm font-medium text-gray-700 mb-2">
+                  Event Image/Poster
                 </label>
-                <Input
-                  id="capacity"
-                  name="capacity"
-                  type="number"
-                  value={formData.capacity}
-                  onChange={handleInputChange}
-                  placeholder="Maximum attendees"
-                />
+                <div className="space-y-4">
+                  <input
+                    id="image"
+                    name="image"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  />
+                  {imagePreview && (
+                    <div className="mt-4">
+                      <p className="text-sm text-gray-600 mb-2">Preview:</p>
+                      <img
+                        src={imagePreview}
+                        alt="Event preview"
+                        className="w-full h-48 object-cover rounded-lg border border-gray-300"
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </Card>
 
-          {/* Location Information */}
+          {/* Venue Information */}
           <Card className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">Location Information</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-6">Venue Information</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="md:col-span-2">
-                <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="venue.name" className="block text-sm font-medium text-gray-700 mb-2">
                   Venue Name *
                 </label>
                 <Input
-                  id="location"
-                  name="location"
+                  id="venue.name"
+                  name="venue.name"
                   type="text"
-                  value={formData.location}
-                  onChange={handleInputChange}
+                  value={formData.venue.name}
+                  onChange={(e) => setFormData(prev => ({
+                    ...prev,
+                    venue: { ...prev.venue, name: e.target.value }
+                  }))}
                   required
                   placeholder="e.g., Convention Center"
                 />
               </div>
               
               <div className="md:col-span-2">
-                <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="venue.address" className="block text-sm font-medium text-gray-700 mb-2">
                   Address *
                 </label>
                 <Input
-                  id="address"
-                  name="address"
+                  id="venue.address"
+                  name="venue.address"
                   type="text"
-                  value={formData.address}
-                  onChange={handleInputChange}
+                  value={formData.venue.address}
+                  onChange={(e) => setFormData(prev => ({
+                    ...prev,
+                    venue: { ...prev.venue, address: e.target.value }
+                  }))}
                   required
-                  placeholder="Street address"
+                  placeholder="Full address including city, state, country"
                 />
               </div>
               
               <div>
-                <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-2">
-                  City *
+                <label htmlFor="venue.capacity" className="block text-sm font-medium text-gray-700 mb-2">
+                  Capacity
                 </label>
                 <Input
-                  id="city"
-                  name="city"
-                  type="text"
-                  value={formData.city}
-                  onChange={handleInputChange}
-                  required
-                  placeholder="City"
+                  id="venue.capacity"
+                  name="venue.capacity"
+                  type="number"
+                  value={formData.venue.capacity}
+                  onChange={(e) => setFormData(prev => ({
+                    ...prev,
+                    venue: { ...prev.venue, capacity: parseInt(e.target.value) || 0 }
+                  }))}
+                  placeholder="Maximum attendees"
                 />
               </div>
               
               <div>
-                <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-2">
-                  State/Province *
+                <label htmlFor="venue.timezone" className="block text-sm font-medium text-gray-700 mb-2">
+                  Timezone
                 </label>
-                <Input
-                  id="state"
-                  name="state"
-                  type="text"
-                  value={formData.state}
-                  onChange={handleInputChange}
-                  required
-                  placeholder="State/Province"
-                />
-              </div>
-              
-              <div>
-                <label htmlFor="zipCode" className="block text-sm font-medium text-gray-700 mb-2">
-                  ZIP/Postal Code *
-                </label>
-                <Input
-                  id="zipCode"
-                  name="zipCode"
-                  type="text"
-                  value={formData.zipCode}
-                  onChange={handleInputChange}
-                  required
-                  placeholder="ZIP/Postal Code"
-                />
-              </div>
-              
-              <div>
-                <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-2">
-                  Country *
-                </label>
-                <Input
-                  id="country"
-                  name="country"
-                  type="text"
-                  value={formData.country}
-                  onChange={handleInputChange}
-                  required
-                  placeholder="Country"
-                />
+                <select
+                  id="venue.timezone"
+                  name="venue.timezone"
+                  value={formData.venue.timezone}
+                  onChange={(e) => setFormData(prev => ({
+                    ...prev,
+                    venue: { ...prev.venue, timezone: e.target.value }
+                  }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                >
+                  <option value="UTC">UTC</option>
+                  <option value="America/New_York">Eastern Time</option>
+                  <option value="America/Chicago">Central Time</option>
+                  <option value="America/Denver">Mountain Time</option>
+                  <option value="America/Los_Angeles">Pacific Time</option>
+                  <option value="Europe/London">London</option>
+                  <option value="Europe/Paris">Paris</option>
+                  <option value="Asia/Tokyo">Tokyo</option>
+                </select>
               </div>
             </div>
           </Card>
 
-          {/* Ticket Types */}
+          {/* Note about ticket types */}
           <Card className="p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-gray-900">Ticket Types</h2>
-              <Button
-                type="button"
-                onClick={addTicketType}
-                variant="outline"
-              >
-                Add Ticket Type
-              </Button>
-            </div>
-            
-            <div className="space-y-6">
-              {ticketTypes.map((ticketType, index) => (
-                <div key={index} className="border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-medium text-gray-900">
-                      Ticket Type {index + 1}
-                    </h3>
-                    {ticketTypes.length > 1 && (
-                      <Button
-                        type="button"
-                        onClick={() => removeTicketType(index)}
-                        variant="outline"
-                        size="sm"
-                      >
-                        Remove
-                      </Button>
-                    )}
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Name *
-                      </label>
-                      <Input
-                        value={ticketType.name}
-                        onChange={(e) => handleTicketTypeChange(index, 'name', e.target.value)}
-                        placeholder="e.g., General Admission"
-                        required
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Price ($) *
-                      </label>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={ticketType.price}
-                        onChange={(e) => handleTicketTypeChange(index, 'price', parseFloat(e.target.value) || 0)}
-                        placeholder="0.00"
-                        required
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Quantity *
-                      </label>
-                      <Input
-                        type="number"
-                        min="1"
-                        value={ticketType.quantity}
-                        onChange={(e) => handleTicketTypeChange(index, 'quantity', parseInt(e.target.value) || 0)}
-                        placeholder="100"
-                        required
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Sales Start Date
-                      </label>
-                      <Input
-                        type="datetime-local"
-                        value={ticketType.salesStartDate}
-                        onChange={(e) => handleTicketTypeChange(index, 'salesStartDate', e.target.value)}
-                      />
-                    </div>
-                    
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Description
-                      </label>
-                      <textarea
-                        value={ticketType.description}
-                        onChange={(e) => handleTicketTypeChange(index, 'description', e.target.value)}
-                        rows={2}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                        placeholder="Describe this ticket type"
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
+            <div className="text-center">
+              <div className="mx-auto h-12 w-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                <svg className="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Ticket Types</h3>
+              <p className="text-gray-600 mb-4">
+                You can add ticket types after creating your event. This allows you to set up different pricing tiers and availability.
+              </p>
+              <p className="text-sm text-gray-500">
+                After creating the event, you'll be able to manage ticket types from the event management page.
+              </p>
             </div>
           </Card>
 

@@ -14,15 +14,18 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EventsController = void 0;
 const common_1 = require("@nestjs/common");
+const platform_express_1 = require("@nestjs/platform-express");
 const swagger_1 = require("@nestjs/swagger");
 const events_service_1 = require("./events.service");
 const create_event_dto_1 = require("./dto/create-event.dto");
 const update_event_dto_1 = require("./dto/update-event.dto");
 const event_query_dto_1 = require("./dto/event-query.dto");
 const jwt_auth_guard_1 = require("../auth/jwt-auth.guard");
+const s3_service_1 = require("../s3/s3.service");
 let EventsController = class EventsController {
-    constructor(eventsService) {
+    constructor(eventsService, s3Service) {
         this.eventsService = eventsService;
+        this.s3Service = s3Service;
     }
     async getEvents(query) {
         return this.eventsService.findAll(query);
@@ -51,6 +54,11 @@ let EventsController = class EventsController {
     async deleteEvent(id, req) {
         await this.eventsService.remove(id, req.user.id);
         return { message: 'Event deleted successfully' };
+    }
+    async uploadEventImage(eventId, file, req) {
+        const imageUrl = await this.s3Service.uploadEventImage(file.buffer, eventId, file.originalname);
+        await this.eventsService.update(eventId, { images: [imageUrl] }, req.user.id);
+        return { imageUrl };
     }
 };
 exports.EventsController = EventsController;
@@ -171,9 +179,24 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], EventsController.prototype, "deleteEvent", null);
+__decorate([
+    (0, common_1.Post)(':id/upload-image'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('image')),
+    (0, swagger_1.ApiOperation)({ summary: 'Upload event image' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Image uploaded successfully' }),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.UploadedFile)()),
+    __param(2, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object, Object]),
+    __metadata("design:returntype", Promise)
+], EventsController.prototype, "uploadEventImage", null);
 exports.EventsController = EventsController = __decorate([
     (0, swagger_1.ApiTags)('Events'),
     (0, common_1.Controller)('events'),
-    __metadata("design:paramtypes", [events_service_1.EventsService])
+    __metadata("design:paramtypes", [events_service_1.EventsService,
+        s3_service_1.S3Service])
 ], EventsController);
 //# sourceMappingURL=events.controller.js.map

@@ -23,6 +23,13 @@ __decorate([
     __metadata("design:type", String)
 ], CreateTicketTypeDto.prototype, "name", void 0);
 __decorate([
+    (0, swagger_1.ApiProperty)({ example: 'General admission ticket for the event', required: false }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(500),
+    __metadata("design:type", String)
+], CreateTicketTypeDto.prototype, "description", void 0);
+__decorate([
     (0, swagger_1.ApiProperty)({ example: 5000, description: 'Price in cents' }),
     (0, class_validator_1.IsNumber)(),
     (0, class_validator_1.Min)(0),

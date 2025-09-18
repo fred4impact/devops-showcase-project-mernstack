@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, BadRequestException, ForbiddenException 
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Event, EventDocument, EventStatus } from '../schemas/event.schema';
+import { TicketType, TicketTypeDocument } from '../schemas/ticket-type.schema';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { EventQueryDto } from './dto/event-query.dto';
@@ -10,6 +11,7 @@ import { EventQueryDto } from './dto/event-query.dto';
 export class EventsService {
   constructor(
     @InjectModel(Event.name) private eventModel: Model<EventDocument>,
+    @InjectModel(TicketType.name) private ticketTypeModel: Model<TicketTypeDocument>,
   ) {}
 
   async create(createEventDto: CreateEventDto, organizerId: string): Promise<Event> {
@@ -127,7 +129,7 @@ export class EventsService {
     }
 
     // Check if user is the organizer
-    if (event.organizerId.toString() !== userId) {
+    if (event.organizerId.toString() !== userId.toString()) {
       throw new ForbiddenException('You can only update your own events');
     }
 
@@ -164,7 +166,7 @@ export class EventsService {
     }
 
     // Check if user is the organizer
-    if (event.organizerId.toString() !== userId) {
+    if (event.organizerId.toString() !== userId.toString()) {
       throw new ForbiddenException('You can only delete your own events');
     }
 
@@ -178,7 +180,7 @@ export class EventsService {
       throw new NotFoundException('Event not found');
     }
 
-    if (event.organizerId.toString() !== userId) {
+    if (event.organizerId.toString() !== userId.toString()) {
       throw new ForbiddenException('You can only publish your own events');
     }
 
@@ -202,8 +204,19 @@ export class EventsService {
       this.eventModel.countDocuments(filter)
     ]);
 
+    // Populate ticket types for each event
+    const eventsWithTicketTypes = await Promise.all(
+      events.map(async (event) => {
+        const ticketTypes = await this.ticketTypeModel.find({ eventId: event._id });
+        return {
+          ...event.toObject(),
+          ticketTypes
+        };
+      })
+    );
+
     return {
-      events,
+      events: eventsWithTicketTypes,
       pagination: {
         page: parseInt(page),
         limit: parseInt(limit),
@@ -219,7 +232,7 @@ export class EventsService {
       throw new NotFoundException('Event not found');
     }
 
-    if (originalEvent.organizerId.toString() !== organizerId) {
+    if (originalEvent.organizerId.toString() !== organizerId.toString()) {
       throw new ForbiddenException('Access denied');
     }
 

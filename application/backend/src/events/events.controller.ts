@@ -8,19 +8,26 @@ import {
   Body, 
   Query, 
   UseGuards, 
-  Request 
+  Request,
+  UseInterceptors,
+  UploadedFile
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { EventsService } from './events.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { EventQueryDto } from './dto/event-query.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { S3Service } from '../s3/s3.service';
 
 @ApiTags('Events')
 @Controller('events')
 export class EventsController {
-  constructor(private readonly eventsService: EventsService) {}
+  constructor(
+    private readonly eventsService: EventsService,
+    private readonly s3Service: S3Service,
+  ) {}
 
   @Get()
   @ApiOperation({ summary: 'Get all published events with filtering and pagination' })
@@ -117,5 +124,28 @@ export class EventsController {
   async deleteEvent(@Param('id') id: string, @Request() req) {
     await this.eventsService.remove(id, req.user.id);
     return { message: 'Event deleted successfully' };
+  }
+
+  @Post(':id/upload-image')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @UseInterceptors(FileInterceptor('image'))
+  @ApiOperation({ summary: 'Upload event image' })
+  @ApiResponse({ status: 200, description: 'Image uploaded successfully' })
+  async uploadEventImage(
+    @Param('id') eventId: string,
+    @UploadedFile() file: Express.Multer.File,
+    @Request() req
+  ) {
+    const imageUrl = await this.s3Service.uploadEventImage(
+      file.buffer,
+      eventId,
+      file.originalname
+    );
+    
+    // Update event with image URL
+    await this.eventsService.update(eventId, { images: [imageUrl] }, req.user.id);
+    
+    return { imageUrl };
   }
 }

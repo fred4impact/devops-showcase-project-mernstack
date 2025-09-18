@@ -12,14 +12,21 @@ const mongoose_1 = require("@nestjs/mongoose");
 const events_controller_1 = require("./events.controller");
 const events_service_1 = require("./events.service");
 const event_schema_1 = require("../schemas/event.schema");
+const ticket_type_schema_1 = require("../schemas/ticket-type.schema");
+const s3_service_1 = require("../s3/s3.service");
 let EventsModule = class EventsModule {
 };
 exports.EventsModule = EventsModule;
 exports.EventsModule = EventsModule = __decorate([
     (0, common_1.Module)({
-        imports: [mongoose_1.MongooseModule.forFeature([{ name: event_schema_1.Event.name, schema: event_schema_1.EventSchema }])],
+        imports: [
+            mongoose_1.MongooseModule.forFeature([
+                { name: event_schema_1.Event.name, schema: event_schema_1.EventSchema },
+                { name: ticket_type_schema_1.TicketType.name, schema: ticket_type_schema_1.TicketTypeSchema }
+            ])
+        ],
         controllers: [events_controller_1.EventsController],
-        providers: [events_service_1.EventsService],
+        providers: [events_service_1.EventsService, s3_service_1.S3Service],
         exports: [events_service_1.EventsService],
     })
 ], EventsModule);
