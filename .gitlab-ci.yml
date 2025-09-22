@@ -1,246 +1,129 @@
-# GitLab CI/CD Pipeline Configuration - Fixed Version
-# This file defines the CI/CD pipeline for the MERN Stack DevOps Showcase Project
+# GitLab CI/CD Pipeline for MERN Stack DevOps Showcase Project
+# Stage-by-stage implementation for testing and validation
 
-# Define stages
+# Define pipeline stages
 stages:
   - security
   - build
   - test
-  # Temporarily disabled for testing
-  # - docker-build
-  # - deploy
+  - docker-build
+  - docker-security
+  - deploy
 
 # Global variables
 variables:
-  NODE_VERSION: "18"
   DOCKER_DRIVER: overlay2
   DOCKER_TLS_CERTDIR: "/certs"
+  NODE_VERSION: "18"
+  NPM_CONFIG_CACHE: ".npm"
+  NPM_CONFIG_PRODUCTION: "false"
 
-# Cache configuration
+# Cache configuration for faster builds
 cache:
   key: ${CI_COMMIT_REF_SLUG}
   paths:
     - node_modules/
     - .npm/
-    - dist/
     - application/backend/node_modules/
     - application/frontend/node_modules/
     - tests/node_modules/
 
-# Default image for jobs
-default:
-  image: node:18-alpine
+# ===========================================
+# STAGE 1: SECURITY SCANNING
+# ===========================================
 
-# Security scanning stage
-security_scan:
+# Security scan for backend dependencies
+security_scan_backend:
   stage: security
   image: node:18-alpine
   before_script:
-    - apk add --no-cache git curl
-  script:
-    - echo "Running security scans..."
-    - echo "Current directory: $(pwd)"
-    - ls -la
-    - echo "Checking backend dependencies..."
-    - cd application/backend && npm ci --cache .npm --prefer-offline || npm install || echo "Backend dependencies not found"
-    - cd application/backend && npm audit --audit-level=moderate || echo "Backend audit completed with issues"
-    - echo "Checking frontend dependencies..."
-    - cd application/frontend && npm ci --cache .npm --prefer-offline || npm install || echo "Frontend dependencies not found"
-    - cd application/frontend && npm audit --audit-level=moderate || echo "Frontend audit completed with issues"
-    - echo "Checking test dependencies..."
-    - cd tests && npm ci --cache .npm --prefer-offline || npm install || echo "Test dependencies not found"
-    - cd tests && npm audit --audit-level=moderate || echo "Tests audit completed with issues"
-  allow_failure: true
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-
-# Backend build and test
-backend_build_test:
-  stage: build
-  image: node:18-alpine
-  before_script:
-    - apk add --no-cache git curl
-  script:
-    - echo "Building and testing backend..."
-    - echo "Checking backend directory..."
-    - ls -la application/
     - cd application/backend
-    - npm ci --cache .npm --prefer-offline || npm install || echo "Backend dependencies not found"
-    - echo "Building backend..."
-    - npm run build || echo "Backend build failed"
-    - echo "Testing backend..."
-    - npm run test || echo "Backend tests failed"
-  cache:
-    key: ${CI_COMMIT_REF_SLUG}
-    paths:
-      - application/backend/node_modules/
-      - .npm/
+    - npm ci --cache .npm --prefer-offline
+  script:
+    - echo "🔍 Running security audit for backend..."
+    - npm audit --audit-level=moderate
+    - echo "📊 Checking for outdated packages..."
+    - npm outdated || true
+    - echo "🔒 Running dependency check..."
+    - npm ls --depth=0
   artifacts:
+    reports:
+      junit: application/backend/security-report.xml
     paths:
-      - application/backend/dist/
+      - application/backend/security-report.xml
     expire_in: 1 week
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  only:
+    - develop
+    - main
+    - merge_requests
 
-# Frontend build and test
-frontend_build_test:
-  stage: build
+# Security scan for frontend dependencies
+security_scan_frontend:
+  stage: security
   image: node:18-alpine
   before_script:
-    - apk add --no-cache git curl
-  script:
-    - echo "Building and testing frontend..."
-    - echo "Checking frontend directory..."
-    - ls -la application/
     - cd application/frontend
-    - npm ci --cache .npm --prefer-offline || npm install || echo "Frontend dependencies not found"
-    - echo "Building frontend..."
-    - npm run build || echo "Frontend build failed"
-    - echo "Testing frontend..."
-    - npm run test || echo "Frontend tests failed"
-  cache:
-    key: ${CI_COMMIT_REF_SLUG}
+    - npm ci --cache .npm --prefer-offline
+  script:
+    - echo "🔍 Running security audit for frontend..."
+    - npm audit --audit-level=moderate
+    - echo "📊 Checking for outdated packages..."
+    - npm outdated || true
+    - echo "🔒 Running dependency check..."
+    - npm ls --depth=0
+  artifacts:
+    reports:
+      junit: application/frontend/security-report.xml
     paths:
-      - application/frontend/node_modules/
-      - .npm/
+      - application/frontend/security-report.xml
+    expire_in: 1 week
+  only:
+    - develop
+    - main
+    - merge_requests
+
+# Security scan for test dependencies
+security_scan_tests:
+  stage: security
+  image: node:18-alpine
+  before_script:
+    - cd tests
+    - npm ci --cache .npm --prefer-offline
+  script:
+    - echo "🔍 Running security audit for test dependencies..."
+    - npm audit --audit-level=moderate
+    - echo "📊 Checking for outdated packages..."
+    - npm outdated || true
+    - echo "🔒 Running dependency check..."
+    - npm ls --depth=0
+  artifacts:
+    reports:
+      junit: tests/security-report.xml
+    paths:
+      - tests/security-report.xml
+    expire_in: 1 week
+  only:
+    - develop
+    - main
+    - merge_requests
+
+# License compliance check
+license_check:
+  stage: security
+  image: node:18-alpine
+  script:
+    - echo "📋 Checking license compliance..."
+    - cd application/backend && npm ls --json > backend-licenses.json
+    - cd ../frontend && npm ls --json > frontend-licenses.json
+    - cd ../../tests && npm ls --json > tests-licenses.json
+    - echo "✅ License check completed"
   artifacts:
     paths:
-      - application/frontend/.next/
-      - application/frontend/out/
+      - application/backend/backend-licenses.json
+      - application/frontend/frontend-licenses.json
+      - tests/tests-licenses.json
     expire_in: 1 week
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-
-# Integration tests
-integration_tests:
-  stage: test
-  image: node:18-alpine
-  services:
-    - name: mongo:latest
-      alias: mongodb
-    - name: redis:alpine
-      alias: redis
-  variables:
-    MONGODB_URI: "mongodb://mongodb:27017/test"
-    REDIS_URL: "redis://redis:6379"
-  before_script:
-    - apk add --no-cache git curl
-  script:
-    - echo "Running integration tests..."
-    - echo "Checking tests directory..."
-    - ls -la tests/
-    - cd tests
-    - npm ci --cache .npm --prefer-offline || npm install || echo "Test dependencies not found"
-    - echo "Running integration tests..."
-    - npm run test:integration || echo "Integration tests failed"
-    - npm run test:api || echo "API tests failed"
-  cache:
-    key: ${CI_COMMIT_REF_SLUG}
-    paths:
-      - tests/node_modules/
-      - .npm/
-  allow_failure: true
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-
-# Temporarily disabled for testing - uncomment when ready
-# Docker build for backend
-# build_backend_image:
-#   stage: docker-build
-#   image: docker:latest
-#   services:
-#     - docker:dind
-#   variables:
-#     DOCKER_TLS_CERTDIR: "/certs"
-#     DOCKER_DRIVER: overlay2
-#   before_script:
-#     - docker --version
-#     - docker info
-#   script:
-#     - echo "Building backend Docker image..."
-#     - |
-#       if [ -d "application/backend" ] && [ -f "application/backend/Dockerfile" ]; then
-#         cd application/backend
-#         docker build -t $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHA .
-#         docker build -t $CI_REGISTRY_IMAGE/backend:latest .
-#         echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
-#         docker push $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHA
-#         docker push $CI_REGISTRY_IMAGE/backend:latest
-#       else
-#         echo "Backend Dockerfile not found, skipping backend Docker build"
-#       fi
-#   rules:
-#     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-#     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-
-# Docker build for frontend
-# build_frontend_image:
-#   stage: docker-build
-#   image: docker:latest
-#   services:
-#     - docker:dind
-#   variables:
-#     DOCKER_TLS_CERTDIR: "/certs"
-#     DOCKER_DRIVER: overlay2
-#   before_script:
-#     - docker --version
-#     - docker info
-#   script:
-#     - echo "Building frontend Docker image..."
-#     - |
-#       if [ -d "application/frontend" ] && [ -f "application/frontend/Dockerfile" ]; then
-#         cd application/frontend
-#         docker build -t $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA .
-#         docker build -t $CI_REGISTRY_IMAGE/frontend:latest .
-#         echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
-#         docker push $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA
-#         docker push $CI_REGISTRY_IMAGE/frontend:latest
-#       else
-#         echo "Frontend Dockerfile not found, skipping frontend Docker build"
-#       fi
-#   rules:
-#     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-#     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-
-# Deploy to Docker Hub (optional - requires DOCKER_HUB_USERNAME and DOCKER_HUB_TOKEN variables)
-# deploy_to_docker_hub:
-#   stage: deploy
-#   image: docker:latest
-#   services:
-#     - docker:dind
-#   variables:
-#     DOCKER_TLS_CERTDIR: "/certs"
-#     DOCKER_DRIVER: overlay2
-#     DOCKER_HUB_NAMESPACE: $DOCKER_HUB_USERNAME
-#   before_script:
-#     - docker --version
-#     - echo $DOCKER_HUB_TOKEN | docker login -u $DOCKER_HUB_USERNAME --password-stdin
-#   script:
-#     - echo "Deploying to Docker Hub..."
-#     - |
-#       docker pull $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHA
-#       docker pull $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA
-#     - |
-#       docker tag $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHA $DOCKER_HUB_NAMESPACE/mern-backend:$CI_COMMIT_SHA
-#       docker tag $CI_REGISTRY_IMAGE/backend:latest $DOCKER_HUB_NAMESPACE/mern-backend:latest
-#       docker push $DOCKER_HUB_NAMESPACE/mern-backend:$CI_COMMIT_SHA
-#       docker push $DOCKER_HUB_NAMESPACE/mern-backend:latest
-#     - |
-#       docker tag $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA $DOCKER_HUB_NAMESPACE/mern-frontend:$CI_COMMIT_SHA
-#       docker tag $CI_REGISTRY_IMAGE/frontend:latest $DOCKER_HUB_NAMESPACE/mern-frontend:latest
-#       docker push $DOCKER_HUB_NAMESPACE/mern-frontend:$CI_COMMIT_SHA
-#       docker push $DOCKER_HUB_NAMESPACE/mern-frontend:latest
-#   rules:
-#     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-#   when: manual
-#   needs:
-#     - build_backend_image
-#     - build_frontend_image
-
-
-
-
+  only:
+    - develop
+    - main
+    - merge_requests
