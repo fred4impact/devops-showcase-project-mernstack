@@ -101,13 +101,169 @@ security_scan_tests:
     - echo "✅ Security scan completed"
   artifacts:
     paths:
-      - tests/security-audit.json
-      - tests/outdated-packages.json
-      - tests/dependencies.json
+    - tests/security-audit.json
+    - tests/outdated-packages.json
+    - tests/dependencies.json
+  expire_in: 1 week
+  only:
+    - develop
+    - main
+    - merge_requests
+
+# ===========================================
+# STAGE 2: BUILD AND COMPILE
+# ===========================================
+
+# Build backend application
+backend_build:
+  stage: build
+  image: node:18-alpine
+  before_script:
+    - cd application/backend
+    - npm ci --cache .npm --prefer-offline
+  script:
+    - echo "🏗️ Building backend application..."
+    - echo "📦 Installing dependencies..."
+    - npm ci --silent
+    - echo "🔧 Running TypeScript compilation..."
+    - npm run build
+    - echo "📊 Checking build output..."
+    - ls -la dist/
+    - echo "✅ Backend build completed successfully"
+  artifacts:
+    paths:
+      - application/backend/dist/
+      - application/backend/package-lock.json
     expire_in: 1 week
   only:
     - develop
     - main
     - merge_requests
 
+# Build frontend application
+frontend_build:
+  stage: build
+  image: node:18-alpine
+  before_script:
+    - cd application/frontend
+    - npm ci --cache .npm --prefer-offline
+  script:
+    - echo "🏗️ Building frontend application..."
+    - echo "📦 Installing dependencies..."
+    - npm ci --silent
+    - echo "🔧 Running Next.js build..."
+    - npm run build
+    - echo "📊 Checking build output..."
+    - ls -la .next/
+    - echo "✅ Frontend build completed successfully"
+  artifacts:
+    paths:
+      - application/frontend/.next/
+      - application/frontend/out/
+      - application/frontend/package-lock.json
+    expire_in: 1 week
+  only:
+    - develop
+    - main
+    - merge_requests
+
+# Build test suite
+test_build:
+  stage: build
+  image: node:18-alpine
+  before_script:
+    - cd tests
+    - npm ci --cache .npm --prefer-offline
+  script:
+    - echo "🏗️ Building test suite..."
+    - echo "📦 Installing test dependencies..."
+    - npm ci --silent
+    - echo "🔧 Running TypeScript compilation for tests..."
+    - npx tsc --noEmit
+    - echo "📊 Checking test configuration..."
+    - npm run test -- --dry-run
+    - echo "✅ Test build completed successfully"
+  artifacts:
+    paths:
+      - tests/node_modules/
+      - tests/package-lock.json
+    expire_in: 1 week
+  only:
+    - develop
+    - main
+    - merge_requests
+
+# Lint backend code
+backend_lint:
+  stage: build
+  image: node:18-alpine
+  before_script:
+    - cd application/backend
+    - npm ci --cache .npm --prefer-offline
+  script:
+    - echo "🔍 Linting backend code..."
+    - npm run lint || echo "⚠️ Linting issues found (non-blocking)"
+    - echo "✅ Backend linting completed"
+  artifacts:
+    paths:
+      - application/backend/lint-report.txt
+    expire_in: 1 week
+  allow_failure: true
+  only:
+    - develop
+    - main
+    - merge_requests
+
+# Lint frontend code
+frontend_lint:
+  stage: build
+  image: node:18-alpine
+  before_script:
+    - cd application/frontend
+    - npm ci --cache .npm --prefer-offline
+  script:
+    - echo "🔍 Linting frontend code..."
+    - npm run lint || echo "⚠️ Linting issues found (non-blocking)"
+    - echo "✅ Frontend linting completed"
+  artifacts:
+    paths:
+      - application/frontend/lint-report.txt
+    expire_in: 1 week
+  allow_failure: true
+  only:
+    - develop
+    - main
+    - merge_requests
+
+# Type checking for backend
+backend_type_check:
+  stage: build
+  image: node:18-alpine
+  before_script:
+    - cd application/backend
+    - npm ci --cache .npm --prefer-offline
+  script:
+    - echo "🔍 Running TypeScript type checking for backend..."
+    - npx tsc --noEmit
+    - echo "✅ Backend type checking completed"
+  only:
+    - develop
+    - main
+    - merge_requests
+
+# Type checking for frontend
+frontend_type_check:
+  stage: build
+  image: node:18-alpine
+  before_script:
+    - cd application/frontend
+    - npm ci --cache .npm --prefer-offline
+  script:
+    - echo "🔍 Running TypeScript type checking for frontend..."
+    - npx tsc --noEmit
+    - echo "✅ Frontend type checking completed"
+  only:
+    - develop
+    - main
+    - merge_requests
 

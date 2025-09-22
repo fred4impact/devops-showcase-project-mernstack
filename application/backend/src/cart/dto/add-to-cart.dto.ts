@@ -6,10 +6,10 @@ export class AddToCartDto {
   @IsString()
   ticketTypeId: string;
 
-  @ApiProperty({ example: 2 })
+  @ApiProperty({ example: 2, description: 'Maximum 5 tickets per purchase' })
   @IsNumber()
   @Min(1)
-  @Max(10)
+  @Max(5)
   quantity: number;
 
   @ApiProperty({ example: 'A-1', required: false })
