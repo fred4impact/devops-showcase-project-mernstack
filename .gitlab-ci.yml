@@ -138,3 +138,51 @@ integration_test:
     - develop
     - main
     - merge_requests
+<<<<<<< HEAD
+=======
+docker_build_backend:
+  stage: docker-build
+  image: docker:20.10.16
+  services:
+    - docker:20.10.16-dind
+  variables:
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: /certs
+    DOCKER_TAG: latest
+  before_script:
+    - cd application/backend
+  script:
+    - echo "Building backend Docker image..."
+    - echo "Using tag: $DOCKER_TAG"
+    - docker build -t backend:$DOCKER_TAG .
+    - echo "Backend Docker image built successfully with tag: $DOCKER_TAG"
+  tags:
+    - docker
+    - runner
+  only:
+    - develop
+    - main
+    - merge_requests
+docker_build_frontend:
+  stage: docker-build
+  image: docker:20.10.16
+  services:
+    - docker:20.10.16-dind
+  variables:
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: /certs
+    DOCKER_TAG: latest
+  before_script:
+    - cd application/frontend
+  script:
+    - echo "Building frontend Docker image..."
+    - docker build -t frontend:$DOCKER_TAG .
+
+  tags:
+    - docker
+    - runner
+  only:
+    - develop
+    - main
+    - merge_requests
+>>>>>>> bd597a29314fcd3f48acea878e99e7e63dc0ff72
