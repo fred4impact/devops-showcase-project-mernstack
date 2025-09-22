@@ -52,7 +52,7 @@ security_scan_backend:
       - application/backend/security-audit.json
       - application/backend/outdated-packages.json
       - application/backend/dependencies.json
-    expire_in: 1 week
+  expire_in: 1 week
   only:
     - develop
     - main
@@ -78,7 +78,7 @@ security_scan_frontend:
       - application/frontend/security-audit.json
       - application/frontend/outdated-packages.json
       - application/frontend/dependencies.json
-    expire_in: 1 week
+  expire_in: 1 week
   only:
     - develop
     - main
@@ -101,9 +101,9 @@ security_scan_tests:
     - echo "✅ Security scan completed"
   artifacts:
     paths:
-    - tests/security-audit.json
-    - tests/outdated-packages.json
-    - tests/dependencies.json
+      - tests/security-audit.json
+      - tests/outdated-packages.json
+      - tests/dependencies.json
   expire_in: 1 week
   only:
     - develop
@@ -134,7 +134,7 @@ backend_build:
     paths:
       - application/backend/dist/
       - application/backend/package-lock.json
-    expire_in: 1 week
+  expire_in: 1 week
   only:
     - develop
     - main
@@ -161,7 +161,7 @@ frontend_build:
       - application/frontend/.next/
       - application/frontend/out/
       - application/frontend/package-lock.json
-    expire_in: 1 week
+  expire_in: 1 week
   only:
     - develop
     - main
@@ -187,7 +187,7 @@ test_build:
     paths:
       - tests/node_modules/
       - tests/package-lock.json
-    expire_in: 1 week
+  expire_in: 1 week
   only:
     - develop
     - main
@@ -207,7 +207,7 @@ backend_lint:
   artifacts:
     paths:
       - application/backend/lint-report.txt
-    expire_in: 1 week
+  expire_in: 1 week
   allow_failure: true
   only:
     - develop
@@ -228,7 +228,7 @@ frontend_lint:
   artifacts:
     paths:
       - application/frontend/lint-report.txt
-    expire_in: 1 week
+  expire_in: 1 week
   allow_failure: true
   only:
     - develop
