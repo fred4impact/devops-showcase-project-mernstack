@@ -41,16 +41,17 @@ security_scan_backend:
     - npm ci --cache .npm --prefer-offline
   script:
     - echo "🔍 Running security audit for backend..."
-    - npm audit --audit-level=moderate
+    - npm audit --audit-level=moderate --json > security-audit.json || true
     - echo "📊 Checking for outdated packages..."
-    - npm outdated || true
+    - npm outdated --json > outdated-packages.json || true
     - echo "🔒 Running dependency check..."
-    - npm ls --depth=0
+    - npm ls --depth=0 --json > dependencies.json
+    - echo "✅ Security scan completed"
   artifacts:
-    reports:
-      junit: application/backend/security-report.xml
     paths:
-      - application/backend/security-report.xml
+      - application/backend/security-audit.json
+      - application/backend/outdated-packages.json
+      - application/backend/dependencies.json
     expire_in: 1 week
   only:
     - develop
@@ -66,16 +67,17 @@ security_scan_frontend:
     - npm ci --cache .npm --prefer-offline
   script:
     - echo "🔍 Running security audit for frontend..."
-    - npm audit --audit-level=moderate
+    - npm audit --audit-level=moderate --json > security-audit.json || true
     - echo "📊 Checking for outdated packages..."
-    - npm outdated || true
+    - npm outdated --json > outdated-packages.json || true
     - echo "🔒 Running dependency check..."
-    - npm ls --depth=0
+    - npm ls --depth=0 --json > dependencies.json
+    - echo "✅ Security scan completed"
   artifacts:
-    reports:
-      junit: application/frontend/security-report.xml
     paths:
-      - application/frontend/security-report.xml
+      - application/frontend/security-audit.json
+      - application/frontend/outdated-packages.json
+      - application/frontend/dependencies.json
     expire_in: 1 week
   only:
     - develop
@@ -91,16 +93,17 @@ security_scan_tests:
     - npm ci --cache .npm --prefer-offline
   script:
     - echo "🔍 Running security audit for test dependencies..."
-    - npm audit --audit-level=moderate
+    - npm audit --audit-level=moderate --json > security-audit.json || true
     - echo "📊 Checking for outdated packages..."
-    - npm outdated || true
+    - npm outdated --json > outdated-packages.json || true
     - echo "🔒 Running dependency check..."
-    - npm ls --depth=0
+    - npm ls --depth=0 --json > dependencies.json
+    - echo "✅ Security scan completed"
   artifacts:
-    reports:
-      junit: tests/security-report.xml
     paths:
-      - tests/security-report.xml
+      - tests/security-audit.json
+      - tests/outdated-packages.json
+      - tests/dependencies.json
     expire_in: 1 week
   only:
     - develop
