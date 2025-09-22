@@ -6,11 +6,13 @@ stages:
   - security
   - build
   - test
+  - docker-build
 
 # Global variables
 variables:
   NODE_VERSION: "18"
   NPM_CONFIG_CACHE: ".npm"
+  DOCKER_TAG: "latest"
 
 # Cache configuration for faster builds
 cache:
@@ -144,6 +146,63 @@ integration_test:
     - npm test || echo "⚠️ Integration tests failed (non-blocking)"
     - echo "✅ Integration tests completed"
   allow_failure: true
+  only:
+    - develop
+    - main
+    - merge_requests
+
+# ===========================================
+# STAGE 4: DOCKER BUILD
+# ===========================================
+# 
+# Custom Docker Tags Usage:
+# - Set DOCKER_TAG variable in GitLab CI/CD variables or pipeline
+# - Examples: v1, v2, latest, v1.0.0, production, staging
+# - Default: Uses CI_COMMIT_SHA if DOCKER_TAG not set
+# - Usage: Go to CI/CD > Variables > Add DOCKER_TAG = "v1"
+#
+
+# Build backend Docker image
+docker_build_backend:
+  stage: docker-build
+  image: docker:20.10.16
+  services:
+    - docker:20.10.16-dind
+  variables:
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: "/certs"
+    # Custom tag options: v1, v2, latest, or commit SHA
+    DOCKER_TAG: "${DOCKER_TAG:-$CI_COMMIT_SHA}"
+  before_script:
+    - cd application/backend
+  script:
+    - echo "🐳 Building backend Docker image..."
+    - echo "📦 Using tag: $DOCKER_TAG"
+    - docker build -t $CI_REGISTRY_IMAGE/backend:$DOCKER_TAG .
+    - echo "✅ Backend Docker image built successfully with tag: $DOCKER_TAG"
+  only:
+    - develop
+    - main
+    - merge_requests
+
+# Build frontend Docker image
+docker_build_frontend:
+  stage: docker-build
+  image: docker:20.10.16
+  services:
+    - docker:20.10.16-dind
+  variables:
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: "/certs"
+    # Custom tag options: v1, v2, latest, or commit SHA
+    DOCKER_TAG: "${DOCKER_TAG:-$CI_COMMIT_SHA}"
+  before_script:
+    - cd application/frontend
+  script:
+    - echo "🐳 Building frontend Docker image..."
+    - echo "📦 Using tag: $DOCKER_TAG"
+    - docker build -t $CI_REGISTRY_IMAGE/frontend:$DOCKER_TAG .
+    - echo "✅ Frontend Docker image built successfully with tag: $DOCKER_TAG"
   only:
     - develop
     - main
