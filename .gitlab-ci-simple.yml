@@ -1,14 +1,13 @@
-# GitLab CI/CD Pipeline Configuration - Fixed Version
-# This file defines the CI/CD pipeline for the MERN Stack DevOps Showcase Project
+# GitLab CI/CD Pipeline Configuration - Simplified Working Version
+# This file defines a simplified CI/CD pipeline for the MERN Stack DevOps Showcase Project
 
 # Define stages
 stages:
   - security
   - build
   - test
-  # Temporarily disabled for testing
-  # - docker-build
-  # - deploy
+  - docker-build
+  - deploy
 
 # Global variables
 variables:
@@ -42,6 +41,7 @@ security_scan:
     - echo "Current directory: $(pwd)"
     - ls -la
     - |
+      # Backend security scan
       if [ -d "application/backend" ] && [ -f "application/backend/package.json" ]; then
         echo "Scanning backend dependencies..."
         cd application/backend
@@ -51,6 +51,7 @@ security_scan:
         echo "Backend directory not found, skipping backend audit"
       fi
     - |
+      # Frontend security scan
       if [ -d "application/frontend" ] && [ -f "application/frontend/package.json" ]; then
         echo "Scanning frontend dependencies..."
         cd application/frontend
@@ -60,6 +61,7 @@ security_scan:
         echo "Frontend directory not found, skipping frontend audit"
       fi
     - |
+      # Test security scan
       if [ -d "tests" ] && [ -f "tests/package.json" ]; then
         echo "Scanning test dependencies..."
         cd tests
@@ -174,100 +176,104 @@ integration_tests:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
-# Temporarily disabled for testing - uncomment when ready
 # Docker build for backend
-# build_backend_image:
-#   stage: docker-build
-#   image: docker:latest
-#   services:
-#     - docker:dind
-#   variables:
-#     DOCKER_TLS_CERTDIR: "/certs"
-#     DOCKER_DRIVER: overlay2
-#   before_script:
-#     - docker --version
-#     - docker info
-#   script:
-#     - echo "Building backend Docker image..."
-#     - |
-#       if [ -d "application/backend" ] && [ -f "application/backend/Dockerfile" ]; then
-#         cd application/backend
-#         docker build -t $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHA .
-#         docker build -t $CI_REGISTRY_IMAGE/backend:latest .
-#         echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
-#         docker push $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHA
-#         docker push $CI_REGISTRY_IMAGE/backend:latest
-#       else
-#         echo "Backend Dockerfile not found, skipping backend Docker build"
-#       fi
-#   rules:
-#     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-#     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+build_backend_image:
+  stage: docker-build
+  image: docker:latest
+  services:
+    - docker:dind
+  variables:
+    DOCKER_TLS_CERTDIR: "/certs"
+    DOCKER_DRIVER: overlay2
+  before_script:
+    - docker --version
+    - docker info
+  script:
+    - echo "Building backend Docker image..."
+    - |
+      if [ -d "application/backend" ] && [ -f "application/backend/Dockerfile" ]; then
+        cd application/backend
+        # Build backend image with commit SHA and latest tags
+        docker build -t $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHA .
+        docker build -t $CI_REGISTRY_IMAGE/backend:latest .
+        # Login to GitLab Container Registry
+        echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
+        # Push images to GitLab Container Registry
+        docker push $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHA
+        docker push $CI_REGISTRY_IMAGE/backend:latest
+      else
+        echo "Backend Dockerfile not found, skipping backend Docker build"
+      fi
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
 # Docker build for frontend
-# build_frontend_image:
-#   stage: docker-build
-#   image: docker:latest
-#   services:
-#     - docker:dind
-#   variables:
-#     DOCKER_TLS_CERTDIR: "/certs"
-#     DOCKER_DRIVER: overlay2
-#   before_script:
-#     - docker --version
-#     - docker info
-#   script:
-#     - echo "Building frontend Docker image..."
-#     - |
-#       if [ -d "application/frontend" ] && [ -f "application/frontend/Dockerfile" ]; then
-#         cd application/frontend
-#         docker build -t $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA .
-#         docker build -t $CI_REGISTRY_IMAGE/frontend:latest .
-#         echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
-#         docker push $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA
-#         docker push $CI_REGISTRY_IMAGE/frontend:latest
-#       else
-#         echo "Frontend Dockerfile not found, skipping frontend Docker build"
-#       fi
-#   rules:
-#     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-#     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+build_frontend_image:
+  stage: docker-build
+  image: docker:latest
+  services:
+    - docker:dind
+  variables:
+    DOCKER_TLS_CERTDIR: "/certs"
+    DOCKER_DRIVER: overlay2
+  before_script:
+    - docker --version
+    - docker info
+  script:
+    - echo "Building frontend Docker image..."
+    - |
+      if [ -d "application/frontend" ] && [ -f "application/frontend/Dockerfile" ]; then
+        cd application/frontend
+        # Build frontend image with commit SHA and latest tags
+        docker build -t $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA .
+        docker build -t $CI_REGISTRY_IMAGE/frontend:latest .
+        # Login to GitLab Container Registry
+        echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
+        # Push images to GitLab Container Registry
+        docker push $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA
+        docker push $CI_REGISTRY_IMAGE/frontend:latest
+      else
+        echo "Frontend Dockerfile not found, skipping frontend Docker build"
+      fi
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
 # Deploy to Docker Hub (optional - requires DOCKER_HUB_USERNAME and DOCKER_HUB_TOKEN variables)
-# deploy_to_docker_hub:
-#   stage: deploy
-#   image: docker:latest
-#   services:
-#     - docker:dind
-#   variables:
-#     DOCKER_TLS_CERTDIR: "/certs"
-#     DOCKER_DRIVER: overlay2
-#     DOCKER_HUB_NAMESPACE: $DOCKER_HUB_USERNAME
-#   before_script:
-#     - docker --version
-#     - echo $DOCKER_HUB_TOKEN | docker login -u $DOCKER_HUB_USERNAME --password-stdin
-#   script:
-#     - echo "Deploying to Docker Hub..."
-#     - |
-#       docker pull $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHA
-#       docker pull $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA
-#     - |
-#       docker tag $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHA $DOCKER_HUB_NAMESPACE/mern-backend:$CI_COMMIT_SHA
-#       docker tag $CI_REGISTRY_IMAGE/backend:latest $DOCKER_HUB_NAMESPACE/mern-backend:latest
-#       docker push $DOCKER_HUB_NAMESPACE/mern-backend:$CI_COMMIT_SHA
-#       docker push $DOCKER_HUB_NAMESPACE/mern-backend:latest
-#     - |
-#       docker tag $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA $DOCKER_HUB_NAMESPACE/mern-frontend:$CI_COMMIT_SHA
-#       docker tag $CI_REGISTRY_IMAGE/frontend:latest $DOCKER_HUB_NAMESPACE/mern-frontend:latest
-#       docker push $DOCKER_HUB_NAMESPACE/mern-frontend:$CI_COMMIT_SHA
-#       docker push $DOCKER_HUB_NAMESPACE/mern-frontend:latest
-#   rules:
-#     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-#   when: manual
-#   needs:
-#     - build_backend_image
-#     - build_frontend_image
-
-
-
-
+deploy_to_docker_hub:
+  stage: deploy
+  image: docker:latest
+  services:
+    - docker:dind
+  variables:
+    DOCKER_TLS_CERTDIR: "/certs"
+    DOCKER_DRIVER: overlay2
+    DOCKER_HUB_NAMESPACE: $DOCKER_HUB_USERNAME
+  before_script:
+    - docker --version
+    - echo $DOCKER_HUB_TOKEN | docker login -u $DOCKER_HUB_USERNAME --password-stdin
+  script:
+    - echo "Deploying to Docker Hub..."
+    - |
+      # Pull images from GitLab Container Registry
+      docker pull $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHA
+      docker pull $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA
+    - |
+      # Tag and push backend to Docker Hub
+      docker tag $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHA $DOCKER_HUB_NAMESPACE/mern-backend:$CI_COMMIT_SHA
+      docker tag $CI_REGISTRY_IMAGE/backend:latest $DOCKER_HUB_NAMESPACE/mern-backend:latest
+      docker push $DOCKER_HUB_NAMESPACE/mern-backend:$CI_COMMIT_SHA
+      docker push $DOCKER_HUB_NAMESPACE/mern-backend:latest
+    - |
+      # Tag and push frontend to Docker Hub
+      docker tag $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA $DOCKER_HUB_NAMESPACE/mern-frontend:$CI_COMMIT_SHA
+      docker tag $CI_REGISTRY_IMAGE/frontend:latest $DOCKER_HUB_NAMESPACE/mern-frontend:latest
+      docker push $DOCKER_HUB_NAMESPACE/mern-frontend:$CI_COMMIT_SHA
+      docker push $DOCKER_HUB_NAMESPACE/mern-frontend:latest
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  when: manual
+  needs:
+    - build_backend_image
+    - build_frontend_image
