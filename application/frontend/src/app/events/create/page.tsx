@@ -200,11 +200,7 @@ export default function CreateEvent() {
         formData.append('image', selectedImage);
         
         try {
-          await api.post(`/events/${response.data._id}/upload-image`, formData, {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-            },
-          });
+          await eventsApi.uploadEventImage(response.data._id, formData);
         } catch (imageError) {
           console.error('Error uploading image:', imageError);
           toast.error('Event created but image upload failed');

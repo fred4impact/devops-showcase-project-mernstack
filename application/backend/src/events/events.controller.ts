@@ -10,7 +10,8 @@ import {
   UseGuards, 
   Request,
   UseInterceptors,
-  UploadedFile
+  UploadedFile,
+  Res
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
@@ -61,20 +62,20 @@ export class EventsController {
     return this.eventsService.create(createEventDto, req.user.id);
   }
 
-  @Get(':id')
-  @ApiOperation({ summary: 'Get event by ID' })
-  @ApiResponse({ status: 200, description: 'Event retrieved successfully' })
-  @ApiResponse({ status: 404, description: 'Event not found' })
-  async getEvent(@Param('id') id: string) {
-    return this.eventsService.findOne(id);
-  }
-
   @Get('slug/:slug')
   @ApiOperation({ summary: 'Get event by slug' })
   @ApiResponse({ status: 200, description: 'Event retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Event not found' })
   async getEventBySlug(@Param('slug') slug: string) {
     return this.eventsService.findBySlug(slug);
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Get event by ID' })
+  @ApiResponse({ status: 200, description: 'Event retrieved successfully' })
+  @ApiResponse({ status: 404, description: 'Event not found' })
+  async getEvent(@Param('id') id: string) {
+    return this.eventsService.findOne(id);
   }
 
   @Put(':id')
@@ -147,5 +148,24 @@ export class EventsController {
     await this.eventsService.update(eventId, { images: [imageUrl] }, req.user.id);
     
     return { imageUrl };
+  }
+
+  @Get('images/:imageId')
+  @ApiOperation({ summary: 'Get image by ID' })
+  @ApiResponse({ status: 200, description: 'Image retrieved successfully' })
+  async getImage(@Param('imageId') imageId: string, @Res() res) {
+    const image = await this.s3Service.getImage(imageId);
+    
+    if (!image) {
+      return res.status(404).json({ message: 'Image not found' });
+    }
+    
+    res.set({
+      'Content-Type': image.mimetype,
+      'Content-Length': image.size,
+      'Cache-Control': 'public, max-age=31536000', // Cache for 1 year
+    });
+    
+    res.send(image.data);
   }
 }
