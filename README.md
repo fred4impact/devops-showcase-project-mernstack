@@ -1,93 +1,466 @@
-# mernstack-devops-showcase-project
+# MERN Stack DevOps Showcase Project
 
+A comprehensive full-stack ticketing platform demonstrating modern DevOps practices with MERN stack, AWS EKS, GitLab CI/CD, ArgoCD, and Kubernetes.
 
+## 🏗️ Architecture Overview
 
-## Getting started
+This project showcases a complete DevOps pipeline for a modern web application:
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+- **Application**: MERN Stack (MongoDB, Express.js, React, Node.js) ticketing platform
+- **Infrastructure**: AWS EKS (Elastic Kubernetes Service) with Terraform
+- **CI/CD**: GitLab CI/CD with automated testing and security scanning
+- **GitOps**: ArgoCD for continuous deployment
+- **Orchestration**: Kubernetes for container orchestration
+- **Testing**: Comprehensive test suites (unit, integration, e2e)
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+## 📁 Project Structure
 
 ```
-cd existing_repo
-git remote add origin https://gitlab.com/fred4impact/mernstack-devops-showcase-project.git
-git branch -M main
-git push -uf origin main
+├── application/                 # MERN Stack Application
+│   ├── backend/                # NestJS Backend API
+│   ├── frontend/               # Next.js Frontend
+│   ├── docker-compose.yml     # Local development
+│   └── docker-compose.prod.yml # Production setup
+├── infrastructure/             # Terraform Infrastructure (AWS EKS)
+│   ├── main.tf
+│   ├── variables.tf
+│   ├── outputs.tf
+│   └── modules/
+├── gitlab-ci/                  # GitLab CI/CD Pipeline
+│   ├── .gitlab-ci.yml
+│   └── templates/
+├── argocd/                     # ArgoCD Configuration
+│   ├── applications/
+│   └── app-of-apps.yaml
+├── kubernetes/                 # Kubernetes Manifests
+│   ├── namespaces/
+│   ├── deployments/
+│   ├── services/
+│   └── ingress/
+├── tests/                      # Test Suites
+│   ├── backend/
+│   ├── frontend/
+│   └── integration/
+└── docs/                       # Documentation
 ```
 
-## Integrate with your tools
+## 🚀 Quick Start
 
-- [ ] [Set up project integrations](https://gitlab.com/fred4impact/mernstack-devops-showcase-project/-/settings/integrations)
+### Prerequisites
 
-## Collaborate with your team
+- **Docker & Docker Compose**: For local development
+- **Node.js 18+**: For development
+- **AWS CLI**: For infrastructure deployment
+- **Terraform**: For infrastructure as code
+- **kubectl**: For Kubernetes management
+- **GitLab Runner**: For CI/CD (or GitLab.com)
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+### Local Development
 
-## Test and Deploy
+1. **Clone the repository**:
+   ```bash
+   git clone https://gitlab.com/your-org/mernstack-devops-showcase-project.git
+   cd mernstack-devops-showcase-project
+   ```
 
-Use the built-in continuous integration in GitLab.
+2. **Start the application locally**:
+   ```bash
+   cd application
+   docker-compose up -d
+   ```
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+3. **Access the application**:
+   - Frontend: http://localhost:3000
+   - Backend API: http://localhost:3001
+   - API Documentation: http://localhost:3001/api/docs
 
-***
+## 🏢 Application Components
 
-# Editing this README
+### Backend (NestJS)
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+**Technology Stack**:
+- **Framework**: NestJS (Node.js + TypeScript)
+- **Database**: MongoDB with Mongoose ODM
+- **Cache**: Redis for seat locking and caching
+- **Storage**: AWS S3 for file storage
+- **Payments**: Stripe integration
+- **Email**: SendGrid for notifications
+- **Authentication**: JWT with Passport.js
 
-## Suggestions for a good README
+**Key Features**:
+- ✅ User authentication and authorization
+- ✅ Event management system
+- ✅ Ticket types and pricing
+- ✅ Seat selection with Redis locking
+- ✅ Stripe payment integration
+- ✅ QR code ticket generation
+- ✅ PDF ticket generation
+- ✅ Email notifications
+- ✅ Order management
+- ✅ Scanner app for check-in
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+**API Endpoints**:
+- **Public**: `/api/events`, `/api/cart`, `/api/checkout`
+- **Authenticated**: `/api/auth/*`, `/api/users/me/*`
+- **Organizer**: `/api/organizer/*`
+- **Scanner**: `/api/scan`
+- **Webhooks**: `/api/webhooks/stripe`
 
-## Name
-Choose a self-explaining name for your project.
+### Frontend (Next.js)
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+**Technology Stack**:
+- **Framework**: Next.js 14 with App Router
+- **UI**: React 18 with TypeScript
+- **Styling**: Tailwind CSS
+- **State Management**: SWR for data fetching
+- **Forms**: React Hook Form with Zod validation
+- **Payments**: Stripe Elements
+- **Animations**: Framer Motion
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+**Key Features**:
+- ✅ Responsive design with Tailwind CSS
+- ✅ Server-side rendering (SSR)
+- ✅ Client-side routing
+- ✅ Form validation with Zod
+- ✅ Payment integration with Stripe
+- ✅ Real-time updates with WebSocket
+- ✅ QR code generation and scanning
+- ✅ PDF ticket download
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+## 🏗️ Infrastructure (AWS EKS)
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+### Terraform Configuration
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+The infrastructure is managed using Terraform with the following components:
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+**AWS Resources**:
+- **EKS Cluster**: Managed Kubernetes cluster
+- **VPC**: Custom Virtual Private Cloud
+- **Subnets**: Public and private subnets across AZs
+- **Security Groups**: Network security rules
+- **IAM Roles**: Service accounts and permissions
+- **Load Balancer**: Application Load Balancer
+- **RDS**: Managed database (PostgreSQL/MySQL)
+- **ElastiCache**: Redis cluster
+- **S3**: Object storage for assets
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+**Deployment**:
+```bash
+cd infrastructure
+terraform init
+terraform plan
+terraform apply
+```
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+### Kubernetes Manifests
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+**Namespaces**:
+- `ticketnow-dev`: Development environment
+- `ticketnow-staging`: Staging environment
+- `ticketnow-prod`: Production environment
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+**Deployments**:
+- Backend API deployment
+- Frontend deployment
+- Database migrations
+- Redis deployment
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+**Services**:
+- ClusterIP services for internal communication
+- LoadBalancer services for external access
+- Ingress controllers for routing
 
-## License
-For open source projects, say how it is licensed.
+## 🔄 CI/CD Pipeline (GitLab)
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+### Pipeline Stages
+
+The GitLab CI/CD pipeline consists of 6 main stages:
+
+1. **Security** (`security`)
+   - Static Application Security Testing (SAST)
+   - Dependency vulnerability scanning
+   - Container security scanning
+
+2. **Build** (`build`)
+   - Backend compilation and testing
+   - Frontend build and testing
+   - Integration tests
+   - Code quality checks
+
+3. **Test** (`test`)
+   - Unit tests (backend/frontend)
+   - Integration tests
+   - End-to-end tests
+   - Performance tests
+
+4. **Docker Build** (`docker-build`)
+   - Build Docker images
+   - Push to GitLab Container Registry
+   - Multi-architecture builds
+
+5. **Docker Security** (`docker-security`)
+   - Container vulnerability scanning
+   - Security policy enforcement
+   - Image signing
+
+6. **Deploy** (`deploy`)
+   - Deploy to staging environment
+   - Deploy to production (manual approval)
+   - Rollback capabilities
+
+### Pipeline Configuration
+
+**Main Pipeline**: `gitlab-ci/.gitlab-ci.yml`
+**Templates**: `gitlab-ci/templates/`
+
+**Key Features**:
+- ✅ Parallel job execution
+- ✅ Artifact caching
+- ✅ Security scanning
+- ✅ Multi-environment deployment
+- ✅ Manual approval gates
+- ✅ Rollback capabilities
+
+## 🚀 GitOps with ArgoCD
+
+### ArgoCD Configuration
+
+**Application of Applications Pattern**:
+- `argocd/app-of-apps.yaml`: Main ArgoCD application
+- `argocd/applications/`: Individual application definitions
+
+**Applications**:
+- **Backend**: API deployment and services
+- **Frontend**: Web application deployment
+- **Infrastructure**: Database and cache services
+- **Monitoring**: Prometheus and Grafana
+
+**Features**:
+- ✅ Automated deployment from Git
+- ✅ Multi-environment support
+- ✅ Rollback capabilities
+- ✅ Health monitoring
+- ✅ Sync policies
+
+### Deployment Strategy
+
+1. **Development**: Automatic deployment on merge
+2. **Staging**: Automatic deployment with tests
+3. **Production**: Manual approval required
+
+## 🧪 Testing Strategy
+
+### Test Suites
+
+**Backend Tests** (`tests/backend/`):
+- Unit tests for services and controllers
+- Integration tests for API endpoints
+- Authentication and authorization tests
+- Payment processing tests
+
+**Frontend Tests** (`tests/frontend/`):
+- Component rendering tests
+- User interaction tests
+- Form validation tests
+- API integration tests
+
+**Integration Tests** (`tests/integration/`):
+- End-to-end user flows
+- API integration tests
+- Database integration tests
+- Third-party service tests
+
+### Test Execution
+
+**Local Testing**:
+```bash
+cd tests
+npm install
+npm run test:all
+```
+
+**CI/CD Testing**:
+- Automatic execution on every commit
+- Parallel test execution
+- Coverage reporting
+- Test result artifacts
+
+## 📊 Monitoring and Observability
+
+### Application Monitoring
+
+**Metrics**:
+- Application performance metrics
+- Business metrics (tickets sold, revenue)
+- Error rates and response times
+- Database performance
+
+**Logging**:
+- Structured logging with correlation IDs
+- Centralized log aggregation
+- Log analysis and alerting
+
+**Tracing**:
+- Distributed tracing across services
+- Performance bottleneck identification
+- Request flow visualization
+
+### Infrastructure Monitoring
+
+**Kubernetes Monitoring**:
+- Cluster health and resource usage
+- Pod and node metrics
+- Network and storage metrics
+
+**AWS Monitoring**:
+- EKS cluster metrics
+- RDS and ElastiCache metrics
+- S3 usage and costs
+
+## 🔒 Security
+
+### Security Measures
+
+**Application Security**:
+- JWT authentication with secure tokens
+- Input validation and sanitization
+- SQL injection prevention
+- XSS protection
+- CSRF protection
+
+**Infrastructure Security**:
+- Network security groups
+- IAM roles and policies
+- Secrets management
+- Container security scanning
+- Vulnerability scanning
+
+**Compliance**:
+- Security scanning in CI/CD
+- Dependency vulnerability checks
+- Container image security
+- Regular security audits
+
+## 🚀 Deployment
+
+### Environment Strategy
+
+**Development**:
+- Local development with Docker Compose
+- Feature branch deployments
+- Automated testing
+
+**Staging**:
+- Production-like environment
+- Integration testing
+- Performance testing
+
+**Production**:
+- High availability setup
+- Blue-green deployments
+- Automated rollback
+- Monitoring and alerting
+
+### Deployment Process
+
+1. **Code Commit**: Developer commits to feature branch
+2. **CI Pipeline**: Automated testing and security scanning
+3. **Merge Request**: Code review and approval
+4. **Staging Deployment**: Automatic deployment to staging
+5. **Production Deployment**: Manual approval and deployment
+6. **Monitoring**: Continuous monitoring and alerting
+
+## 📚 Documentation
+
+### Additional Documentation
+
+- **API Documentation**: Available at `/api/docs` when running locally
+- **GitLab CI Pipeline**: `docs/gitlab_ci_pipeline-flow.md`
+- **Commit Guide**: `docs/git-commit-guide.md`
+- **Troubleshooting**: `docs/image-upload-troubleshooting.md`
+- **Test Documentation**: `tests/README.md`
+
+## 🤝 Contributing
+
+### Development Workflow
+
+1. **Fork the repository**
+2. **Create a feature branch**: `git checkout -b feature/amazing-feature`
+3. **Make your changes**
+4. **Add tests** for new functionality
+5. **Run tests**: `npm run test:all`
+6. **Commit changes**: Follow the commit guide
+7. **Push to branch**: `git push origin feature/amazing-feature`
+8. **Create a Merge Request**
+
+### Code Standards
+
+- **TypeScript**: Strict type checking enabled
+- **ESLint**: Code linting and formatting
+- **Prettier**: Code formatting
+- **Testing**: Minimum 70% code coverage
+- **Documentation**: JSDoc for public APIs
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🆘 Support
+
+### Getting Help
+
+- **Documentation**: Check the `docs/` directory
+- **Issues**: Create an issue in GitLab
+- **Discussions**: Use GitLab discussions for questions
+- **API Docs**: Available at `/api/docs` when running locally
+
+### Troubleshooting
+
+**Common Issues**:
+1. **Docker Issues**: Check Docker daemon and available resources
+2. **Database Connection**: Verify MongoDB and Redis are running
+3. **Environment Variables**: Check `.env` file configuration
+4. **CI/CD Failures**: Review pipeline logs and configuration
+
+**Debug Commands**:
+```bash
+# Check application status
+docker-compose ps
+
+# View application logs
+docker-compose logs backend
+docker-compose logs frontend
+
+# Check Kubernetes status
+kubectl get pods -n ticketnow-dev
+
+# Check ArgoCD applications
+argocd app list
+```
+
+## 🎯 Roadmap
+
+### Planned Features
+
+- [ ] **Microservices Architecture**: Split monolith into microservices
+- [ ] **Event Sourcing**: Implement event-driven architecture
+- [ ] **Advanced Analytics**: Business intelligence dashboard
+- [ ] **Mobile App**: React Native mobile application
+- [ ] **Multi-tenancy**: Support for multiple organizations
+- [ ] **Advanced Security**: OAuth2, RBAC, audit logging
+- [ ] **Performance Optimization**: Caching, CDN, optimization
+- [ ] **Disaster Recovery**: Backup and recovery procedures
+
+### Infrastructure Improvements
+
+- [ ] **Service Mesh**: Istio implementation
+- [ ] **Advanced Monitoring**: Prometheus, Grafana, Jaeger
+- [ ] **Security Scanning**: Falco, OPA Gatekeeper
+- [ ] **Cost Optimization**: Resource optimization and monitoring
+- [ ] **Multi-region**: Global deployment strategy
+
+---
+
+**Built with ❤️ by the DevOps Team**
+
+*This project demonstrates modern DevOps practices and serves as a learning resource for full-stack development with cloud-native technologies.*
