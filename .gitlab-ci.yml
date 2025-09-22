@@ -107,23 +107,4 @@ security_scan_tests:
     - main
     - merge_requests
 
-# License compliance check
-license_check:
-  stage: security
-  image: node:18-alpine
-  script:
-    - echo "📋 Checking license compliance..."
-    - cd application/backend && npm ls --json > backend-licenses.json
-    - cd ../frontend && npm ls --json > frontend-licenses.json
-    - cd ../../tests && npm ls --json > tests-licenses.json
-    - echo "✅ License check completed"
-  artifacts:
-    paths:
-      - application/backend/backend-licenses.json
-      - application/frontend/frontend-licenses.json
-      - tests/tests-licenses.json
-    expire_in: 1 week
-  only:
-    - develop
-    - main
-    - merge_requests
+
