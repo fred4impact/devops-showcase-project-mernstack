@@ -175,10 +175,10 @@ docker_build_backend:
   before_script:
     - cd application/backend
   script:
-    - echo "🐳 Building backend Docker image..."
-    - echo "📦 Using tag: $DOCKER_TAG"
+    - echo "Building backend Docker image..."
+    - echo "Using tag: $DOCKER_TAG"
     - docker build -t $CI_REGISTRY_IMAGE/backend:$DOCKER_TAG .
-    - echo "✅ Backend Docker image built successfully with tag: $DOCKER_TAG"
+    - echo "Backend Docker image built successfully with tag: $DOCKER_TAG"
   only:
     - develop
     - main
@@ -198,10 +198,10 @@ docker_build_frontend:
   before_script:
     - cd application/frontend
   script:
-    - echo "🐳 Building frontend Docker image..."
-    - echo "📦 Using tag: $DOCKER_TAG"
+    - echo "Building frontend Docker image..."
+    - echo "Using tag: $DOCKER_TAG"
     - docker build -t $CI_REGISTRY_IMAGE/frontend:$DOCKER_TAG .
-    - echo "✅ Frontend Docker image built successfully with tag: $DOCKER_TAG"
+    - echo "Frontend Docker image built successfully with tag: $DOCKER_TAG"
   only:
     - develop
     - main
