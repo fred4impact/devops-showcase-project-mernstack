@@ -232,7 +232,7 @@ install_dependencies:
     paths:
       - node_modules/
   tags:
-    - docker
+    - shared
 
 # Run tests
 test_frontend:
@@ -243,7 +243,7 @@ test_frontend:
     - npm install
     - npm test
   tags:
-    - docker
+    - shared
 
 test_backend:
   stage: test
@@ -253,7 +253,7 @@ test_backend:
     - npm install
     - npm test
   tags:
-    - docker
+    - shared
 
 # Build application
 build_app:
@@ -265,7 +265,7 @@ build_app:
     paths:
       - build/
   tags:
-    - docker
+    - shared
 
 # Deploy to production
 deploy_production:
@@ -277,7 +277,7 @@ deploy_production:
   only:
     - main
   tags:
-    - docker
+    - shared
 ```
 
 ## Benefits of This Setup

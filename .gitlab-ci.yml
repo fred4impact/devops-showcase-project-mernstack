@@ -28,7 +28,7 @@ security_scan_backend:
     - echo "✅ Backend security scan completed"
   tags:
     - docker
-    - runner
+    - shared
   only:
     - develop
     - main
@@ -45,7 +45,7 @@ security_scan_frontend:
     - echo "✅ Frontend security scan completed"
   tags:
     - docker
-    - runner
+    - shared
   only:
     - develop
     - main
@@ -62,7 +62,7 @@ backend_build:
     - echo "✅ Backend build completed successfully"
   tags:
     - docker
-    - runner
+    - shared
   only:
     - develop
     - main
@@ -79,7 +79,7 @@ frontend_build:
     - echo "✅ Frontend build completed successfully"
   tags:
     - docker
-    - runner
+    - shared
   only:
     - develop
     - main
@@ -97,7 +97,7 @@ backend_test:
   allow_failure: true
   tags:
     - docker
-    - runner
+    - shared
   only:
     - develop
     - main
@@ -115,7 +115,7 @@ frontend_test:
   allow_failure: true
   tags:
     - docker
-    - runner
+    - shared
   only:
     - develop
     - main
@@ -133,7 +133,7 @@ integration_test:
   allow_failure: true
   tags:
     - docker
-    - runner
+    - shared
   only:
     - develop
     - main
