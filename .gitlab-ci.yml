@@ -5,6 +5,7 @@ stages:
   - security
   - build
   - test
+  - docker-build
 variables:
   NODE_VERSION: "18"
   NPM_CONFIG_CACHE: .npm
@@ -130,6 +131,51 @@ integration_test:
     - npm test || echo "⚠️ Integration tests failed (non-blocking)"
     - echo "✅ Integration tests completed"
   allow_failure: true
+  tags:
+    - shared
+  only:
+    - develop
+    - main
+    - merge_requests
+
+# Docker Build Stage
+docker_build_backend:
+  stage: docker-build
+  image: docker:20.10.16
+  services:
+    - docker:20.10.16-dind
+  variables:
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: /certs
+    DOCKER_TAG: latest
+  before_script:
+    - cd application/backend
+  script:
+    - echo "🐳 Building backend Docker image..."
+    - docker build -t backend:$DOCKER_TAG .
+    - echo "✅ Backend Docker image built successfully"
+  tags:
+    - shared
+  only:
+    - develop
+    - main
+    - merge_requests
+
+docker_build_frontend:
+  stage: docker-build
+  image: docker:20.10.16
+  services:
+    - docker:20.10.16-dind
+  variables:
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: /certs
+    DOCKER_TAG: latest
+  before_script:
+    - cd application/frontend
+  script:
+    - echo "🐳 Building frontend Docker image..."
+    - docker build -t frontend:$DOCKER_TAG .
+    - echo "✅ Frontend Docker image built successfully"
   tags:
     - shared
   only:
