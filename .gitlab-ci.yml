@@ -6,15 +6,24 @@ stages:
   - security
   - build
   - test
-  
-# Include template files (commented out for now)
-# include:
-#   - local: 'gitlab-ci/templates/security-scan.yml'
-#   - local: 'gitlab-ci/templates/build-and-test.yml'
+  - docker-build
+  - docker-security
+  - deploy
+
+# Include template files
+include:
+  - local: 'gitlab-ci/templates/security-scan.yml'
+  - local: 'gitlab-ci/templates/build-and-test.yml'
+  - local: 'gitlab-ci/templates/docker-build.yml'
+  - local: 'gitlab-ci/templates/docker-security.yml'
 
 # Global variables
 variables:
   NODE_VERSION: "18"
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: "/certs"
+  # GitLab Container Registry variables (automatically set by GitLab)
+  # CI_REGISTRY_IMAGE, CI_REGISTRY_USER, CI_REGISTRY_PASSWORD are auto-injected
 
 # Cache configuration
 cache:
@@ -23,6 +32,9 @@ cache:
     - node_modules/
     - .npm/
     - dist/
+    - application/backend/node_modules/
+    - application/frontend/node_modules/
+    - tests/node_modules/
 
 # Default image for jobs
 default:
