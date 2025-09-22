@@ -1,0 +1,49 @@
+# GitLab CI/CD Pipeline Configuration
+# This file defines the CI/CD pipeline for the MERN Stack DevOps Showcase Project
+
+# Define stages
+stages:
+  - security
+  - build
+  - test
+  
+# Include template files
+include:
+  - local: 'gitlab-ci/templates/security-scan.yml'
+  - local: 'gitlab-ci/templates/build-and-test.yml'
+
+# Global variables
+variables:
+  NODE_VERSION: "18"
+
+# Cache configuration
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - node_modules/
+    - .npm/
+    - dist/
+
+# Default image for jobs
+default:
+  image: node:18-alpine
+
+# Security scanning stage
+security_scan:
+  stage: security
+  extends: .security_scan_template
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+# Build and test stage
+build_and_test:
+  stage: build
+  extends: .build_and_test_template
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+
+
+
