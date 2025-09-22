@@ -36,21 +36,41 @@ security_scan:
     - apk add --no-cache git
   script:
     - echo "Running security scans..."
+    - echo "Current directory: $(pwd)"
+    - echo "Directory contents:"
+    - ls -la
+    - echo "Application directory contents:"
+    - ls -la application/
     - |
       # Backend security scan
-      cd application/backend
       echo "Scanning backend dependencies..."
-      npm audit --audit-level=moderate || true
+      if [ -d "application/backend" ] && [ -f "application/backend/package.json" ]; then
+        cd application/backend
+        echo "Backend directory: $(pwd)"
+        npm audit --audit-level=moderate || echo "Backend audit completed with issues"
+      else
+        echo "Backend directory or package.json not found, skipping backend audit"
+      fi
     - |
       # Frontend security scan
-      cd application/frontend
       echo "Scanning frontend dependencies..."
-      npm audit --audit-level=moderate || true
+      if [ -d "application/frontend" ] && [ -f "application/frontend/package.json" ]; then
+        cd application/frontend
+        echo "Frontend directory: $(pwd)"
+        npm audit --audit-level=moderate || echo "Frontend audit completed with issues"
+      else
+        echo "Frontend directory or package.json not found, skipping frontend audit"
+      fi
     - |
       # Test security scan
-      cd tests
       echo "Scanning test dependencies..."
-      npm audit --audit-level=moderate || true
+      if [ -d "tests" ] && [ -f "tests/package.json" ]; then
+        cd tests
+        echo "Tests directory: $(pwd)"
+        npm audit --audit-level=moderate || echo "Tests audit completed with issues"
+      else
+        echo "Tests directory or package.json not found, skipping tests audit"
+      fi
   allow_failure: true
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
