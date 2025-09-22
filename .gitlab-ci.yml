@@ -1,19 +1,12 @@
-# Simplified GitLab CI/CD Pipeline for MERN Stack DevOps Showcase Project
-# Minimal configuration for testing
-
-# Define pipeline stages
+---
 stages:
   - security
   - build
   - test
   - docker-build
-
-# Global variables
 variables:
   NODE_VERSION: "18"
-  NPM_CONFIG_CACHE: ".npm"
-
-# Cache configuration for faster builds
+  NPM_CONFIG_CACHE: .npm
 cache:
   key: ${CI_COMMIT_REF_SLUG}
   paths:
@@ -22,12 +15,6 @@ cache:
     - application/backend/node_modules/
     - application/frontend/node_modules/
     - tests/node_modules/
-
-# ===========================================
-# STAGE 1: SECURITY SCANNING
-# ===========================================
-
-# Security scan for backend dependencies
 security_scan_backend:
   stage: security
   image: node:18-alpine
@@ -42,8 +29,6 @@ security_scan_backend:
     - develop
     - main
     - merge_requests
-
-# Security scan for frontend dependencies
 security_scan_frontend:
   stage: security
   image: node:18-alpine
@@ -58,12 +43,6 @@ security_scan_frontend:
     - develop
     - main
     - merge_requests
-
-# ===========================================
-# STAGE 2: BUILD AND COMPILE
-# ===========================================
-
-# Build backend application
 backend_build:
   stage: build
   image: node:18-alpine
@@ -78,8 +57,6 @@ backend_build:
     - develop
     - main
     - merge_requests
-
-# Build frontend application
 frontend_build:
   stage: build
   image: node:18-alpine
@@ -94,12 +71,6 @@ frontend_build:
     - develop
     - main
     - merge_requests
-
-# ===========================================
-# STAGE 3: RUN TESTS
-# ===========================================
-
-# Run backend tests
 backend_test:
   stage: test
   image: node:18-alpine
@@ -115,8 +86,6 @@ backend_test:
     - develop
     - main
     - merge_requests
-
-# Run frontend tests
 frontend_test:
   stage: test
   image: node:18-alpine
@@ -132,8 +101,6 @@ frontend_test:
     - develop
     - main
     - merge_requests
-
-# Run integration tests
 integration_test:
   stage: test
   image: node:18-alpine
@@ -149,19 +116,6 @@ integration_test:
     - develop
     - main
     - merge_requests
-
-# ===========================================
-# STAGE 4: DOCKER BUILD
-# ===========================================
-# 
-# Custom Docker Tags Usage:
-# - Set DOCKER_TAG variable in GitLab CI/CD variables or pipeline
-# - Examples: v1, v2, latest, v1.0.0, production, staging
-# - Default: Uses CI_COMMIT_SHA if DOCKER_TAG not set
-# - Usage: Go to CI/CD > Variables > Add DOCKER_TAG = "v1"
-#
-
-# Build backend Docker image
 docker_build_backend:
   stage: docker-build
   image: docker:20.10.16
@@ -169,9 +123,8 @@ docker_build_backend:
     - docker:20.10.16-dind
   variables:
     DOCKER_DRIVER: overlay2
-    DOCKER_TLS_CERTDIR: "/certs"
-    # Custom tag options: v1, v2, latest, or commit SHA
-    DOCKER_TAG: "latest"
+    DOCKER_TLS_CERTDIR: /certs
+    DOCKER_TAG: latest
   before_script:
     - cd application/backend
   script:
@@ -183,8 +136,6 @@ docker_build_backend:
     - develop
     - main
     - merge_requests
-
-# Build frontend Docker image
 docker_build_frontend:
   stage: docker-build
   image: docker:20.10.16
@@ -192,9 +143,8 @@ docker_build_frontend:
     - docker:20.10.16-dind
   variables:
     DOCKER_DRIVER: overlay2
-    DOCKER_TLS_CERTDIR: "/certs"
-    # Custom tag options: v1, v2, latest, or commit SHA
-    DOCKER_TAG: "latest"
+    DOCKER_TLS_CERTDIR: /certs
+    DOCKER_TAG: latest
   before_script:
     - cd application/frontend
   script:
