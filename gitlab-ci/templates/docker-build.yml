@@ -12,6 +12,7 @@
   before_script:
     - docker --version
     - docker info
+    - echo "Docker daemon is running"
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"

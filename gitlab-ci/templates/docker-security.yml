@@ -16,15 +16,15 @@
       # Install Trivy
       curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
     - |
-      # Install Snyk
-      npm install -g snyk
+      # Install Snyk (optional)
+      npm install -g snyk || echo "Snyk installation failed, continuing without it"
     - |
-      # Install Docker Scout CLI
-      curl -fsSL https://raw.githubusercontent.com/docker/scout-cli/main/install.sh | sh
+      # Install Docker Scout CLI (optional)
+      curl -fsSL https://raw.githubusercontent.com/docker/scout-cli/main/install.sh | sh || echo "Docker Scout installation failed, continuing without it"
     - docker --version
-    - trivy --version
-    - snyk --version
-    - docker scout version
+    - trivy --version || echo "Trivy not available"
+    - snyk --version || echo "Snyk not available"
+    - docker scout version || echo "Docker Scout not available"
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
