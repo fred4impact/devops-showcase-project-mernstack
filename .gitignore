@@ -12,6 +12,9 @@ dist/
 .next/
 out/
 
+# TypeScript build outputs
+*.tsbuildinfo
+
 # Environment variables
 .env
 .env.local

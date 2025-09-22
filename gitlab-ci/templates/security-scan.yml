@@ -1,0 +1,84 @@
+# Security Scanning Template
+# This template provides security scanning capabilities for the MERN Stack project
+
+.security_scan_template:
+  stage: security
+  image: node:18-alpine
+  before_script:
+    - apk add --no-cache git
+    - npm install -g npm-audit-resolver
+  script:
+    - echo "Running security scans..."
+    - |
+      # Backend security scan
+      cd application/backend
+      echo "Scanning backend dependencies..."
+      npm audit --audit-level=moderate
+      npm audit --json > backend-audit.json || true
+    - |
+      # Frontend security scan
+      cd application/frontend
+      echo "Scanning frontend dependencies..."
+      npm audit --audit-level=moderate
+      npm audit --json > frontend-audit.json || true
+    - |
+      # Test security scan
+      cd tests
+      echo "Scanning test dependencies..."
+      npm audit --audit-level=moderate
+      npm audit --json > test-audit.json || true
+  artifacts:
+    reports:
+      junit:
+        - application/backend/backend-audit.json
+        - application/frontend/frontend-audit.json
+        - tests/test-audit.json
+    expire_in: 1 week
+  allow_failure: true
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+# SAST (Static Application Security Testing)
+sast_scan:
+  extends: .security_scan_template
+  stage: security
+  script:
+    - echo "Running SAST scan..."
+    - |
+      # Install security scanning tools
+      npm install -g @snyk/cli
+      npm install -g retire
+    - |
+      # Backend SAST
+      cd application/backend
+      echo "Running SAST on backend..."
+      snyk test --severity-threshold=high || true
+      retire --path . || true
+    - |
+      # Frontend SAST
+      cd application/frontend
+      echo "Running SAST on frontend..."
+      snyk test --severity-threshold=high || true
+      retire --path . || true
+  artifacts:
+    reports:
+      sast: sast-report.json
+    expire_in: 1 week
+  allow_failure: true
+
+# Dependency scanning
+dependency_scan:
+  extends: .security_scan_template
+  stage: security
+  script:
+    - echo "Running dependency scan..."
+    - |
+      # Scan all package.json files
+      find . -name "package.json" -not -path "*/node_modules/*" -exec echo "Scanning {}" \;
+      find . -name "package.json" -not -path "*/node_modules/*" -exec npm audit --audit-level=high {} \; || true
+  artifacts:
+    reports:
+      dependency_scanning: dependency-scan-report.json
+    expire_in: 1 week
+  allow_failure: true

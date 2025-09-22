@@ -88,6 +88,13 @@ export const eventsApi = {
   publishEvent: (id: string) => api.put<Event>(`/events/${id}/publish`),
   
   deleteEvent: (id: string) => api.delete(`/events/${id}`),
+  
+  uploadEventImage: (id: string, formData: FormData) => 
+    api.post(`/events/${id}/upload-image`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }),
 }
 
 // Ticket Types API

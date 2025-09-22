@@ -1,0 +1,158 @@
+# Build and Test Template
+# This template provides build and testing capabilities for the MERN Stack project
+
+.build_and_test_template:
+  stage: build
+  image: node:18-alpine
+  before_script:
+    - apk add --no-cache git
+    - npm install -g npm@latest
+  script:
+    - echo "Building and testing application..."
+    - |
+      # Install dependencies for all parts of the application
+      echo "Installing backend dependencies..."
+      cd application/backend
+      npm ci --cache .npm --prefer-offline
+    - |
+      echo "Installing frontend dependencies..."
+      cd application/frontend
+      npm ci --cache .npm --prefer-offline
+    - |
+      echo "Installing test dependencies..."
+      cd tests
+      npm ci --cache .npm --prefer-offline
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+      - application/backend/node_modules/
+      - application/frontend/node_modules/
+      - tests/node_modules/
+      - .npm/
+  artifacts:
+    expire_in: 1 hour
+
+# Backend build and test
+backend_build_test:
+  extends: .build_and_test_template
+  stage: build
+  script:
+    - echo "Building backend..."
+    - cd application/backend
+    - npm run build
+    - echo "Testing backend..."
+    - npm run test
+    - npm run test:e2e || true
+  artifacts:
+    paths:
+      - application/backend/dist/
+    expire_in: 1 week
+  coverage: '/Lines\s*:\s*(\d+\.\d+)%/'
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+# Frontend build and test
+frontend_build_test:
+  extends: .build_and_test_template
+  stage: build
+  script:
+    - echo "Building frontend..."
+    - cd application/frontend
+    - npm run build
+    - echo "Testing frontend..."
+    - npm run test
+    - npm run test:coverage || true
+  artifacts:
+    paths:
+      - application/frontend/.next/
+      - application/frontend/out/
+    expire_in: 1 week
+  coverage: '/Lines\s*:\s*(\d+\.\d+)%/'
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+# Integration tests
+integration_tests:
+  extends: .build_and_test_template
+  stage: test
+  services:
+    - name: mongo:latest
+      alias: mongodb
+    - name: redis:alpine
+      alias: redis
+  variables:
+    MONGODB_URI: "mongodb://mongodb:27017/test"
+    REDIS_URL: "redis://redis:6379"
+  script:
+    - echo "Running integration tests..."
+    - cd tests
+    - npm run test:integration
+    - npm run test:api
+  artifacts:
+    reports:
+      junit: tests/results/junit.xml
+    paths:
+      - tests/coverage/
+    expire_in: 1 week
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+# Docker build test
+docker_build_test:
+  stage: build
+  image: docker:latest
+  services:
+    - docker:dind
+  before_script:
+    - docker --version
+  script:
+    - echo "Testing Docker builds..."
+    - |
+      # Test backend Docker build
+      cd application/backend
+      docker build -t backend-test .
+      docker run --rm backend-test npm test || true
+    - |
+      # Test frontend Docker build
+      cd application/frontend
+      docker build -t frontend-test .
+      docker run --rm frontend-test npm test || true
+    - |
+      # Test production Docker build
+      cd application
+      docker-compose -f docker-compose.prod.yml build
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+# Linting and code quality
+code_quality:
+  extends: .build_and_test_template
+  stage: test
+  script:
+    - echo "Running code quality checks..."
+    - |
+      # Backend linting
+      cd application/backend
+      npm run lint || true
+      npm run format:check || true
+    - |
+      # Frontend linting
+      cd application/frontend
+      npm run lint || true
+      npm run type-check || true
+    - |
+      # Test linting
+      cd tests
+      npm run lint || true
+  artifacts:
+    reports:
+      codequality: codequality-report.json
+    expire_in: 1 week
+  allow_failure: true
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH

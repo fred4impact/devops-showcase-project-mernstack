@@ -1,0 +1,165 @@
+# Docker Security Scanning Template
+# This template provides Docker image security scanning capabilities
+
+.docker_security_scan_template:
+  stage: docker-security
+  image: docker:latest
+  services:
+    - docker:dind
+  variables:
+    DOCKER_TLS_CERTDIR: "/certs"
+    DOCKER_DRIVER: overlay2
+    TRIVY_CACHE_DIR: "/tmp/trivy-cache"
+  before_script:
+    - apk add --no-cache curl
+    - |
+      # Install Trivy
+      curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+    - |
+      # Install Snyk
+      npm install -g snyk
+    - |
+      # Install Docker Scout CLI
+      curl -fsSL https://raw.githubusercontent.com/docker/scout-cli/main/install.sh | sh
+    - docker --version
+    - trivy --version
+    - snyk --version
+    - docker scout version
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+# Comprehensive Docker image security scan
+comprehensive_docker_scan:
+  extends: .docker_security_scan_template
+  stage: docker-security
+  script:
+    - echo "Running comprehensive Docker security scan..."
+    - |
+      # Create scan directory
+      mkdir -p /tmp/security-reports
+    - |
+      # Scan backend image
+      echo "Scanning backend image..."
+      docker pull $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHA
+      trivy image --format json --output /tmp/security-reports/backend-trivy.json $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHA
+      trivy image --format table $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHA
+    - |
+      # Scan frontend image
+      echo "Scanning frontend image..."
+      docker pull $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA
+      trivy image --format json --output /tmp/security-reports/frontend-trivy.json $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA
+      trivy image --format table $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA
+    - |
+      # Snyk container scans
+      echo "Running Snyk container scans..."
+      snyk container test $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHA --json > /tmp/security-reports/backend-snyk.json || true
+      snyk container test $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA --json > /tmp/security-reports/frontend-snyk.json || true
+    - |
+      # Docker Scout scans
+      echo "Running Docker Scout scans..."
+      docker scout cves $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHA --format json > /tmp/security-reports/backend-scout.json || true
+      docker scout cves $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA --format json > /tmp/security-reports/frontend-scout.json || true
+    - |
+      # Generate summary report
+      echo "Generating security scan summary..."
+      echo "# Docker Security Scan Summary" > /tmp/security-reports/security-summary.md
+      echo "## Backend Image: $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHA" >> /tmp/security-reports/security-summary.md
+      echo "## Frontend Image: $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA" >> /tmp/security-reports/security-summary.md
+      echo "## Scan Date: $(date)" >> /tmp/security-reports/security-summary.md
+      echo "## Tools Used: Trivy, Snyk, Docker Scout" >> /tmp/security-reports/security-summary.md
+  artifacts:
+    reports:
+      container_scanning: /tmp/security-reports/backend-trivy.json
+    paths:
+      - /tmp/security-reports/
+    expire_in: 1 week
+  allow_failure: true
+
+# High severity vulnerability check
+high_severity_check:
+  extends: .docker_security_scan_template
+  stage: docker-security
+  script:
+    - echo "Checking for high severity vulnerabilities..."
+    - |
+      # Check backend for high/critical vulnerabilities
+      trivy image --severity HIGH,CRITICAL --exit-code 1 $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHA || echo "High severity vulnerabilities found in backend"
+    - |
+      # Check frontend for high/critical vulnerabilities
+      trivy image --severity HIGH,CRITICAL --exit-code 1 $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA || echo "High severity vulnerabilities found in frontend"
+    - |
+      # Generate high severity report
+      echo "High Severity Vulnerabilities Report" > high-severity-report.txt
+      echo "=====================================" >> high-severity-report.txt
+      echo "" >> high-severity-report.txt
+      echo "Backend Image:" >> high-severity-report.txt
+      trivy image --severity HIGH,CRITICAL --format table $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHA >> high-severity-report.txt || true
+      echo "" >> high-severity-report.txt
+      echo "Frontend Image:" >> high-severity-report.txt
+      trivy image --severity HIGH,CRITICAL --format table $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA >> high-severity-report.txt || true
+  artifacts:
+    paths:
+      - high-severity-report.txt
+    expire_in: 1 week
+  allow_failure: true
+
+# Base image security scan
+base_image_scan:
+  extends: .docker_security_scan_template
+  stage: docker-security
+  script:
+    - echo "Scanning base images for vulnerabilities..."
+    - |
+      # Extract base images from Dockerfiles
+      echo "Extracting base images..."
+      cd application/backend
+      BASE_IMAGE_BACKEND=$(grep "^FROM" Dockerfile | head -1 | awk '{print $2}')
+      echo "Backend base image: $BASE_IMAGE_BACKEND"
+
+      cd ../frontend
+      BASE_IMAGE_FRONTEND=$(grep "^FROM" Dockerfile | head -1 | awk '{print $2}')
+      echo "Frontend base image: $BASE_IMAGE_FRONTEND"
+    - |
+      # Scan base images
+      echo "Scanning backend base image: $BASE_IMAGE_BACKEND"
+      trivy image --format json --output base-backend-trivy.json $BASE_IMAGE_BACKEND || true
+    - |
+      echo "Scanning frontend base image: $BASE_IMAGE_FRONTEND"
+      trivy image --format json --output base-frontend-trivy.json $BASE_IMAGE_FRONTEND || true
+  artifacts:
+    paths:
+      - base-backend-trivy.json
+      - base-frontend-trivy.json
+    expire_in: 1 week
+  allow_failure: true
+
+# License compliance check
+license_compliance:
+  extends: .docker_security_scan_template
+  stage: docker-security
+  script:
+    - echo "Checking license compliance..."
+    - |
+      # Check licenses in backend image
+      trivy image --scanners license --format json --output backend-licenses.json $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHA || true
+    - |
+      # Check licenses in frontend image
+      trivy image --scanners license --format json --output frontend-licenses.json $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA || true
+    - |
+      # Generate license report
+      echo "License Compliance Report" > license-report.txt
+      echo "========================" >> license-report.txt
+      echo "" >> license-report.txt
+      echo "Backend Image Licenses:" >> license-report.txt
+      trivy image --scanners license --format table $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHA >> license-report.txt || true
+      echo "" >> license-report.txt
+      echo "Frontend Image Licenses:" >> license-report.txt
+      trivy image --scanners license --format table $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA >> license-report.txt || true
+  artifacts:
+    paths:
+      - backend-licenses.json
+      - frontend-licenses.json
+      - license-report.txt
+    expire_in: 1 week
+  allow_failure: true
