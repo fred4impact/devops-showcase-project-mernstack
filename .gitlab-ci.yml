@@ -12,7 +12,6 @@ stages:
 variables:
   NODE_VERSION: "18"
   NPM_CONFIG_CACHE: ".npm"
-  DOCKER_TAG: "latest"
 
 # Cache configuration for faster builds
 cache:
@@ -172,7 +171,7 @@ docker_build_backend:
     DOCKER_DRIVER: overlay2
     DOCKER_TLS_CERTDIR: "/certs"
     # Custom tag options: v1, v2, latest, or commit SHA
-    DOCKER_TAG: "${DOCKER_TAG:-$CI_COMMIT_SHA}"
+    DOCKER_TAG: "latest"
   before_script:
     - cd application/backend
   script:
@@ -195,7 +194,7 @@ docker_build_frontend:
     DOCKER_DRIVER: overlay2
     DOCKER_TLS_CERTDIR: "/certs"
     # Custom tag options: v1, v2, latest, or commit SHA
-    DOCKER_TAG: "${DOCKER_TAG:-$CI_COMMIT_SHA}"
+    DOCKER_TAG: "latest"
   before_script:
     - cd application/frontend
   script:
