@@ -27,7 +27,6 @@ security_scan_backend:
     - npm audit --audit-level=moderate || true
     - echo "✅ Backend security scan completed"
   tags:
-    - docker
     - shared
   only:
     - develop
@@ -44,7 +43,6 @@ security_scan_frontend:
     - npm audit --audit-level=moderate || true
     - echo "✅ Frontend security scan completed"
   tags:
-    - docker
     - shared
   only:
     - develop
@@ -61,7 +59,6 @@ backend_build:
     - npm run build
     - echo "✅ Backend build completed successfully"
   tags:
-    - docker
     - shared
   only:
     - develop
@@ -78,7 +75,6 @@ frontend_build:
     - npm run build
     - echo "✅ Frontend build completed successfully"
   tags:
-    - docker
     - shared
   only:
     - develop
@@ -96,7 +92,6 @@ backend_test:
     - echo "✅ Backend tests completed"
   allow_failure: true
   tags:
-    - docker
     - shared
   only:
     - develop
@@ -114,7 +109,6 @@ frontend_test:
     - echo "✅ Frontend tests completed"
   allow_failure: true
   tags:
-    - docker
     - shared
   only:
     - develop
@@ -132,7 +126,6 @@ integration_test:
     - echo "✅ Integration tests completed"
   allow_failure: true
   tags:
-    - docker
     - shared
   only:
     - develop
