@@ -1,3 +1,7 @@
+# GitLab CI/CD Pipeline Configuration
+# This file defines the CI/CD pipeline for the MERN Stack DevOps Showcase Project
+
+
 # Define stages
 stages:
   - security
@@ -20,7 +24,8 @@ variables:
   DOCKER_DRIVER: overlay2
   DOCKER_TLS_CERTDIR: "/certs"
 
-# Cache configuration
+
+  # Cache configuration
 cache:
   key: ${CI_COMMIT_REF_SLUG}
   paths:
@@ -40,10 +45,13 @@ security_scan:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
-# Build and test stage
+    # Build and test stage
 build_and_test:
   stage: build
   extends: .build_and_test_template
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+    
+
