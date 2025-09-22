@@ -62,7 +62,6 @@ backend_build_test:
   image: node:18-alpine
   before_script:
     - apk add --no-cache git
-    - npm install -g npm@latest
   script:
     - echo "Building and testing backend..."
     - cd application/backend
@@ -88,7 +87,6 @@ frontend_build_test:
   image: node:18-alpine
   before_script:
     - apk add --no-cache git
-    - npm install -g npm@latest
   script:
     - echo "Building and testing frontend..."
     - cd application/frontend
@@ -123,7 +121,6 @@ integration_tests:
     REDIS_URL: "redis://redis:6379"
   before_script:
     - apk add --no-cache git
-    - npm install -g npm@latest
   script:
     - echo "Running integration tests..."
     - cd tests
