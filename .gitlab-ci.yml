@@ -41,33 +41,15 @@ security_scan:
     - echo "Running security scans..."
     - echo "Current directory: $(pwd)"
     - ls -la
-    - |
-      if [ -d "application/backend" ] && [ -f "application/backend/package.json" ]; then
-        echo "Scanning backend dependencies..."
-        cd application/backend
-        npm ci --cache .npm --prefer-offline || npm install
-        npm audit --audit-level=moderate || echo "Backend audit completed with issues"
-      else
-        echo "Backend directory not found, skipping backend audit"
-      fi
-    - |
-      if [ -d "application/frontend" ] && [ -f "application/frontend/package.json" ]; then
-        echo "Scanning frontend dependencies..."
-        cd application/frontend
-        npm ci --cache .npm --prefer-offline || npm install
-        npm audit --audit-level=moderate || echo "Frontend audit completed with issues"
-      else
-        echo "Frontend directory not found, skipping frontend audit"
-      fi
-    - |
-      if [ -d "tests" ] && [ -f "tests/package.json" ]; then
-        echo "Scanning test dependencies..."
-        cd tests
-        npm ci --cache .npm --prefer-offline || npm install
-        npm audit --audit-level=moderate || echo "Tests audit completed with issues"
-      else
-        echo "Tests directory not found, skipping tests audit"
-      fi
+    - echo "Checking backend dependencies..."
+    - cd application/backend && npm ci --cache .npm --prefer-offline || npm install || echo "Backend dependencies not found"
+    - cd application/backend && npm audit --audit-level=moderate || echo "Backend audit completed with issues"
+    - echo "Checking frontend dependencies..."
+    - cd application/frontend && npm ci --cache .npm --prefer-offline || npm install || echo "Frontend dependencies not found"
+    - cd application/frontend && npm audit --audit-level=moderate || echo "Frontend audit completed with issues"
+    - echo "Checking test dependencies..."
+    - cd tests && npm ci --cache .npm --prefer-offline || npm install || echo "Test dependencies not found"
+    - cd tests && npm audit --audit-level=moderate || echo "Tests audit completed with issues"
   allow_failure: true
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
@@ -81,17 +63,14 @@ backend_build_test:
     - apk add --no-cache git curl
   script:
     - echo "Building and testing backend..."
-    - |
-      if [ -d "application/backend" ] && [ -f "application/backend/package.json" ]; then
-        cd application/backend
-        npm ci --cache .npm --prefer-offline || npm install
-        echo "Building backend..."
-        npm run build || echo "Backend build failed"
-        echo "Testing backend..."
-        npm run test || echo "Backend tests failed"
-      else
-        echo "Backend directory not found, skipping backend"
-      fi
+    - echo "Checking backend directory..."
+    - ls -la application/
+    - cd application/backend
+    - npm ci --cache .npm --prefer-offline || npm install || echo "Backend dependencies not found"
+    - echo "Building backend..."
+    - npm run build || echo "Backend build failed"
+    - echo "Testing backend..."
+    - npm run test || echo "Backend tests failed"
   cache:
     key: ${CI_COMMIT_REF_SLUG}
     paths:
@@ -113,17 +92,14 @@ frontend_build_test:
     - apk add --no-cache git curl
   script:
     - echo "Building and testing frontend..."
-    - |
-      if [ -d "application/frontend" ] && [ -f "application/frontend/package.json" ]; then
-        cd application/frontend
-        npm ci --cache .npm --prefer-offline || npm install
-        echo "Building frontend..."
-        npm run build || echo "Frontend build failed"
-        echo "Testing frontend..."
-        npm run test || echo "Frontend tests failed"
-      else
-        echo "Frontend directory not found, skipping frontend"
-      fi
+    - echo "Checking frontend directory..."
+    - ls -la application/
+    - cd application/frontend
+    - npm ci --cache .npm --prefer-offline || npm install || echo "Frontend dependencies not found"
+    - echo "Building frontend..."
+    - npm run build || echo "Frontend build failed"
+    - echo "Testing frontend..."
+    - npm run test || echo "Frontend tests failed"
   cache:
     key: ${CI_COMMIT_REF_SLUG}
     paths:
@@ -154,16 +130,13 @@ integration_tests:
     - apk add --no-cache git curl
   script:
     - echo "Running integration tests..."
-    - |
-      if [ -d "tests" ] && [ -f "tests/package.json" ]; then
-        cd tests
-        npm ci --cache .npm --prefer-offline || npm install
-        echo "Running integration tests..."
-        npm run test:integration || echo "Integration tests failed"
-        npm run test:api || echo "API tests failed"
-      else
-        echo "Tests directory not found, skipping integration tests"
-      fi
+    - echo "Checking tests directory..."
+    - ls -la tests/
+    - cd tests
+    - npm ci --cache .npm --prefer-offline || npm install || echo "Test dependencies not found"
+    - echo "Running integration tests..."
+    - npm run test:integration || echo "Integration tests failed"
+    - npm run test:api || echo "API tests failed"
   cache:
     key: ${CI_COMMIT_REF_SLUG}
     paths:
