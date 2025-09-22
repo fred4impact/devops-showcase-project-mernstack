@@ -175,9 +175,8 @@ docker_build_frontend:
     - cd application/frontend
   script:
     - echo "Building frontend Docker image..."
-    - echo "Using tag: $DOCKER_TAG"
     - docker build -t frontend:$DOCKER_TAG .
-    - echo "Frontend Docker image built successfully with tag: $DOCKER_TAG"
+
   tags:
     - docker
     - runner
