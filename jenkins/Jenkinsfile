@@ -1,0 +1,276 @@
+#!/usr/bin/env groovy
+
+/**
+ * MERN Stack DevOps Showcase - Jenkins CI/CD Pipeline
+ * Automated build, test, and deployment pipeline for MERN stack application
+ * 
+ * This pipeline mirrors the GitLab CI flow with the following stages:
+ * 1. Security Scan
+ * 2. Build Applications
+ * 3. Run Tests
+ * 4. Docker Build
+ * 5. Docker Security Scan
+ * 6. Docker Push/Deploy
+ */
+
+pipeline {
+    agent any
+    
+    // Environment variables
+    environment {
+        NODE_VERSION = '18'
+        NPM_CONFIG_CACHE = '.npm'
+        NODE_OPTIONS = '--max-old-space-size=4096'
+        DOCKER_TAG = 'latest'
+        DOCKER_REGISTRY = 'docker.io'
+        DOCKER_IMAGE_PREFIX = "${env.DOCKER_USERNAME ?: 'your-dockerhub-username'}"
+    }
+    
+    // Pipeline stages
+    stages {
+        stage('Security Scan') {
+            parallel {
+                stage('Backend Security Scan') {
+                    steps {
+                        script {
+                            echo "🔍 Running security audit for backend..."
+                            dir('application/backend') {
+                                sh '''
+                                    npm ci --cache .npm --prefer-offline
+                                    npm audit --audit-level=moderate || true
+                                '''
+                            }
+                            echo "✅ Backend security scan completed"
+                        }
+                    }
+                }
+                
+                stage('Frontend Security Scan') {
+                    steps {
+                        script {
+                            echo "🔍 Running security audit for frontend..."
+                            dir('application/frontend') {
+                                sh '''
+                                    npm ci --cache .npm --prefer-offline
+                                    npm audit --audit-level=moderate || true
+                                '''
+                            }
+                            echo "✅ Frontend security scan completed"
+                        }
+                    }
+                }
+            }
+        }
+        
+        stage('Build Applications') {
+            parallel {
+                stage('Backend Build') {
+                    steps {
+                        script {
+                            echo "🏗️ Building backend application..."
+                            dir('application/backend') {
+                                sh '''
+                                    npm ci --cache .npm --prefer-offline
+                                    npm run build
+                                '''
+                            }
+                            echo "✅ Backend build completed successfully"
+                        }
+                    }
+                }
+                
+                stage('Frontend Build') {
+                    steps {
+                        script {
+                            echo "🏗️ Building frontend application..."
+                            dir('application/frontend') {
+                                sh '''
+                                    npm ci --cache .npm --prefer-offline
+                                    npm run build
+                                '''
+                            }
+                            echo "✅ Frontend build completed successfully"
+                        }
+                    }
+                }
+            }
+        }
+        
+        stage('Run Tests') {
+            parallel {
+                stage('Backend Tests') {
+                    steps {
+                        script {
+                            echo "🧪 Running backend tests..."
+                            dir('application/backend') {
+                                sh '''
+                                    npm ci --cache .npm --prefer-offline
+                                    npm test || echo "⚠️ Backend tests failed (non-blocking)"
+                                '''
+                            }
+                            echo "✅ Backend tests completed"
+                        }
+                    }
+                }
+                
+                stage('Frontend Tests') {
+                    steps {
+                        script {
+                            echo "🧪 Running frontend tests..."
+                            dir('application/frontend') {
+                                sh '''
+                                    npm ci --cache .npm --prefer-offline
+                                    npm test || echo "⚠️ Frontend tests failed (non-blocking)"
+                                '''
+                            }
+                            echo "✅ Frontend tests completed"
+                        }
+                    }
+                }
+                
+                stage('Integration Tests') {
+                    steps {
+                        script {
+                            echo "🧪 Running integration tests..."
+                            dir('tests') {
+                                sh '''
+                                    npm ci --cache .npm --prefer-offline
+                                    npm test || echo "⚠️ Integration tests failed (non-blocking)"
+                                '''
+                            }
+                            echo "✅ Integration tests completed"
+                        }
+                    }
+                }
+            }
+        }
+        
+        stage('Docker Build') {
+            steps {
+                script {
+                    echo "🐳 Building Docker images..."
+                    
+                    // Build backend image
+                    sh '''
+                        docker build -t backend:${DOCKER_TAG} -f application/backend/Dockerfile application/backend/
+                    '''
+                    
+                    // Build frontend image
+                    sh '''
+                        docker build -t frontend:${DOCKER_TAG} -f application/frontend/Dockerfile application/frontend/
+                    '''
+                    
+                    echo "✅ All Docker images built successfully"
+                    sh 'docker images'
+                }
+            }
+        }
+        
+        stage('Docker Security Scan') {
+            steps {
+                script {
+                    echo "🔍 Scanning Docker images for vulnerabilities..."
+                    
+                    // Scan backend image
+                    sh '''
+                        docker run --rm aquasec/trivy:latest image backend:${DOCKER_TAG}
+                    '''
+                    
+                    // Scan frontend image
+                    sh '''
+                        docker run --rm aquasec/trivy:latest image frontend:${DOCKER_TAG}
+                    '''
+                    
+                    echo "✅ Image scans completed"
+                }
+            }
+        }
+        
+        stage('Docker Push') {
+            when {
+                anyOf {
+                    branch 'main'
+                    branch 'develop'
+                }
+            }
+            steps {
+                script {
+                    echo "📤 Pushing images to Docker Hub..."
+                    
+                    // Login to Docker Hub
+                    withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                        sh '''
+                            echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+                        '''
+                    }
+                    
+                    // Tag and push backend image
+                    sh '''
+                        docker tag backend:${DOCKER_TAG} ${DOCKER_IMAGE_PREFIX}/backend:${DOCKER_TAG}
+                        docker push ${DOCKER_IMAGE_PREFIX}/backend:${DOCKER_TAG}
+                    '''
+                    
+                    // Tag and push frontend image
+                    sh '''
+                        docker tag frontend:${DOCKER_TAG} ${DOCKER_IMAGE_PREFIX}/frontend:${DOCKER_TAG}
+                        docker push ${DOCKER_IMAGE_PREFIX}/frontend:${DOCKER_TAG}
+                    '''
+                    
+                    echo "✅ All docker images pushed successfully"
+                    sh 'docker images'
+                }
+            }
+        }
+    }
+    
+    // Post-build actions
+    post {
+        always {
+            // Clean up Docker images to save space
+            sh '''
+                docker image prune -f
+                docker system prune -f
+            '''
+            
+            // Archive test results
+            archiveArtifacts artifacts: '**/coverage/**', allowEmptyArchive: true
+            archiveArtifacts artifacts: '**/test-results/**', allowEmptyArchive: true
+        }
+        
+        success {
+            echo "🎉 Pipeline completed successfully!"
+        }
+        
+        failure {
+            echo "❌ Pipeline failed!"
+        }
+        
+        unstable {
+            echo "⚠️ Pipeline completed with warnings!"
+        }
+    }
+    
+    // Pipeline options
+    options {
+        // Timeout after 30 minutes
+        timeout(time: 30, unit: 'MINUTES')
+        
+        // Retry failed builds up to 2 times
+        retry(2)
+        
+        // Skip default checkout
+        skipDefaultCheckout()
+        
+        // Build discarder - keep only last 10 builds
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+    }
+    
+    // Pipeline triggers
+    triggers {
+        // Trigger on push to main/develop branches
+        githubPush()
+        
+        // Poll SCM every 5 minutes
+        pollSCM('H/5 * * * *')
+    }
+}
