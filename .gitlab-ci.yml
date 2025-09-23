@@ -23,15 +23,17 @@ cache:
     - application/backend/node_modules/
     - application/frontend/node_modules/
     - tests/node_modules/
+
+# 1. Security Scan
 security_scan:
   stage: security
   image: node:18-alpine
   script:
     - echo "🔍 Running security audits..."
     - cd application/backend && npm ci --cache .npm --prefer-offline
-    - cd application/backend && npm audit --audit-level=moderate || true
-    - cd application/frontend && npm ci --cache .npm --prefer-offline
-    - cd application/frontend && npm audit --audit-level=moderate || true
+    - npm audit --audit-level=moderate || true
+    - cd ../frontend && npm ci --cache .npm --prefer-offline
+    - npm audit --audit-level=moderate || true
     - echo "✅ Security scans completed"
   tags:
     - shared
@@ -39,15 +41,15 @@ security_scan:
     - develop
     - main
     - merge_requests
+
+# 2. Build Applications
 build_applications:
   stage: build
   image: node:18-alpine
   script:
     - echo "🏗️ Building applications..."
-    - cd application/backend && npm ci --cache .npm --prefer-offline
-    - cd application/backend && npm run build
-    - cd application/frontend && npm ci --cache .npm --prefer-offline
-    - cd application/frontend && npm run build
+    - cd application/backend && npm ci --cache .npm --prefer-offline && npm run build
+    - cd ../frontend && npm ci --cache .npm --prefer-offline && npm run build
     - echo "✅ All applications built successfully"
   tags:
     - shared
@@ -55,17 +57,16 @@ build_applications:
     - develop
     - main
     - merge_requests
+
+# 3. Run Tests
 run_tests:
   stage: test
   image: node:18-alpine
   script:
     - echo "🧪 Running all tests..."
-    - cd tests/backend && npm ci --cache .npm --prefer-offline
-    - cd tests/backend && npm test || echo "⚠️ Backend tests failed (non-blocking)"
-    - cd tests/frontend && npm ci --cache .npm --prefer-offline
-    - cd tests/frontend && npm test || echo "⚠️ Frontend tests failed (non-blocking)"
-    - cd tests && npm ci --cache .npm --prefer-offline
-    - cd tests && npm test || echo "⚠️ Integration tests failed (non-blocking)"
+    - cd tests/backend && npm ci --cache .npm --prefer-offline && npm test || echo "⚠️ Backend tests failed (non-blocking)"
+    - cd ../frontend && npm ci --cache .npm --prefer-offline && npm test || echo "⚠️ Frontend tests failed (non-blocking)"
+    - cd .. && npm ci --cache .npm --prefer-offline && npm test || echo "⚠️ Integration tests failed (non-blocking)"
     - echo "✅ All tests completed"
   allow_failure: true
   tags:
@@ -75,38 +76,20 @@ run_tests:
     - main
     - merge_requests
 
-# Docker Build Stage - Alternative Approach
+# 4. Docker Build
 docker_build:
   stage: docker-build
   image: docker:20.10.16
   services:
-    - name: docker:20.10.16-dind
-      alias: docker
-      command: ["--tls=false", "--host=tcp://0.0.0.0:2375"]
+    - docker:20.10.16-dind
   variables:
     DOCKER_DRIVER: overlay2
     DOCKER_TLS_CERTDIR: ""
     DOCKER_HOST: tcp://docker:2375
   before_script:
-    - echo "🔧 Setting up Docker environment..."
-    - sleep 30
-    - echo "Testing Docker daemon connection..."
+    - echo "🔧 Waiting for Docker daemon..."
+    - until docker info >/dev/null 2>&1; do echo "⏳ Waiting for Docker..."; sleep 2; done
     - docker version
-    - echo "Attempting to connect to Docker daemon..."
-    - docker info || {
-        echo "❌ Docker daemon not accessible via docker:2375"
-        echo "Trying alternative connection methods..."
-        export DOCKER_HOST=tcp://localhost:2375
-        docker info || {
-          echo "❌ Docker daemon not accessible via localhost:2375"
-          echo "Checking if Docker daemon is running..."
-          ps aux | grep docker || echo "No Docker processes found"
-          echo "Attempting to start Docker daemon manually..."
-          dockerd --host=tcp://0.0.0.0:2375 --tls=false &
-          sleep 10
-          docker info || echo "❌ Manual Docker daemon start failed"
-        }
-      }
   script:
     - echo "🐳 Building Docker images..."
     - docker build -t backend:$DOCKER_TAG -f application/backend/Dockerfile application/backend/
@@ -120,52 +103,23 @@ docker_build:
     - main
     - merge_requests
 
-# Alternative Docker Build - No Docker-in-Docker
-docker_build_alternative:
-  stage: docker-build
-  image: node:18-alpine
-  before_script:
-    - echo "🔧 Setting up alternative Docker build environment..."
-    - apk add --no-cache docker-cli
-    - echo "This approach builds Docker images using the host Docker daemon"
-  script:
-    - echo "🐳 Building Docker images using host Docker..."
-    - docker build -t backend:$DOCKER_TAG -f application/backend/Dockerfile application/backend/
-    - docker build -t frontend:$DOCKER_TAG -f application/frontend/Dockerfile application/frontend/
-    - echo "✅ All Docker images built successfully"
-    - docker images
-  tags:
-    - docker
-  only:
-    - develop
-    - main
-    - merge_requests
-  when: on_failure
-  allow_failure: true
-
-# Image Security Scanning Stage
+# 5. Image Security Scan
 image_scan:
   stage: image-scan
   image: docker:20.10.16
   services:
-    - name: docker:20.10.16-dind
-      alias: docker
-      command: ["--tls=false", "--host=tcp://0.0.0.0:2375"]
+    - docker:20.10.16-dind
   variables:
     DOCKER_DRIVER: overlay2
     DOCKER_TLS_CERTDIR: ""
     DOCKER_HOST: tcp://docker:2375
   before_script:
-    - echo "🔧 Setting up Docker environment..."
-    - apk add --no-cache curl
-    - echo "Waiting for Docker daemon to be ready..."
-    - sleep 10
-    - until docker info >/dev/null 2>&1; do echo "Waiting for Docker daemon..."; sleep 2; done
-    - docker info
+    - echo "🔧 Waiting for Docker daemon..."
+    - until docker info >/dev/null 2>&1; do echo "⏳ Waiting for Docker..."; sleep 2; done
   script:
     - echo "🔍 Scanning Docker images for vulnerabilities..."
-    - docker run --rm --network host aquasec/trivy:latest image backend:$DOCKER_TAG
-    - docker run --rm --network host aquasec/trivy:latest image frontend:$DOCKER_TAG
+    - docker run --rm aquasec/trivy:latest image backend:$DOCKER_TAG
+    - docker run --rm aquasec/trivy:latest image frontend:$DOCKER_TAG
     - echo "✅ Image scans completed"
   tags:
     - shared
@@ -175,33 +129,29 @@ image_scan:
     - main
     - merge_requests
 
-# Docker Push Stage
+# 6. Docker Push
 docker_push:
   stage: docker-push
   image: docker:20.10.16
   services:
-    - name: docker:20.10.16-dind
-      alias: docker
-      command: ["--tls=false", "--host=tcp://0.0.0.0:2375"]
+    - docker:20.10.16-dind
   variables:
     DOCKER_DRIVER: overlay2
     DOCKER_TLS_CERTDIR: ""
     DOCKER_HOST: tcp://docker:2375
   before_script:
-    - echo "🔧 Setting up Docker environment..."
-    - sleep 30
-    - echo "Testing Docker daemon connection..."
+    - echo "🔧 Waiting for Docker daemon..."
+    - until docker info >/dev/null 2>&1; do echo "⏳ Waiting for Docker..."; sleep 2; done
     - docker version
-    - docker info || echo "Docker daemon not ready, continuing anyway..."
     - echo "🔐 Logging into Docker Hub..."
     - echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
   script:
-    - echo "📤 Pushing images to Docker Hub Now"
+    - echo "📤 Pushing images to Docker Hub..."
     - docker tag backend:$DOCKER_TAG $DOCKER_USERNAME/backend:$DOCKER_TAG
     - docker tag frontend:$DOCKER_TAG $DOCKER_USERNAME/frontend:$DOCKER_TAG
     - docker push $DOCKER_USERNAME/backend:$DOCKER_TAG
     - docker push $DOCKER_USERNAME/frontend:$DOCKER_TAG
-    - echo "✅ All docker images pushed successfully Now"
+    - echo "✅ All docker images pushed successfully"
     - docker images
   tags:
     - shared
