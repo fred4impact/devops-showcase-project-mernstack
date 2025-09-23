@@ -89,16 +89,15 @@ docker_build:
     DOCKER_HOST: tcp://docker:2375
   before_script:
     - echo "🔧 Setting up Docker environment..."
-    - apk add --no-cache curl
-    - echo "Waiting for Docker daemon to be ready..."
-    - sleep 10
-    - until docker info >/dev/null 2>&1; do echo "Waiting for Docker daemon..."; sleep 2; done
+    - sleep 15
+    - until docker info >/dev/null 2>&1; do echo "Waiting for Docker daemon..."; sleep 3; done
     - docker info
   script:
     - echo "🐳 Building Docker images..."
-    - docker build -t backend:$DOCKER_TAG -f application/backend/Dockerfile application/backend/
-    - docker build -t frontend:$DOCKER_TAG -f application/frontend/Dockerfile application/frontend/
+    - docker build --no-cache -t backend:$DOCKER_TAG -f application/backend/Dockerfile application/backend/
+    - docker build --no-cache -t frontend:$DOCKER_TAG -f application/frontend/Dockerfile application/frontend/
     - echo "✅ All Docker images built successfully"
+    - docker images
   tags:
     - shared
   only:
@@ -152,10 +151,8 @@ docker_push:
     DOCKER_HOST: tcp://docker:2375
   before_script:
     - echo "🔧 Setting up Docker environment..."
-    - apk add --no-cache curl
-    - echo "Waiting for Docker daemon to be ready..."
-    - sleep 10
-    - until docker info >/dev/null 2>&1; do echo "Waiting for Docker daemon..."; sleep 2; done
+    - sleep 15
+    - until docker info >/dev/null 2>&1; do echo "Waiting for Docker daemon..."; sleep 3; done
     - docker info
     - echo "🔐 Logging into Docker Hub..."
     - echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
@@ -166,6 +163,7 @@ docker_push:
     - docker push $DOCKER_USERNAME/backend:$DOCKER_TAG
     - docker push $DOCKER_USERNAME/frontend:$DOCKER_TAG
     - echo "✅ All images pushed successfully"
+    - docker images
   tags:
     - shared
   only:
