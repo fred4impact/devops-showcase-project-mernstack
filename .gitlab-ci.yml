@@ -83,21 +83,28 @@ docker_build:
   services:
     - docker:20.10.16-dind
   variables:
+    DOCKER_DRIVER: overlay2
     DOCKER_TLS_CERTDIR: ""
     DOCKER_HOST: tcp://docker:2375
-    DOCKER_DRIVER: overlay2
+    DOCKER_BUILDKIT: 1
   before_script:
-    - echo "🔧 Waiting for Docker daemon..."
-    - until docker info >/dev/null 2>&1; do echo "⏳ Waiting for Docker..."; sleep 2; done
-    - docker version
+    - echo "🔐 Logging into Docker Hub..."
+    - echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
   script:
-    - echo "🐳 Building Docker images..."
-    - docker version
-    - docker build -t backend:$CI_COMMIT_SHA -f application/backend/Dockerfile application/backend/
-    - docker build -t backend:$DOCKER_TAG -f application/backend/Dockerfile application/backend/
-    - docker build -t frontend:$DOCKER_TAG -f application/frontend/Dockerfile application/frontend/
-    - echo "✅ All Docker images built successfully"
-    - docker images
+    - echo "🏷️ Building images with BuildKit..."
+    # Backend
+    - docker buildx build --platform linux/amd64 \
+        -t $DOCKER_USERNAME/backend:${CI_COMMIT_REF_SLUG} \
+        -t $DOCKER_USERNAME/backend:${CI_COMMIT_SHA} \
+        -t $DOCKER_USERNAME/backend:latest \
+        --push application/backend
+    # Frontend
+    - docker buildx build --platform linux/amd64 \
+        -t $DOCKER_USERNAME/frontend:${CI_COMMIT_REF_SLUG} \
+        -t $DOCKER_USERNAME/frontend:${CI_COMMIT_SHA} \
+        -t $DOCKER_USERNAME/frontend:latest \
+        --push application/frontend
+    - echo "✅ Build and push completed"
   tags:
     - shared
   only:
