@@ -159,7 +159,7 @@ docker_push:
     - echo "🔐 Logging into Docker Hub..."
     - echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
   script:
-    - echo "📤 Pushing images to Docker Hub..."
+    - echo "📤 Pushing images to Docker Hub Now"
     - docker tag backend:$DOCKER_TAG $DOCKER_USERNAME/backend:$DOCKER_TAG
     - docker tag frontend:$DOCKER_TAG $DOCKER_USERNAME/frontend:$DOCKER_TAG
     - docker push $DOCKER_USERNAME/backend:$DOCKER_TAG
