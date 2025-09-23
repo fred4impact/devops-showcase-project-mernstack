@@ -89,10 +89,18 @@ docker_build:
     DOCKER_HOST: tcp://docker:2375
   before_script:
     - echo "🔧 Setting up Docker environment..."
-    - sleep 45
+    - sleep 60
     - echo "Testing Docker daemon connection..."
-    - timeout 120 sh -c 'until docker info >/dev/null 2>&1; do echo "Waiting for Docker daemon..."; sleep 5; done'
-    - echo "✅ Docker daemon is ready!"
+    - apk add --no-cache curl
+    - for i in $(seq 1 20); do
+        if docker info >/dev/null 2>&1; then
+          echo "✅ Docker daemon is ready! (attempt $i)"
+          break
+        else
+          echo "Waiting for Docker daemon... (attempt $i/20)"
+          sleep 6
+        fi
+      done
     - docker info
   script:
     - echo "🐳 Building Docker images..."
@@ -153,10 +161,18 @@ docker_push:
     DOCKER_HOST: tcp://docker:2375
   before_script:
     - echo "🔧 Setting up Docker environment..."
-    - sleep 45
+    - sleep 60
     - echo "Testing Docker daemon connection..."
-    - timeout 120 sh -c 'until docker info >/dev/null 2>&1; do echo "Waiting for Docker daemon..."; sleep 5; done'
-    - echo "✅ Docker daemon is ready!"
+    - apk add --no-cache curl
+    - for i in $(seq 1 20); do
+        if docker info >/dev/null 2>&1; then
+          echo "✅ Docker daemon is ready! (attempt $i)"
+          break
+        else
+          echo "Waiting for Docker daemon... (attempt $i/20)"
+          sleep 6
+        fi
+      done
     - docker info
     - echo "🔐 Logging into Docker Hub..."
     - echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
