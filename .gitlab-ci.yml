@@ -75,7 +75,7 @@ run_tests:
     - main
     - merge_requests
 
-# Docker Build Stage - Simplified Approach
+# Docker Build Stage - Alternative Approach
 docker_build:
   stage: docker-build
   image: docker:20.10.16
@@ -92,7 +92,21 @@ docker_build:
     - sleep 30
     - echo "Testing Docker daemon connection..."
     - docker version
-    - docker info || echo "Docker daemon not ready, continuing anyway..."
+    - echo "Attempting to connect to Docker daemon..."
+    - docker info || {
+        echo "❌ Docker daemon not accessible via docker:2375"
+        echo "Trying alternative connection methods..."
+        export DOCKER_HOST=tcp://localhost:2375
+        docker info || {
+          echo "❌ Docker daemon not accessible via localhost:2375"
+          echo "Checking if Docker daemon is running..."
+          ps aux | grep docker || echo "No Docker processes found"
+          echo "Attempting to start Docker daemon manually..."
+          dockerd --host=tcp://0.0.0.0:2375 --tls=false &
+          sleep 10
+          docker info || echo "❌ Manual Docker daemon start failed"
+        }
+      }
   script:
     - echo "🐳 Building Docker images..."
     - docker build -t backend:$DOCKER_TAG -f application/backend/Dockerfile application/backend/
@@ -105,6 +119,29 @@ docker_build:
     - develop
     - main
     - merge_requests
+
+# Alternative Docker Build - No Docker-in-Docker
+docker_build_alternative:
+  stage: docker-build
+  image: node:18-alpine
+  before_script:
+    - echo "🔧 Setting up alternative Docker build environment..."
+    - apk add --no-cache docker-cli
+    - echo "This approach builds Docker images using the host Docker daemon"
+  script:
+    - echo "🐳 Building Docker images using host Docker..."
+    - docker build -t backend:$DOCKER_TAG -f application/backend/Dockerfile application/backend/
+    - docker build -t frontend:$DOCKER_TAG -f application/frontend/Dockerfile application/frontend/
+    - echo "✅ All Docker images built successfully"
+    - docker images
+  tags:
+    - docker
+  only:
+    - develop
+    - main
+    - merge_requests
+  when: on_failure
+  allow_failure: true
 
 # Image Security Scanning Stage
 image_scan:
