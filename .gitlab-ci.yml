@@ -81,6 +81,7 @@ docker_build:
   image: docker:20.10.16
   services:
     - name: docker:20.10.16-dind
+      alias: docker
       command: ["--tls=false", "--host=tcp://0.0.0.0:2375"]
   variables:
     DOCKER_DRIVER: overlay2
@@ -89,7 +90,9 @@ docker_build:
   before_script:
     - echo "🔧 Setting up Docker environment..."
     - apk add --no-cache curl
-    - until docker info; do echo "Waiting for Docker daemon..."; sleep 1; done
+    - echo "Waiting for Docker daemon to be ready..."
+    - sleep 10
+    - until docker info >/dev/null 2>&1; do echo "Waiting for Docker daemon..."; sleep 2; done
     - docker info
   script:
     - echo "🐳 Building Docker images..."
@@ -109,6 +112,7 @@ image_scan:
   image: docker:20.10.16
   services:
     - name: docker:20.10.16-dind
+      alias: docker
       command: ["--tls=false", "--host=tcp://0.0.0.0:2375"]
   variables:
     DOCKER_DRIVER: overlay2
@@ -117,7 +121,9 @@ image_scan:
   before_script:
     - echo "🔧 Setting up Docker environment..."
     - apk add --no-cache curl
-    - until docker info; do echo "Waiting for Docker daemon..."; sleep 1; done
+    - echo "Waiting for Docker daemon to be ready..."
+    - sleep 10
+    - until docker info >/dev/null 2>&1; do echo "Waiting for Docker daemon..."; sleep 2; done
     - docker info
   script:
     - echo "🔍 Scanning Docker images for vulnerabilities..."
@@ -138,6 +144,7 @@ docker_push:
   image: docker:20.10.16
   services:
     - name: docker:20.10.16-dind
+      alias: docker
       command: ["--tls=false", "--host=tcp://0.0.0.0:2375"]
   variables:
     DOCKER_DRIVER: overlay2
@@ -146,7 +153,9 @@ docker_push:
   before_script:
     - echo "🔧 Setting up Docker environment..."
     - apk add --no-cache curl
-    - until docker info; do echo "Waiting for Docker daemon..."; sleep 1; done
+    - echo "Waiting for Docker daemon to be ready..."
+    - sleep 10
+    - until docker info >/dev/null 2>&1; do echo "Waiting for Docker daemon..."; sleep 2; done
     - docker info
     - echo "🔐 Logging into Docker Hub..."
     - echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
