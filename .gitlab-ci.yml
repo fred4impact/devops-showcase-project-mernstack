@@ -60,10 +60,10 @@ run_tests:
   image: node:18-alpine
   script:
     - echo "🧪 Running all tests..."
-    - cd application/backend && npm ci --cache .npm --prefer-offline
-    - cd application/backend && npm test || echo "⚠️ Backend tests failed (non-blocking)"
-    - cd application/frontend && npm ci --cache .npm --prefer-offline
-    - cd application/frontend && npm test || echo "⚠️ Frontend tests failed (non-blocking)"
+    - cd tests/backend && npm ci --cache .npm --prefer-offline
+    - cd tests/backend && npm test || echo "⚠️ Backend tests failed (non-blocking)"
+    - cd tests/frontend && npm ci --cache .npm --prefer-offline
+    - cd tests/frontend && npm test || echo "⚠️ Frontend tests failed (non-blocking)"
     - cd tests && npm ci --cache .npm --prefer-offline
     - cd tests && npm test || echo "⚠️ Integration tests failed (non-blocking)"
     - echo "✅ All tests completed"
@@ -91,7 +91,7 @@ docker_build:
     - echo "🔧 Setting up Docker environment..."
     - sleep 45
     - echo "Testing Docker daemon connection..."
-    - timeout 120 bash -c 'until docker info >/dev/null 2>&1; do echo "Waiting for Docker daemon..."; sleep 5; done'
+    - timeout 120 sh -c 'until docker info >/dev/null 2>&1; do echo "Waiting for Docker daemon..."; sleep 5; done'
     - echo "✅ Docker daemon is ready!"
     - docker info
   script:
@@ -155,7 +155,7 @@ docker_push:
     - echo "🔧 Setting up Docker environment..."
     - sleep 45
     - echo "Testing Docker daemon connection..."
-    - timeout 120 bash -c 'until docker info >/dev/null 2>&1; do echo "Waiting for Docker daemon..."; sleep 5; done'
+    - timeout 120 sh -c 'until docker info >/dev/null 2>&1; do echo "Waiting for Docker daemon..."; sleep 5; done'
     - echo "✅ Docker daemon is ready!"
     - docker info
     - echo "🔐 Logging into Docker Hub..."
