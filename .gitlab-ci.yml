@@ -6,10 +6,15 @@ stages:
   - build
   - test
   - docker-build
+  - image-scan
+  - docker-push
+
 variables:
   NODE_VERSION: "18"
   NPM_CONFIG_CACHE: .npm
   NODE_OPTIONS: "--max-old-space-size=4096"
+  DOCKER_TAG: latest
+
 cache:
   key: ${CI_COMMIT_REF_SLUG}
   paths:
@@ -18,118 +23,50 @@ cache:
     - application/backend/node_modules/
     - application/frontend/node_modules/
     - tests/node_modules/
-security_scan_backend:
+security_scan:
   stage: security
   image: node:18-alpine
-  before_script:
-    - cd application/backend
-    - npm ci --cache .npm --prefer-offline
   script:
-    - echo "🔍 Running security audit for backend..."
-    - npm audit --audit-level=moderate || true
-    - echo "✅ Backend security scan completed"
+    - echo "🔍 Running security audits..."
+    - cd application/backend && npm ci --cache .npm --prefer-offline
+    - cd application/backend && npm audit --audit-level=moderate || true
+    - cd application/frontend && npm ci --cache .npm --prefer-offline
+    - cd application/frontend && npm audit --audit-level=moderate || true
+    - echo "✅ Security scans completed"
   tags:
     - shared
   only:
     - develop
     - main
     - merge_requests
-security_scan_frontend:
-  stage: security
-  image: node:18-alpine
-  before_script:
-    - cd application/frontend
-    - npm ci --cache .npm --prefer-offline
-  script:
-    - echo "🔍 Running security audit for frontend..."
-    - npm audit --audit-level=moderate || true
-    - echo "✅ Frontend security scan completed"
-  tags:
-    - shared
-  only:
-    - develop
-    - main
-    - merge_requests
-backend_build:
+build_applications:
   stage: build
   image: node:18-alpine
-  variables:
-    NODE_OPTIONS: "--max-old-space-size=4096"
-  before_script:
-    - cd application/backend
-    - npm ci --cache .npm --prefer-offline
   script:
-    - echo "🏗️ Building backend application..."
-    - npm run build
-    - echo "✅ Backend build completed successfully"
+    - echo "🏗️ Building applications..."
+    - cd application/backend && npm ci --cache .npm --prefer-offline
+    - cd application/backend && npm run build
+    - cd application/frontend && npm ci --cache .npm --prefer-offline
+    - cd application/frontend && npm run build
+    - echo "✅ All applications built successfully"
   tags:
     - shared
   only:
     - develop
     - main
     - merge_requests
-frontend_build:
-  stage: build
-  image: node:18-alpine
-  variables:
-    NODE_OPTIONS: "--max-old-space-size=4096"
-  before_script:
-    - cd application/frontend
-    - npm ci --cache .npm --prefer-offline
-  script:
-    - echo "🏗️ Building frontend application..."
-    - npm run build
-    - echo "✅ Frontend build completed successfully"
-  tags:
-    - shared
-  only:
-    - develop
-    - main
-    - merge_requests
-backend_test:
+run_tests:
   stage: test
   image: node:18-alpine
-  before_script:
-    - cd application/backend
-    - npm ci --cache .npm --prefer-offline
   script:
-    - echo "🧪 Running backend tests..."
-    - npm test || echo "⚠️ Backend tests failed (non-blocking)"
-    - echo "✅ Backend tests completed"
-  allow_failure: true
-  tags:
-    - shared
-  only:
-    - develop
-    - main
-    - merge_requests
-frontend_test:
-  stage: test
-  image: node:18-alpine
-  before_script:
-    - cd application/frontend
-    - npm ci --cache .npm --prefer-offline
-  script:
-    - echo "🧪 Running frontend tests..."
-    - npm test || echo "⚠️ Frontend tests failed (non-blocking)"
-    - echo "✅ Frontend tests completed"
-  allow_failure: true
-  tags:
-    - shared
-  only:
-    - develop
-    - main
-    - merge_requests
-integration_test:
-  stage: test
-  image: node:18-alpine
-  before_script:
-    - cd tests
-    - npm ci --cache .npm --prefer-offline
-  script:
-    - echo "🧪 Running integration tests..."
-    - npm test || echo "⚠️ Integration tests failed (non-blocking)"
-    - echo "✅ Integration tests completed"
+    - echo "🧪 Running all tests..."
+    - cd application/backend && npm ci --cache .npm --prefer-offline
+    - cd application/backend && npm test || echo "⚠️ Backend tests failed (non-blocking)"
+    - cd application/frontend && npm ci --cache .npm --prefer-offline
+    - cd application/frontend && npm test || echo "⚠️ Frontend tests failed (non-blocking)"
+    - cd tests && npm ci --cache .npm --prefer-offline
+    - cd tests && npm test || echo "⚠️ Integration tests failed (non-blocking)"
+    - echo "✅ All tests completed"
   allow_failure: true
   tags:
     - shared
@@ -139,21 +76,26 @@ integration_test:
     - merge_requests
 
 # Docker Build Stage
-docker_build_backend:
+docker_build:
   stage: docker-build
   image: docker:20.10.16
   services:
-    - docker:20.10.16-dind
+    - name: docker:20.10.16-dind
+      command: ["--tls=false", "--host=tcp://0.0.0.0:2375"]
   variables:
     DOCKER_DRIVER: overlay2
-    DOCKER_TLS_CERTDIR: /certs
-    DOCKER_TAG: latest
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_HOST: tcp://docker:2375
   before_script:
-    - cd application/backend
+    - echo "🔧 Setting up Docker environment..."
+    - apk add --no-cache curl
+    - until docker info; do echo "Waiting for Docker daemon..."; sleep 1; done
+    - docker info
   script:
-    - echo "🐳 Building backend Docker image..."
-    - docker build -t backend:$DOCKER_TAG .
-    - echo "✅ Backend Docker image built successfully"
+    - echo "🐳 Building Docker images..."
+    - docker build -t backend:$DOCKER_TAG -f application/backend/Dockerfile application/backend/
+    - docker build -t frontend:$DOCKER_TAG -f application/frontend/Dockerfile application/frontend/
+    - echo "✅ All Docker images built successfully"
   tags:
     - shared
   only:
@@ -161,21 +103,60 @@ docker_build_backend:
     - main
     - merge_requests
 
-docker_build_frontend:
-  stage: docker-build
+# Image Security Scanning Stage
+image_scan:
+  stage: image-scan
   image: docker:20.10.16
   services:
-    - docker:20.10.16-dind
+    - name: docker:20.10.16-dind
+      command: ["--tls=false", "--host=tcp://0.0.0.0:2375"]
   variables:
     DOCKER_DRIVER: overlay2
-    DOCKER_TLS_CERTDIR: /certs
-    DOCKER_TAG: latest
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_HOST: tcp://docker:2375
   before_script:
-    - cd application/frontend
+    - echo "🔧 Setting up Docker environment..."
+    - apk add --no-cache curl
+    - until docker info; do echo "Waiting for Docker daemon..."; sleep 1; done
+    - docker info
   script:
-    - echo "🐳 Building frontend Docker image..."
-    - docker build -t frontend:$DOCKER_TAG .
-    - echo "✅ Frontend Docker image built successfully"
+    - echo "🔍 Scanning Docker images for vulnerabilities..."
+    - docker run --rm --network host aquasec/trivy:latest image backend:$DOCKER_TAG
+    - docker run --rm --network host aquasec/trivy:latest image frontend:$DOCKER_TAG
+    - echo "✅ Image scans completed"
+  tags:
+    - shared
+  allow_failure: true
+  only:
+    - develop
+    - main
+    - merge_requests
+
+# Docker Push Stage
+docker_push:
+  stage: docker-push
+  image: docker:20.10.16
+  services:
+    - name: docker:20.10.16-dind
+      command: ["--tls=false", "--host=tcp://0.0.0.0:2375"]
+  variables:
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_HOST: tcp://docker:2375
+  before_script:
+    - echo "🔧 Setting up Docker environment..."
+    - apk add --no-cache curl
+    - until docker info; do echo "Waiting for Docker daemon..."; sleep 1; done
+    - docker info
+    - echo "🔐 Logging into Docker Hub..."
+    - echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+  script:
+    - echo "📤 Pushing images to Docker Hub..."
+    - docker tag backend:$DOCKER_TAG $DOCKER_USERNAME/backend:$DOCKER_TAG
+    - docker tag frontend:$DOCKER_TAG $DOCKER_USERNAME/frontend:$DOCKER_TAG
+    - docker push $DOCKER_USERNAME/backend:$DOCKER_TAG
+    - docker push $DOCKER_USERNAME/frontend:$DOCKER_TAG
+    - echo "✅ All images pushed successfully"
   tags:
     - shared
   only:
