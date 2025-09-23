@@ -182,7 +182,7 @@ docker_push:
     - docker tag frontend:$DOCKER_TAG $DOCKER_USERNAME/frontend:$DOCKER_TAG
     - docker push $DOCKER_USERNAME/backend:$DOCKER_TAG
     - docker push $DOCKER_USERNAME/frontend:$DOCKER_TAG
-    - echo "✅ All docker  images pushed successfully"
+    - echo "✅ All docker images pushed successfully Now"
     - docker images
   tags:
     - shared
