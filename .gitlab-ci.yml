@@ -174,3 +174,4 @@ docker_push:
     - develop
     - main
     - merge_requests
+# Trigger new pipeline
