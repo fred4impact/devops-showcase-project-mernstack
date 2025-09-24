@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ticketnow-config
+  namespace: ticketnow
+data:
+  # Backend Configuration
+  NODE_ENV: "production"
+  PORT: "3001"
+  MONGO_URI: "mongodb://admin:password123@mongodb-service:27017/ticketnow?authSource=admin"
+  REDIS_URL: "redis://:redis123@redis-service:6379"
+  FRONTEND_BASE_URL: "http://frontend-service:3000"
+  
+  # Frontend Configuration
+  NEXT_PUBLIC_API_URL: "http://backend-service:3001"
+  NEXT_PUBLIC_APP_NAME: "TicketNow"
+  NEXT_PUBLIC_APP_URL: "http://localhost:3000"
+  
+  # MongoDB Configuration
+  MONGO_INITDB_ROOT_USERNAME: "admin"
+  MONGO_INITDB_ROOT_PASSWORD: "password123"
+  MONGO_INITDB_DATABASE: "ticketnow"
+  
+  # Redis Configuration
+  REDIS_PASSWORD: "redis123"
+  
+  # Mongo Express Configuration
+  ME_CONFIG_MONGODB_ADMINUSERNAME: "admin"
+  ME_CONFIG_MONGODB_ADMINPASSWORD: "password123"
+  ME_CONFIG_MONGODB_URL: "mongodb://admin:password123@mongodb-service:27017/"
+  ME_CONFIG_BASICAUTH_USERNAME: "admin"
+  ME_CONFIG_BASICAUTH_PASSWORD: "admin123"
+  
+  # Redis Commander Configuration
+  REDIS_HOSTS: "local:redis-service:6379:0:redis123"

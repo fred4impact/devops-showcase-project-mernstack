@@ -15,6 +15,7 @@ export interface CartItem {
 export interface Cart {
   items: CartItem[];
   totalCents: number;
+  processingFeesCents: number;
   itemCount: number;
   sessionId: string;
 }
@@ -42,16 +43,29 @@ export class CartService {
       return {
         items: [],
         totalCents: 0,
+        processingFeesCents: 0,
         itemCount: 0,
         sessionId,
       };
     }
 
-    return JSON.parse(cartData);
+    const cart = JSON.parse(cartData);
+    
+    // Ensure backward compatibility - add processingFeesCents if missing
+    if (cart.processingFeesCents === undefined) {
+      cart.processingFeesCents = cart.itemCount ? cart.itemCount * 99 : 0;
+    }
+    
+    return cart;
   }
 
   async addToCart(sessionId: string, addToCartDto: AddToCartDto): Promise<Cart> {
     const { ticketTypeId, quantity, seatId } = addToCartDto;
+
+    // Check ticket quantity limit (max 5 tickets per purchase)
+    if (quantity > 5) {
+      throw new BadRequestException('Cannot purchase more than 5 tickets at a time');
+    }
 
     // Verify ticket type exists and is on sale
     const ticketType = await this.ticketTypesService.findOne(ticketTypeId);
@@ -101,6 +115,7 @@ export class CartService {
     // Recalculate totals
     cart.totalCents = cart.items.reduce((total, item) => total + (item.priceCents * item.quantity), 0);
     cart.itemCount = cart.items.reduce((total, item) => total + item.quantity, 0);
+    cart.processingFeesCents = cart.itemCount * 99; // $0.99 per ticket
 
     // Save to Redis with 1 hour expiration
     const cartKey = this.getCartKey(sessionId);
@@ -119,6 +134,11 @@ export class CartService {
       throw new NotFoundException('Cart item not found');
     }
 
+    // Check ticket quantity limit (max 5 tickets per purchase)
+    if (updateDto.quantity > 5) {
+      throw new BadRequestException('Cannot purchase more than 5 tickets at a time');
+    }
+
     // Check availability
     const availableCapacity = await this.ticketTypesService.getAvailableCapacity(ticketTypeId);
     if (updateDto.quantity > availableCapacity) {
@@ -130,6 +150,7 @@ export class CartService {
     // Recalculate totals
     cart.totalCents = cart.items.reduce((total, item) => total + (item.priceCents * item.quantity), 0);
     cart.itemCount = cart.items.reduce((total, item) => total + item.quantity, 0);
+    cart.processingFeesCents = cart.itemCount * 99; // $0.99 per ticket
 
     // Save to Redis
     const cartKey = this.getCartKey(sessionId);
@@ -154,6 +175,7 @@ export class CartService {
     // Recalculate totals
     cart.totalCents = cart.items.reduce((total, item) => total + (item.priceCents * item.quantity), 0);
     cart.itemCount = cart.items.reduce((total, item) => total + item.quantity, 0);
+    cart.processingFeesCents = cart.itemCount * 99; // $0.99 per ticket
 
     // Save to Redis
     const cartKey = this.getCartKey(sessionId);
@@ -167,18 +189,29 @@ export class CartService {
   }
 
   async clearCart(sessionId: string): Promise<void> {
-    const cart = await this.getCart(sessionId);
-    
-    // Release all seat locks
-    for (const item of cart.items) {
-      if (item.seatId) {
-        const ticketType = await this.ticketTypesService.findOne(item.ticketTypeId);
-        await this.redisService.unlockSeat(ticketType.eventId.toString(), item.seatId);
+    try {
+      const cart = await this.getCart(sessionId);
+      
+      // Release all seat locks
+      for (const item of cart.items) {
+        if (item.seatId) {
+          try {
+            const ticketType = await this.ticketTypesService.findOne(item.ticketTypeId);
+            await this.redisService.unlockSeat(ticketType.eventId.toString(), item.seatId);
+          } catch (error) {
+            console.warn(`Failed to unlock seat ${item.seatId}:`, error.message);
+          }
+        }
       }
-    }
 
-    const cartKey = this.getCartKey(sessionId);
-    await this.redisService.del(cartKey);
+      const cartKey = this.getCartKey(sessionId);
+      await this.redisService.del(cartKey);
+    } catch (error) {
+      console.error('Error clearing cart:', error.message);
+      // Still try to delete the cart key even if there's an error
+      const cartKey = this.getCartKey(sessionId);
+      await this.redisService.del(cartKey);
+    }
   }
 
   async validateCart(sessionId: string): Promise<{ isValid: boolean; errors: string[] }> {

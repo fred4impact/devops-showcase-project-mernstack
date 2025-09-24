@@ -26,7 +26,15 @@ export class OrdersService {
     }
 
     // Validate ticket types and availability
+    let totalTickets = 0;
     for (const item of createOrderDto.items) {
+      // Check ticket quantity limit (max 5 tickets per purchase)
+      if (item.qty > 5) {
+        throw new BadRequestException('Cannot purchase more than 5 tickets at a time');
+      }
+      
+      totalTickets += item.qty;
+      
       const ticketType = await this.ticketTypeModel.findById(item.ticketTypeId);
       if (!ticketType) {
         throw new BadRequestException(`Ticket type ${item.ticketTypeId} not found`);
@@ -43,12 +51,21 @@ export class OrdersService {
       }
     }
 
+    // Check total ticket limit (max 5 tickets per purchase)
+    if (totalTickets > 5) {
+      throw new BadRequestException('Cannot purchase more than 5 tickets total per order');
+    }
+
+    // Calculate processing fees ($0.99 per ticket)
+    const processingFeesCents = totalTickets * 99;
+
     // Create order
     const order = new this.orderModel({
       ...createOrderDto,
       userId,
       status: OrderStatus.PENDING,
       paymentProvider: 'stripe',
+      feesCents: processingFeesCents,
     });
 
     const savedOrder = await order.save();
