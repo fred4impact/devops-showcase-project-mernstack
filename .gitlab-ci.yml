@@ -88,10 +88,12 @@ docker_build:
     DOCKER_HOST: tcp://docker:2375
     DOCKER_BUILDKIT: 1
   before_script:
-    - echo "🔐 Logging into Docker Hub..."
-    - echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+    - echo "Logging into Docker Hub..."
+    - if [ -z "$DOCKER_PASSWORD" ]; then echo "❌ DOCKER_PASSWORD is empty"; exit 1; fi
+    - if [ -z "$DOCKER_USERNAME" ]; then echo "❌ DOCKER_USERNAME is empty"; exit 1; fi
+    - printf "%s" "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
   script:
-    - echo "🏷️ Building images with BuildKit..."
+    - echo "Building images with BuildKit..."
     # Backend
     - docker buildx build --platform linux/amd64 \
         -t $DOCKER_USERNAME/backend:${CI_COMMIT_REF_SLUG} \
@@ -104,13 +106,14 @@ docker_build:
         -t $DOCKER_USERNAME/frontend:${CI_COMMIT_SHA} \
         -t $DOCKER_USERNAME/frontend:latest \
         --push application/frontend
-    - echo "✅ Build and push completed"
+    - echo "Build and push completed"
   tags:
     - shared
   only:
     - develop
     - main
     - merge_requests
+
 
 # 5. Image Security Scan
 image_scan:
