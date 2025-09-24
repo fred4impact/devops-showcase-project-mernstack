@@ -77,42 +77,43 @@ run_tests:
     - merge_requests
 
 # 4. Docker Build
-docker_build:
+docker_build_and_push:
   stage: docker-build
   image: docker:20.10.16
   services:
-    - docker:20.10.16-dind
+    - name: docker:20.10.16-dind
+      alias: docker
   variables:
-    DOCKER_DRIVER: overlay2
-    DOCKER_TLS_CERTDIR: ""
     DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_DRIVER: overlay2
     DOCKER_BUILDKIT: 1
   before_script:
-    - echo "Logging into Docker Hub..."
-    - if [ -z "$DOCKER_PASSWORD" ]; then echo "❌ DOCKER_PASSWORD is empty"; exit 1; fi
-    - if [ -z "$DOCKER_USERNAME" ]; then echo "❌ DOCKER_USERNAME is empty"; exit 1; fi
-    - printf "%s" "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+    - echo "🔧 Waiting for Docker daemon..."
+    - until docker info >/dev/null 2>&1; do echo "⏳ Waiting for Docker..."; sleep 2; done
+    - echo "🔐 Logging into Docker Hub..."
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
   script:
-    - echo "Building images with BuildKit..."
-    # Backend
+    - echo "🏗️ Building and pushing backend image..."
     - docker buildx build --platform linux/amd64 \
         -t $DOCKER_USERNAME/backend:${CI_COMMIT_REF_SLUG} \
         -t $DOCKER_USERNAME/backend:${CI_COMMIT_SHA} \
         -t $DOCKER_USERNAME/backend:latest \
         --push application/backend
-    # Frontend
+    - echo "🏗️ Building and pushing frontend image..."
     - docker buildx build --platform linux/amd64 \
         -t $DOCKER_USERNAME/frontend:${CI_COMMIT_REF_SLUG} \
         -t $DOCKER_USERNAME/frontend:${CI_COMMIT_SHA} \
         -t $DOCKER_USERNAME/frontend:latest \
         --push application/frontend
-    - echo "Build and push completed"
+    - echo "✅ Build and push completed"
   tags:
     - shared
   only:
     - develop
     - main
     - merge_requests
+
 
 
 # 5. Image Security Scan
