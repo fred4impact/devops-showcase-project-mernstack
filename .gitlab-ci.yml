@@ -43,7 +43,7 @@ security_scan:
     - merge_requests
 
 # 2. Build Applications
-build_applications:
+build:
   stage: build
   image: node:18-alpine
   script:
@@ -59,7 +59,7 @@ build_applications:
     - merge_requests
 
 # 3. Run Tests
-run_tests:
+tests:
   stage: test
   image: node:18-alpine
   script:
@@ -77,7 +77,7 @@ run_tests:
     - merge_requests
 
 # 4. Docker Build
-docker_build_and_push:
+docker_build:
   stage: docker-build
   image: docker:20.10.16
   services:
@@ -91,22 +91,20 @@ docker_build_and_push:
   before_script:
     - echo "🔧 Waiting for Docker daemon..."
     - until docker info >/dev/null 2>&1; do echo "⏳ Waiting for Docker..."; sleep 2; done
-    - echo "🔐 Logging into Docker Hub..."
-    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
   script:
-    - echo "🏗️ Building and pushing backend image..."
+    - echo "🏗️ Building backend image..."
     - docker buildx build --platform linux/amd64 \
-        -t $DOCKER_USERNAME/backend:${CI_COMMIT_REF_SLUG} \
-        -t $DOCKER_USERNAME/backend:${CI_COMMIT_SHA} \
-        -t $DOCKER_USERNAME/backend:latest \
-        --push application/backend
-    - echo "🏗️ Building and pushing frontend image..."
+        -t backend:${CI_COMMIT_REF_SLUG} \
+        -t backend:${CI_COMMIT_SHA} \
+        -t backend:latest \
+        --load application/backend
+    - echo "🏗️ Building frontend image..."
     - docker buildx build --platform linux/amd64 \
-        -t $DOCKER_USERNAME/frontend:${CI_COMMIT_REF_SLUG} \
-        -t $DOCKER_USERNAME/frontend:${CI_COMMIT_SHA} \
-        -t $DOCKER_USERNAME/frontend:latest \
-        --push application/frontend
-    - echo "✅ Build and push completed"
+        -t frontend:${CI_COMMIT_REF_SLUG} \
+        -t frontend:${CI_COMMIT_SHA} \
+        -t frontend:latest \
+        --load application/frontend
+    - echo "✅ Build completed"
   tags:
     - shared
   only:
@@ -114,9 +112,6 @@ docker_build_and_push:
     - main
     - merge_requests
 
-
-
-# 5. Image Security Scan
 image_scan:
   stage: image-scan
   image: docker:20.10.16
@@ -130,8 +125,9 @@ image_scan:
     - echo "🔧 Waiting for Docker daemon..."
     - until docker info >/dev/null 2>&1; do echo "⏳ Waiting for Docker..."; sleep 2; done
   script:
-    - echo "🔍 Scanning Docker images for vulnerabilities..."
+    - echo "🔍 Scanning backend image..."
     - docker run --rm aquasec/trivy:latest image backend:$DOCKER_TAG
+    - echo "🔍 Scanning frontend image..."
     - docker run --rm aquasec/trivy:latest image frontend:$DOCKER_TAG
     - echo "✅ Image scans completed"
   tags:
@@ -141,6 +137,7 @@ image_scan:
     - develop
     - main
     - merge_requests
+
 
 # 6. Docker Push
 docker_push:
@@ -155,17 +152,16 @@ docker_push:
   before_script:
     - echo "🔧 Waiting for Docker daemon..."
     - until docker info >/dev/null 2>&1; do echo "⏳ Waiting for Docker..."; sleep 2; done
-    - docker version
     - echo "🔐 Logging into Docker Hub..."
     - echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
   script:
-    - echo "📤 Pushing images to Docker Hub..."
+    - echo "📤 Pushing backend image..."
     - docker tag backend:$DOCKER_TAG $DOCKER_USERNAME/backend:$DOCKER_TAG
-    - docker tag frontend:$DOCKER_TAG $DOCKER_USERNAME/frontend:$DOCKER_TAG
     - docker push $DOCKER_USERNAME/backend:$DOCKER_TAG
+    - echo "📤 Pushing frontend image..."
+    - docker tag frontend:$DOCKER_TAG $DOCKER_USERNAME/frontend:$DOCKER_TAG
     - docker push $DOCKER_USERNAME/frontend:$DOCKER_TAG
-    - echo "✅ All docker images pushed successfully to Docker Hub"
-    - docker images
+    - echo "✅ All images pushed successfully"
   tags:
     - shared
   only:
