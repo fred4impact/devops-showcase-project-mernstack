@@ -88,11 +88,16 @@ docker_build:
     DOCKER_TLS_CERTDIR: ""
     DOCKER_DRIVER: overlay2
     DOCKER_BUILDKIT: 1
+    DOCKER_CLI_EXPERIMENTAL: enabled
   before_script:
+    # Wait for Docker daemon
     - echo "🔧 Waiting for Docker daemon..."
     - until docker info >/dev/null 2>&1; do echo "⏳ Waiting for Docker..."; sleep 2; done
+    - docker version
   script:
     - echo "🏗️ Building backend image..."
+    - docker buildx create --use --name buildx-builder || true
+    - docker buildx inspect --bootstrap
     - docker buildx build --platform linux/amd64 \
         -t backend:${CI_COMMIT_REF_SLUG} \
         -t backend:${CI_COMMIT_SHA} \
@@ -111,6 +116,8 @@ docker_build:
     - develop
     - main
     - merge_requests
+
+
 
 image_scan:
   stage: image-scan
