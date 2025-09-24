@@ -1,0 +1,88 @@
+# Development Environment Values
+# This file contains environment-specific configurations for the TicketNow application
+
+# Application Configuration
+app:
+  name: ticketnow
+  environment: development
+  version: "1.0.0"
+
+# Replica Configuration
+replicas:
+  backend: 1
+  frontend: 1
+  mongodb: 1
+  redis: 1
+
+# Resource Configuration
+resources:
+  backend:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "250m"
+  frontend:
+    requests:
+      memory: "128Mi"
+      cpu: "50m"
+    limits:
+      memory: "256Mi"
+      cpu: "100m"
+  mongodb:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "250m"
+  redis:
+    requests:
+      memory: "64Mi"
+      cpu: "50m"
+    limits:
+      memory: "128Mi"
+      cpu: "100m"
+
+# Storage Configuration
+storage:
+  mongodb:
+    size: "5Gi"
+    storageClass: "standard"
+  redis:
+    size: "2Gi"
+    storageClass: "standard"
+
+# Environment Variables
+env:
+  NODE_ENV: "development"
+  LOG_LEVEL: "debug"
+  DEBUG: "true"
+
+# Ingress Configuration
+ingress:
+  enabled: true
+  host: "ticketnow-dev.local"
+  tls:
+    enabled: false
+
+# Monitoring Configuration
+monitoring:
+  enabled: true
+  metrics:
+    enabled: true
+  logging:
+    level: "debug"
+
+# Security Configuration
+security:
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    fsGroup: 1000
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    runAsNonRoot: true
+    runAsUser: 1000
