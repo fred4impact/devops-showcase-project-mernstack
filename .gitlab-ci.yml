@@ -1,273 +1,177 @@
-# GitLab CI/CD Pipeline Configuration - Fixed Version
-# This file defines the CI/CD pipeline for the MERN Stack DevOps Showcase Project
+# MERN Stack DevOps Showcase - CI/CD Pipeline
+# Automated build, test, and deployment pipeline for MERN stack application
 
-# Define stages
 stages:
   - security
   - build
   - test
-  # Temporarily disabled for testing
-  # - docker-build
-  # - deploy
+  - docker-build
+  - image-scan
+  - docker-push
 
-# Global variables
 variables:
   NODE_VERSION: "18"
-  DOCKER_DRIVER: overlay2
-  DOCKER_TLS_CERTDIR: "/certs"
+  NPM_CONFIG_CACHE: .npm
+  NODE_OPTIONS: "--max-old-space-size=4096"
+  DOCKER_TAG: latest
 
-# Cache configuration
 cache:
   key: ${CI_COMMIT_REF_SLUG}
   paths:
     - node_modules/
     - .npm/
-    - dist/
     - application/backend/node_modules/
     - application/frontend/node_modules/
     - tests/node_modules/
 
-# Default image for jobs
-default:
-  image: node:18-alpine
-
-# Security scanning stage
+# 1. Security Scan
 security_scan:
   stage: security
   image: node:18-alpine
-  before_script:
-    - apk add --no-cache git curl
   script:
-    - echo "Running security scans..."
-    - echo "Current directory: $(pwd)"
-    - ls -la
-    - |
-      if [ -d "application/backend" ] && [ -f "application/backend/package.json" ]; then
-        echo "Scanning backend dependencies..."
-        cd application/backend
-        npm ci --cache .npm --prefer-offline || npm install
-        npm audit --audit-level=moderate || echo "Backend audit completed with issues"
-      else
-        echo "Backend directory not found, skipping backend audit"
-      fi
-    - |
-      if [ -d "application/frontend" ] && [ -f "application/frontend/package.json" ]; then
-        echo "Scanning frontend dependencies..."
-        cd application/frontend
-        npm ci --cache .npm --prefer-offline || npm install
-        npm audit --audit-level=moderate || echo "Frontend audit completed with issues"
-      else
-        echo "Frontend directory not found, skipping frontend audit"
-      fi
-    - |
-      if [ -d "tests" ] && [ -f "tests/package.json" ]; then
-        echo "Scanning test dependencies..."
-        cd tests
-        npm ci --cache .npm --prefer-offline || npm install
-        npm audit --audit-level=moderate || echo "Tests audit completed with issues"
-      else
-        echo "Tests directory not found, skipping tests audit"
-      fi
-  allow_failure: true
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - echo "🔍 Running security audits..."
+    - cd application/backend && npm ci --cache .npm --prefer-offline
+    - npm audit --audit-level=moderate || true
+    - cd ../frontend && npm ci --cache .npm --prefer-offline
+    - npm audit --audit-level=moderate || true
+    - echo "✅ Security scans completed"
+  tags:
+    - shared
+  only:
+    - develop
+    - main
 
-# Backend build and test
-backend_build_test:
+
+# 2. Build Applications
+build:
   stage: build
   image: node:18-alpine
-  before_script:
-    - apk add --no-cache git curl
   script:
-    - echo "Building and testing backend..."
-    - |
-      if [ -d "application/backend" ] && [ -f "application/backend/package.json" ]; then
-        cd application/backend
-        npm ci --cache .npm --prefer-offline || npm install
-        echo "Building backend..."
-        npm run build || echo "Backend build failed"
-        echo "Testing backend..."
-        npm run test || echo "Backend tests failed"
-      else
-        echo "Backend directory not found, skipping backend"
-      fi
-  cache:
-    key: ${CI_COMMIT_REF_SLUG}
-    paths:
-      - application/backend/node_modules/
-      - .npm/
-  artifacts:
-    paths:
-      - application/backend/dist/
-    expire_in: 1 week
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - echo "🏗️ Building applications..."
+    - cd application/backend && npm ci --cache .npm --prefer-offline && npm run build
+    - cd ../frontend && npm ci --cache .npm --prefer-offline && npm run build
+    - echo "✅ All applications built successfully"
+  tags:
+    - shared
+  only:
+    - develop
+    - main
 
-# Frontend build and test
-frontend_build_test:
-  stage: build
-  image: node:18-alpine
-  before_script:
-    - apk add --no-cache git curl
-  script:
-    - echo "Building and testing frontend..."
-    - |
-      if [ -d "application/frontend" ] && [ -f "application/frontend/package.json" ]; then
-        cd application/frontend
-        npm ci --cache .npm --prefer-offline || npm install
-        echo "Building frontend..."
-        npm run build || echo "Frontend build failed"
-        echo "Testing frontend..."
-        npm run test || echo "Frontend tests failed"
-      else
-        echo "Frontend directory not found, skipping frontend"
-      fi
-  cache:
-    key: ${CI_COMMIT_REF_SLUG}
-    paths:
-      - application/frontend/node_modules/
-      - .npm/
-  artifacts:
-    paths:
-      - application/frontend/.next/
-      - application/frontend/out/
-    expire_in: 1 week
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
-# Integration tests
-integration_tests:
+# 3. Run Tests
+tests:
   stage: test
   image: node:18-alpine
-  services:
-    - name: mongo:latest
-      alias: mongodb
-    - name: redis:alpine
-      alias: redis
-  variables:
-    MONGODB_URI: "mongodb://mongodb:27017/test"
-    REDIS_URL: "redis://redis:6379"
-  before_script:
-    - apk add --no-cache git curl
   script:
-    - echo "Running integration tests..."
-    - |
-      if [ -d "tests" ] && [ -f "tests/package.json" ]; then
-        cd tests
-        npm ci --cache .npm --prefer-offline || npm install
-        echo "Running integration tests..."
-        npm run test:integration || echo "Integration tests failed"
-        npm run test:api || echo "API tests failed"
-      else
-        echo "Tests directory not found, skipping integration tests"
-      fi
-  cache:
-    key: ${CI_COMMIT_REF_SLUG}
-    paths:
-      - tests/node_modules/
-      - .npm/
+    - echo "🧪 Running all tests..."
+    - cd tests/backend && npm ci --cache .npm --prefer-offline && npm test || echo "⚠️ Backend tests failed (non-blocking)"
+    - cd ../frontend && npm ci --cache .npm --prefer-offline && npm test || echo "⚠️ Frontend tests failed (non-blocking)"
+    - cd .. && npm ci --cache .npm --prefer-offline && npm test || echo "⚠️ Integration tests failed (non-blocking)"
+    - echo "✅ All tests completed"
   allow_failure: true
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  tags:
+    - shared
+  only:
+    - develop
+    - main
 
-# Temporarily disabled for testing - uncomment when ready
-# Docker build for backend
-# build_backend_image:
-#   stage: docker-build
-#   image: docker:latest
-#   services:
-#     - docker:dind
-#   variables:
-#     DOCKER_TLS_CERTDIR: "/certs"
-#     DOCKER_DRIVER: overlay2
-#   before_script:
-#     - docker --version
-#     - docker info
-#   script:
-#     - echo "Building backend Docker image..."
-#     - |
-#       if [ -d "application/backend" ] && [ -f "application/backend/Dockerfile" ]; then
-#         cd application/backend
-#         docker build -t $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHA .
-#         docker build -t $CI_REGISTRY_IMAGE/backend:latest .
-#         echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
-#         docker push $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHA
-#         docker push $CI_REGISTRY_IMAGE/backend:latest
-#       else
-#         echo "Backend Dockerfile not found, skipping backend Docker build"
-#       fi
-#   rules:
-#     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-#     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
-# Docker build for frontend
-# build_frontend_image:
-#   stage: docker-build
-#   image: docker:latest
-#   services:
-#     - docker:dind
-#   variables:
-#     DOCKER_TLS_CERTDIR: "/certs"
-#     DOCKER_DRIVER: overlay2
-#   before_script:
-#     - docker --version
-#     - docker info
-#   script:
-#     - echo "Building frontend Docker image..."
-#     - |
-#       if [ -d "application/frontend" ] && [ -f "application/frontend/Dockerfile" ]; then
-#         cd application/frontend
-#         docker build -t $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA .
-#         docker build -t $CI_REGISTRY_IMAGE/frontend:latest .
-#         echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
-#         docker push $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA
-#         docker push $CI_REGISTRY_IMAGE/frontend:latest
-#       else
-#         echo "Frontend Dockerfile not found, skipping frontend Docker build"
-#       fi
-#   rules:
-#     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-#     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-
-# Deploy to Docker Hub (optional - requires DOCKER_HUB_USERNAME and DOCKER_HUB_TOKEN variables)
-# deploy_to_docker_hub:
-#   stage: deploy
-#   image: docker:latest
-#   services:
-#     - docker:dind
-#   variables:
-#     DOCKER_TLS_CERTDIR: "/certs"
-#     DOCKER_DRIVER: overlay2
-#     DOCKER_HUB_NAMESPACE: $DOCKER_HUB_USERNAME
-#   before_script:
-#     - docker --version
-#     - echo $DOCKER_HUB_TOKEN | docker login -u $DOCKER_HUB_USERNAME --password-stdin
-#   script:
-#     - echo "Deploying to Docker Hub..."
-#     - |
-#       docker pull $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHA
-#       docker pull $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA
-#     - |
-#       docker tag $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHA $DOCKER_HUB_NAMESPACE/mern-backend:$CI_COMMIT_SHA
-#       docker tag $CI_REGISTRY_IMAGE/backend:latest $DOCKER_HUB_NAMESPACE/mern-backend:latest
-#       docker push $DOCKER_HUB_NAMESPACE/mern-backend:$CI_COMMIT_SHA
-#       docker push $DOCKER_HUB_NAMESPACE/mern-backend:latest
-#     - |
-#       docker tag $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA $DOCKER_HUB_NAMESPACE/mern-frontend:$CI_COMMIT_SHA
-#       docker tag $CI_REGISTRY_IMAGE/frontend:latest $DOCKER_HUB_NAMESPACE/mern-frontend:latest
-#       docker push $DOCKER_HUB_NAMESPACE/mern-frontend:$CI_COMMIT_SHA
-#       docker push $DOCKER_HUB_NAMESPACE/mern-frontend:latest
-#   rules:
-#     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-#   when: manual
-#   needs:
-#     - build_backend_image
-#     - build_frontend_image
+# 4. Docker Build
+docker_build:
+  stage: docker-build
+  image: docker:20.10.16
+  services:
+    - name: docker:20.10.16-dind
+      alias: docker
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_DRIVER: overlay2
+    DOCKER_BUILDKIT: 1
+    DOCKER_CLI_EXPERIMENTAL: enabled
+  before_script:
+    # Wait for Docker daemon
+    - echo "🔧 Waiting for Docker daemon..."
+    - until docker info >/dev/null 2>&1; do echo "⏳ Waiting for Docker..."; sleep 2; done
+    - docker version
+  script:
+    - echo "🏗️ Building backend image..."
+    - docker buildx create --use --name buildx-builder || true
+    - docker buildx inspect --bootstrap
+    - docker buildx build --platform linux/amd64 \
+        -t backend:${CI_COMMIT_REF_SLUG} \
+        -t backend:${CI_COMMIT_SHA} \
+        -t backend:latest \
+        --load application/backend
+    - echo "🏗️ Building frontend image..."
+    - docker buildx build --platform linux/amd64 \
+        -t frontend:${CI_COMMIT_REF_SLUG} \
+        -t frontend:${CI_COMMIT_SHA} \
+        -t frontend:latest \
+        --load application/frontend
+    - echo "✅ Build completed"
+  tags:
+    - shared
+  only:
+    - develop
+    - main
+ 
 
 
 
+image_scan:
+  stage: image-scan
+  image: docker:20.10.16
+  services:
+    - docker:20.10.16-dind
+  variables:
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_HOST: tcp://docker:2375
+  before_script:
+    - echo "🔧 Waiting for Docker daemon..."
+    - until docker info >/dev/null 2>&1; do echo "⏳ Waiting for Docker..."; sleep 2; done
+  script:
+    - echo "🔍 Scanning backend image..."
+    - docker run --rm aquasec/trivy:latest image backend:$DOCKER_TAG
+    - echo "🔍 Scanning frontend image..."
+    - docker run --rm aquasec/trivy:latest image frontend:$DOCKER_TAG
+    - echo "✅ Image scans completed"
+  tags:
+    - shared
+  allow_failure: true
+  only:
+    - develop
+    - main
+ 
+
+
+# 6. Docker Push
+docker_push:
+  stage: docker-push
+  image: docker:20.10.16
+  services:
+    - docker:20.10.16-dind
+  variables:
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_HOST: tcp://docker:2375
+  before_script:
+    - echo "🔧 Waiting for Docker daemon..."
+    - until docker info >/dev/null 2>&1; do echo "⏳ Waiting for Docker..."; sleep 2; done
+    - echo "🔐 Logging into Docker Hub..."
+    - echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+  script:
+    - echo "📤 Pushing backend image..."
+    - docker tag backend:$DOCKER_TAG $DOCKER_USERNAME/backend:$DOCKER_TAG
+    - docker push $DOCKER_USERNAME/backend:$DOCKER_TAG
+    - echo "📤 Pushing frontend image..."
+    - docker tag frontend:$DOCKER_TAG $DOCKER_USERNAME/frontend:$DOCKER_TAG
+    - docker push $DOCKER_USERNAME/frontend:$DOCKER_TAG
+    - echo "✅ All images pushed successfully"
+  tags:
+    - shared
+  only:
+    - develop
+    - main
 

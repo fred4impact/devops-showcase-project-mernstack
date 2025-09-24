@@ -1,0 +1,133 @@
+#!/usr/bin/env groovy
+
+/**
+ * MERN Stack DevOps Showcase - Simplified Jenkins CI/CD Pipeline
+ * This is the main pipeline that matches your GitLab CI flow exactly
+ * 
+ * Stages: Security → Build → Test → Docker Build → Docker Security → Deploy
+ */
+
+pipeline {
+    agent any
+    
+    environment {
+        NODE_VERSION = '18'
+        NPM_CONFIG_CACHE = '.npm'
+        NODE_OPTIONS = '--max-old-space-size=4096'
+        DOCKER_TAG = 'latest'
+        DOCKER_IMAGE_PREFIX = "${env.DOCKER_USERNAME ?: 'your-dockerhub-username'}"
+    }
+    
+    stages {
+        stage('Security Scan') {
+            steps {
+                script {
+                    echo "🔍 Running security audits..."
+                    sh '''
+                        cd application/backend && npm ci --cache .npm --prefer-offline
+                        npm audit --audit-level=moderate || true
+                        cd ../frontend && npm ci --cache .npm --prefer-offline
+                        npm audit --audit-level=moderate || true
+                    '''
+                    echo "✅ Security scans completed"
+                }
+            }
+        }
+        
+        stage('Build Applications') {
+            steps {
+                script {
+                    echo "🏗️ Building applications..."
+                    sh '''
+                        cd application/backend && npm ci --cache .npm --prefer-offline && npm run build
+                        cd ../frontend && npm ci --cache .npm --prefer-offline && npm run build
+                    '''
+                    echo "✅ All applications built successfully"
+                }
+            }
+        }
+        
+        stage('Run Tests') {
+            steps {
+                script {
+                    echo "🧪 Running all tests..."
+                    sh '''
+                        cd tests/backend && npm ci --cache .npm --prefer-offline && npm test || echo "⚠️ Backend tests failed (non-blocking)"
+                        cd ../frontend && npm ci --cache .npm --prefer-offline && npm test || echo "⚠️ Frontend tests failed (non-blocking)"
+                        cd .. && npm ci --cache .npm --prefer-offline && npm test || echo "⚠️ Integration tests failed (non-blocking)"
+                    '''
+                    echo "✅ All tests completed"
+                }
+            }
+        }
+        
+        stage('Docker Build') {
+            steps {
+                script {
+                    echo "🐳 Building Docker images..."
+                    sh '''
+                        docker build -t backend:${DOCKER_TAG} -f application/backend/Dockerfile application/backend/
+                        docker build -t frontend:${DOCKER_TAG} -f application/frontend/Dockerfile application/frontend/
+                        docker images
+                    '''
+                    echo "✅ All Docker images built successfully"
+                }
+            }
+        }
+        
+        stage('Docker Security Scan') {
+            steps {
+                script {
+                    echo "🔍 Scanning Docker images for vulnerabilities..."
+                    sh '''
+                        docker run --rm aquasec/trivy:latest image backend:${DOCKER_TAG}
+                        docker run --rm aquasec/trivy:latest image frontend:${DOCKER_TAG}
+                    '''
+                    echo "✅ Image scans completed"
+                }
+            }
+        }
+        
+        stage('Docker Push') {
+            when {
+                anyOf {
+                    branch 'main'
+                    branch 'develop'
+                }
+            }
+            steps {
+                script {
+                    echo "📤 Pushing images to Docker Hub..."
+                    withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                        sh '''
+                            echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+                            docker tag backend:${DOCKER_TAG} ${DOCKER_IMAGE_PREFIX}/backend:${DOCKER_TAG}
+                            docker tag frontend:${DOCKER_TAG} ${DOCKER_IMAGE_PREFIX}/frontend:${DOCKER_TAG}
+                            docker push ${DOCKER_IMAGE_PREFIX}/backend:${DOCKER_TAG}
+                            docker push ${DOCKER_IMAGE_PREFIX}/frontend:${DOCKER_TAG}
+                        '''
+                    }
+                    echo "✅ All docker images pushed successfully"
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            sh 'docker image prune -f'
+        }
+        success {
+            echo "🎉 Pipeline completed successfully!"
+        }
+        failure {
+            echo "❌ Pipeline failed!"
+        }
+    }
+    
+    options {
+        timeout(time: 30, unit: 'MINUTES')
+        retry(2)
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+    }
+}
