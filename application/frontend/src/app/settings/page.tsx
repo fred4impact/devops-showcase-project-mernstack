@@ -102,8 +102,8 @@ export default function Settings() {
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await authApi.put('/auth/me', formData);
-      updateUser(response.data.user);
+      const response = await authApi.updateProfile(formData);
+      updateUser(response.data);
       toast.success('Profile updated successfully');
       setIsEditing(false);
     } catch (error: any) {
@@ -126,7 +126,10 @@ export default function Settings() {
     }
 
     try {
-      await authApi.put('/auth/change-password', passwordData);
+      await authApi.changePassword({
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword,
+      });
       toast.success('Password changed successfully');
       setPasswordData({
         currentPassword: '',
@@ -141,7 +144,10 @@ export default function Settings() {
 
   const handleNotificationSave = async () => {
     try {
-      await authApi.put('/auth/notification-settings', notificationSettings);
+      // For now, we'll just update the marketing consent as that's what's available in the API
+      await authApi.updateProfile({
+        marketingConsent: notificationSettings.marketingEmails,
+      });
       toast.success('Notification settings updated');
     } catch (error: any) {
       console.error('Error updating notifications:', error);
@@ -151,7 +157,7 @@ export default function Settings() {
 
   const upgradeToOrganizer = async () => {
     try {
-      const response = await authApi.put('/users/me/upgrade-to-organizer');
+      const response = await authApi.upgradeToOrganizer();
       updateUser(response.data.user);
       toast.success('Successfully upgraded to organizer!');
     } catch (error: any) {
