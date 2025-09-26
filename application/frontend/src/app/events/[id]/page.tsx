@@ -249,6 +249,28 @@ export default function EventDetails() {
           </div>
         </div>
 
+        {/* Event Image */}
+        {event.images && event.images.length > 0 && (
+          <div className="mb-8">
+            <div className="aspect-video bg-gradient-to-br from-primary-100 to-secondary-100 rounded-xl overflow-hidden">
+              <img
+                src={event.images[0]}
+                alt={event.title}
+                className="w-full h-full object-cover"
+                onLoad={() => console.log('Image loaded successfully:', event.images[0])}
+                onError={(e) => {
+                  console.error('Image failed to load:', event.images[0]);
+                  console.error('Image error details:', e);
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+            </div>
+            <div className="mt-2 text-sm text-gray-500">
+              Debug: Image URL: {event.images[0]}
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Event Details */}
           <div className="space-y-6">

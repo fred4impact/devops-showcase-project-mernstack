@@ -138,34 +138,64 @@ export class EventsController {
     @UploadedFile() file: Express.Multer.File,
     @Request() req
   ) {
-    const imageUrl = await this.s3Service.uploadEventImage(
-      file.buffer,
-      eventId,
-      file.originalname
-    );
-    
-    // Update event with image URL
-    await this.eventsService.update(eventId, { images: [imageUrl] }, req.user.id);
-    
-    return { imageUrl };
+    try {
+      console.log('Uploading image for event:', eventId);
+      console.log('File details:', {
+        originalname: file.originalname,
+        mimetype: file.mimetype,
+        size: file.size
+      });
+      
+      const imageUrl = await this.s3Service.uploadEventImage(
+        file.buffer,
+        eventId,
+        file.originalname
+      );
+      
+      console.log('Image uploaded, URL:', imageUrl);
+      
+      // Update event with image URL
+      await this.eventsService.update(eventId, { images: [imageUrl] }, req.user.id);
+      
+      console.log('Event updated with image URL');
+      
+      return { imageUrl };
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      throw error;
+    }
   }
 
   @Get('images/:imageId')
   @ApiOperation({ summary: 'Get image by ID' })
   @ApiResponse({ status: 200, description: 'Image retrieved successfully' })
   async getImage(@Param('imageId') imageId: string, @Res() res) {
-    const image = await this.s3Service.getImage(imageId);
-    
-    if (!image) {
-      return res.status(404).json({ message: 'Image not found' });
+    try {
+      console.log('Fetching image with ID:', imageId);
+      const image = await this.s3Service.getImage(imageId);
+      
+      if (!image) {
+        console.log('Image not found for ID:', imageId);
+        return res.status(404).json({ message: 'Image not found' });
+      }
+      
+      console.log('Image found:', { 
+        id: image._id, 
+        filename: image.filename, 
+        mimetype: image.mimetype, 
+        size: image.size 
+      });
+      
+      res.set({
+        'Content-Type': image.mimetype,
+        'Content-Length': image.size,
+        'Cache-Control': 'public, max-age=31536000', // Cache for 1 year
+      });
+      
+      res.send(image.data);
+    } catch (error) {
+      console.error('Error fetching image:', error);
+      return res.status(500).json({ message: 'Internal server error', error: error.message });
     }
-    
-    res.set({
-      'Content-Type': image.mimetype,
-      'Content-Length': image.size,
-      'Cache-Control': 'public, max-age=31536000', // Cache for 1 year
-    });
-    
-    res.send(image.data);
   }
 }

@@ -14,6 +14,9 @@ import { CartModule } from './cart/cart.module';
 import { OrdersModule } from './orders/orders.module';
 import { TicketsModule } from './tickets/tickets.module';
 import { RedisModule } from './redis/redis.module';
+import { StripeModule } from './stripe/stripe.module';
+import { WebhooksModule } from './webhooks/webhooks.module';
+import { SeatingPlanModule } from './seating-plan/seating-plan.module';
 
 @Module({
   imports: [
@@ -28,6 +31,7 @@ import { RedisModule } from './redis/redis.module';
     }),
     PassportModule,
     RedisModule,
+    StripeModule,
     AuthModule,
     UsersModule,
     EventsModule,
@@ -35,6 +39,8 @@ import { RedisModule } from './redis/redis.module';
     CartModule,
     OrdersModule,
     TicketsModule,
+    WebhooksModule,
+    SeatingPlanModule,
   ],
   controllers: [AppController],
   providers: [AppService],

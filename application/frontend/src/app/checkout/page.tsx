@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/Badge';
 import api from '@/lib/api';
 import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
+import { getStripe } from '@/lib/stripe';
 import toast from 'react-hot-toast';
 
 interface CartItem {
@@ -110,36 +111,35 @@ export default function Checkout() {
       const orderData = {
         items: cart.items.map(item => ({
           ticketTypeId: item.ticketTypeId,
-          quantity: item.quantity,
+          qty: item.quantity,
           seatId: item.seatId,
         })),
-        customerInfo: paymentForm,
+        email: paymentForm.email,
+        totalCents: cart.totalCents,
         sessionId,
       };
 
-      const response = await api.post('/orders', orderData);
+      // Create payment intent
+      const response = await api.post('/orders/payment-intent', orderData);
       
-      // Payment placeholder for testing - bypass actual payment
       if (response.data.paymentIntent) {
-        // In development mode, skip Stripe and go directly to success
-        toast.success('Payment processed successfully (Development Mode)');
-        router.push(`/orders/${response.data.orderId}/success`);
-        
-        // TODO: In production, uncomment the Stripe integration below
-        /*
-        const stripe = (window as any).Stripe;
-        if (stripe) {
-          const { error } = await stripe.redirectToCheckout({
-            sessionId: response.data.paymentIntent.client_secret,
-          });
-          
-          if (error) {
-            toast.error('Payment failed. Please try again.');
-          }
-        } else {
+        const stripe = await getStripe();
+        if (!stripe) {
           toast.error('Payment system not available');
+          return;
         }
-        */
+
+        // Use Stripe Elements for payment
+        const { error } = await stripe.confirmPayment({
+          clientSecret: response.data.paymentIntent.clientSecret,
+          confirmParams: {
+            return_url: `${window.location.origin}/orders/${response.data.orderId}/success`,
+          },
+        });
+
+        if (error) {
+          toast.error(error.message || 'Payment failed. Please try again.');
+        }
       } else {
         // Free tickets - redirect to success
         router.push(`/orders/${response.data.orderId}/success`);

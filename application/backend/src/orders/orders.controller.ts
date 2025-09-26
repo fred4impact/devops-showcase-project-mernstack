@@ -32,6 +32,27 @@ export class OrdersController {
     return this.ordersService.create(createOrderDto, userId, sessionId);
   }
 
+  @Post('payment-intent')
+  @ApiOperation({ summary: 'Create payment intent for order' })
+  @ApiResponse({ status: 201, description: 'Payment intent created successfully' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  async createPaymentIntent(
+    @Body() createOrderDto: CreateOrderDto,
+    @Query('sessionId') sessionId?: string,
+    @Request() req?: any
+  ) {
+    const userId = req?.user?.id;
+    return this.ordersService.createPaymentIntent(createOrderDto, userId, sessionId);
+  }
+
+  @Post('confirm-payment')
+  @ApiOperation({ summary: 'Confirm payment and complete order' })
+  @ApiResponse({ status: 200, description: 'Payment confirmed successfully' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  async confirmPayment(@Body() body: { paymentIntentId: string }) {
+    return this.ordersService.confirmPayment(body.paymentIntentId);
+  }
+
   @Get('my-orders')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
