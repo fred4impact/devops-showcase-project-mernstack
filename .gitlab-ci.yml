@@ -83,34 +83,35 @@ tests:
 # 4. Docker Build
 docker_build:
   stage: docker-build
-  image: docker:24
+  image: docker:20.10.16
   services:
-    - name: docker:24-dind
+    - name: docker:20.10.16-dind
       alias: docker
   variables:
     DOCKER_HOST: tcp://docker:2375
     DOCKER_TLS_CERTDIR: ""
     DOCKER_DRIVER: overlay2
+    DOCKER_BUILDKIT: 1
   before_script:
-    - apk add --no-cache docker-cli-buildx
     - echo "🔧 Waiting for Docker daemon..."
     - until docker info >/dev/null 2>&1; do echo "⏳ Waiting for Docker..."; sleep 2; done
     - docker version
+    - docker info
   script:
     - echo "🏗️ Building backend image..."
-    - docker buildx build --platform linux/amd64 \
+    - cd application/backend
+    - docker build \
         -t backend:${CI_COMMIT_REF_SLUG} \
         -t backend:${CI_COMMIT_SHA} \
         -t backend:latest \
-        -f application/backend/Dockerfile \
-        --load application/backend
+        -f Dockerfile .
     - echo "🏗️ Building frontend image..."
-    - docker buildx build --platform linux/amd64 \
+    - cd ../frontend
+    - docker build \
         -t frontend:${CI_COMMIT_REF_SLUG} \
         -t frontend:${CI_COMMIT_SHA} \
         -t frontend:latest \
-        -f application/frontend/Dockerfile \
-        --load application/frontend
+        -f Dockerfile .
     - echo "✅ Build completed"
   tags:
     - shared
@@ -118,14 +119,13 @@ docker_build:
     - develop
     - main
 
- 
-
 
 image_scan:
   stage: image-scan
   image: docker:20.10.16
   services:
-    - docker:20.10.16-dind
+    - name: docker:20.10.16-dind
+      alias: docker
   variables:
     DOCKER_DRIVER: overlay2
     DOCKER_TLS_CERTDIR: ""
@@ -135,9 +135,9 @@ image_scan:
     - until docker info >/dev/null 2>&1; do echo "⏳ Waiting for Docker..."; sleep 2; done
   script:
     - echo "🔍 Scanning backend image..."
-    - docker run --rm aquasec/trivy:latest image backend:$DOCKER_TAG
+    - docker run --rm aquasec/trivy:latest image backend:latest
     - echo "🔍 Scanning frontend image..."
-    - docker run --rm aquasec/trivy:latest image frontend:$DOCKER_TAG
+    - docker run --rm aquasec/trivy:latest image frontend:latest
     - echo "✅ Image scans completed"
   tags:
     - shared
@@ -153,7 +153,8 @@ docker_push:
   stage: docker-push
   image: docker:20.10.16
   services:
-    - docker:20.10.16-dind
+    - name: docker:20.10.16-dind
+      alias: docker
   variables:
     DOCKER_DRIVER: overlay2
     DOCKER_TLS_CERTDIR: ""
@@ -165,11 +166,15 @@ docker_push:
     - echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
   script:
     - echo "📤 Pushing backend image..."
-    - docker tag backend:$DOCKER_TAG $DOCKER_USERNAME/backend:$DOCKER_TAG
-    - docker push $DOCKER_USERNAME/backend:$DOCKER_TAG
+    - docker tag backend:latest $DOCKER_USERNAME/backend:latest
+    - docker tag backend:latest $DOCKER_USERNAME/backend:${CI_COMMIT_REF_SLUG}
+    - docker push $DOCKER_USERNAME/backend:latest
+    - docker push $DOCKER_USERNAME/backend:${CI_COMMIT_REF_SLUG}
     - echo "📤 Pushing frontend image..."
-    - docker tag frontend:$DOCKER_TAG $DOCKER_USERNAME/frontend:$DOCKER_TAG
-    - docker push $DOCKER_USERNAME/frontend:$DOCKER_TAG
+    - docker tag frontend:latest $DOCKER_USERNAME/frontend:latest
+    - docker tag frontend:latest $DOCKER_USERNAME/frontend:${CI_COMMIT_REF_SLUG}
+    - docker push $DOCKER_USERNAME/frontend:latest
+    - docker push $DOCKER_USERNAME/frontend:${CI_COMMIT_REF_SLUG}
     - echo "✅ All images pushed successfully"
   tags:
     - shared
