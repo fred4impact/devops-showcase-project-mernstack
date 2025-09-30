@@ -45,7 +45,7 @@ export function SeatMap({
   const fetchSeatMap = async () => {
     try {
       setLoading(true);
-      const response = await api.get(`/events/${eventId}/seatmap`);
+      const response = await api.get(`/seating-plan/events/${eventId}/seatmap`);
       setSeats(response.data.seats || []);
       setBasePrice(response.data.basePrice || 0);
     } catch (error) {
@@ -68,10 +68,9 @@ export function SeatMap({
     } else {
       // Lock the seat temporarily
       try {
-        await api.post(`/cart/lock-seat`, {
-          eventId,
-          seatId: seat.seatId,
+        await api.post(`/seating-plan/events/${eventId}/seats/${seat.seatId}/lock`, {
           sessionId,
+          duration: 300, // 5 minutes
         });
         
         const totalPrice = basePrice + seat.priceModifier;

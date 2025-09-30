@@ -47,6 +47,17 @@ interface Event {
       priceModifier: number;
       accessible: boolean;
     }>;
+    sections?: Array<{
+      name: string;
+      color: string;
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+    }>;
+    width?: number;
+    height?: number;
+    stageLabel?: string;
   };
 }
 
@@ -431,6 +442,7 @@ export default function EventManagement() {
                         <option value="conference">Conference</option>
                         <option value="workshop">Workshop</option>
                         <option value="concert">Concert</option>
+                        <option value="festival">Festival</option>
                         <option value="sports">Sports</option>
                         <option value="networking">Networking</option>
                         <option value="other">Other</option>
@@ -783,237 +795,59 @@ export default function EventManagement() {
                 <h2 className="text-xl font-semibold text-gray-900">Seating Configuration</h2>
                 <div className="flex items-center space-x-4">
                   <Button
-                    onClick={() => setShowSeatForm(!showSeatForm)}
+                    onClick={() => router.push(`/organizer/events/${params.id}/seating-plan`)}
                     className="bg-primary-600 hover:bg-primary-700"
                   >
-                    {event.seatmap ? 'Edit Seating' : 'Configure Seating'}
+                    {event.seatmap ? 'Manage Seating Plan' : 'Create Seating Plan'}
                   </Button>
-                  {event.seatmap && (
-                    <Button
-                      onClick={() => handleSeatmapDelete()}
-                      variant="outline"
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                    >
-                      Remove Seating
-                    </Button>
-                  )}
                 </div>
               </div>
 
-              {showSeatForm && (
-                <div className="mb-6 p-4 border border-gray-200 rounded-lg">
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">
-                    {event.seatmap ? 'Edit Seating Configuration' : 'Create Seating Configuration'}
-                  </h3>
-                  
+              {/* Current Seating Plan Status */}
+              <div className="mb-6">
+                {event.seatmap ? (
                   <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Seating Type
-                      </label>
-                      <div className="flex space-x-4">
-                        <label className="flex items-center">
-                          <input
-                            type="radio"
-                            value="ga"
-                            checked={seatForm.type === 'ga'}
-                            onChange={(e) => setSeatForm(prev => ({ ...prev, type: e.target.value as 'ga' | 'reserved' }))}
-                            className="mr-2"
-                          />
-                          General Admission
-                        </label>
-                        <label className="flex items-center">
-                          <input
-                            type="radio"
-                            value="reserved"
-                            checked={seatForm.type === 'reserved'}
-                            onChange={(e) => setSeatForm(prev => ({ ...prev, type: e.target.value as 'ga' | 'reserved' }))}
-                            className="mr-2"
-                          />
-                          Reserved Seating
-                        </label>
-                      </div>
+                    <div className="flex items-center space-x-4">
+                      <Badge variant={event.seatmap.type === 'reserved' ? 'default' : 'secondary'}>
+                        {event.seatmap.type === 'reserved' ? 'Reserved Seating' : 'General Admission'}
+                      </Badge>
+                      <span className="text-sm text-gray-600">
+                        {event.seatmap.seats?.length || 0} seats
+                      </span>
+                      <span className="text-sm text-gray-600">
+                        {event.seatmap.sections?.length || 0} sections
+                      </span>
                     </div>
-
-                    {seatForm.type === 'reserved' && (
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <h4 className="font-medium text-gray-900">Sections</h4>
-                          <Button
-                            type="button"
-                            onClick={() => setSeatForm(prev => ({
-                              ...prev,
-                              sections: [...prev.sections, { name: '', rows: 1, seatsPerRow: 1, priceModifier: 0 }]
-                            }))}
-                            variant="outline"
-                            size="sm"
-                          >
-                            Add Section
-                          </Button>
-                        </div>
-
-                        {seatForm.sections.map((section, index) => (
-                          <div key={index} className="p-4 border border-gray-200 rounded-lg">
-                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                  Section Name
-                                </label>
-                                <Input
-                                  value={section.name}
-                                  onChange={(e) => {
-                                    const newSections = [...seatForm.sections];
-                                    newSections[index].name = e.target.value;
-                                    setSeatForm(prev => ({ ...prev, sections: newSections }));
-                                  }}
-                                  placeholder="e.g., Orchestra, Balcony"
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                  Rows
-                                </label>
-                                <Input
-                                  type="number"
-                                  min="1"
-                                  value={section.rows}
-                                  onChange={(e) => {
-                                    const newSections = [...seatForm.sections];
-                                    newSections[index].rows = parseInt(e.target.value) || 1;
-                                    setSeatForm(prev => ({ ...prev, sections: newSections }));
-                                  }}
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                  Seats per Row
-                                </label>
-                                <Input
-                                  type="number"
-                                  min="1"
-                                  value={section.seatsPerRow}
-                                  onChange={(e) => {
-                                    const newSections = [...seatForm.sections];
-                                    newSections[index].seatsPerRow = parseInt(e.target.value) || 1;
-                                    setSeatForm(prev => ({ ...prev, sections: newSections }));
-                                  }}
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                  Price Modifier ($)
-                                </label>
-                                <Input
-                                  type="number"
-                                  step="0.01"
-                                  value={section.priceModifier}
-                                  onChange={(e) => {
-                                    const newSections = [...seatForm.sections];
-                                    newSections[index].priceModifier = parseFloat(e.target.value) || 0;
-                                    setSeatForm(prev => ({ ...prev, sections: newSections }));
-                                  }}
-                                />
-                              </div>
-                            </div>
-                            <div className="mt-2 flex justify-end">
-                              <Button
-                                type="button"
-                                onClick={() => {
-                                  const newSections = seatForm.sections.filter((_, i) => i !== index);
-                                  setSeatForm(prev => ({ ...prev, sections: newSections }));
-                                }}
-                                variant="outline"
-                                size="sm"
-                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                              >
-                                Remove Section
-                              </Button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    <div className="flex items-center space-x-4 pt-4">
-                      <Button
-                        onClick={handleSeatmapSave}
-                        className="bg-primary-600 hover:bg-primary-700"
-                      >
-                        {event.seatmap ? 'Update Seating' : 'Save Seating Configuration'}
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => setShowSeatForm(false)}
-                      >
-                        Cancel
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {event.seatmap && !showSeatForm && (
-                <div className="space-y-4">
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <h3 className="font-medium text-gray-900 mb-2">Current Seating Configuration</h3>
-                    <div className="flex items-center space-x-4 text-sm text-gray-600">
-                      <span>Type: {event.seatmap.type === 'ga' ? 'General Admission' : 'Reserved Seating'}</span>
-                      {event.seatmap.seats && (
-                        <span>Total Seats: {event.seatmap.seats.length}</span>
-                      )}
-                    </div>
-                  </div>
-
-                  {event.seatmap.type === 'reserved' && event.seatmap.seats && (
-                    <div className="space-y-2">
-                      <h4 className="font-medium text-gray-900">Seat Map Preview</h4>
-                      <div className="bg-white border border-gray-200 rounded-lg p-4">
-                        <div className="grid grid-cols-12 gap-1 text-xs">
-                          {event.seatmap.seats.slice(0, 60).map((seat, index) => (
-                            <div
-                              key={seat.seatId}
-                              className={`w-6 h-6 flex items-center justify-center border rounded ${
-                                seat.accessible ? 'bg-blue-100 border-blue-300' : 'bg-gray-100 border-gray-300'
-                              }`}
-                              title={`${seat.section} ${seat.row}${seat.number}`}
-                            >
-                              {seat.number}
+                    
+                    {event.seatmap.sections && event.seatmap.sections.length > 0 && (
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-700 mb-2">Sections:</h3>
+                        <div className="flex flex-wrap gap-2">
+                          {event.seatmap.sections.map((section, index) => (
+                            <div key={index} className="flex items-center space-x-2">
+                              <div 
+                                className="w-4 h-4 rounded" 
+                                style={{ backgroundColor: section.color }}
+                              />
+                              <span className="text-sm">{section.name}</span>
                             </div>
                           ))}
-                          {event.seatmap.seats.length > 60 && (
-                            <div className="col-span-12 text-center text-gray-500 py-2">
-                              ... and {event.seatmap.seats.length - 60} more seats
-                            </div>
-                          )}
                         </div>
                       </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {!event.seatmap && !showSeatForm && (
-                <div className="text-center py-12">
-                  <div className="text-gray-500 mb-4">
-                    <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                    </svg>
+                    )}
                   </div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Seating Configuration</h3>
-                  <p className="text-gray-500 mb-4">Configure seating for your event to enable seat selection</p>
-                  <Button
-                    onClick={() => setShowSeatForm(true)}
-                    className="bg-primary-600 hover:bg-primary-700"
-                  >
-                    Configure Seating
-                  </Button>
-                </div>
-              )}
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-gray-600 mb-4">No seating plan configured for this event.</p>
+                    <p className="text-sm text-gray-500">
+                      Create a seating plan to enable reserved seating for your event.
+                    </p>
+                  </div>
+                )}
+              </div>
             </Card>
           </div>
         )}
-
         {activeTab === 'analytics' && (
           <div className="space-y-6">
             {/* Key Metrics */}

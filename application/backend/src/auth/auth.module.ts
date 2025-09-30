@@ -6,6 +6,7 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
 import { User, UserSchema } from '../schemas/user.schema';
+import { S3Module } from '../s3/s3.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { User, UserSchema } from '../schemas/user.schema';
       signOptions: { expiresIn: '7d' },
     }),
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    S3Module,
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],

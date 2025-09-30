@@ -6,6 +6,7 @@ import { Order, OrderSchema } from '../schemas/order.schema';
 import { TicketType, TicketTypeSchema } from '../schemas/ticket-type.schema';
 import { CartModule } from '../cart/cart.module';
 import { TicketTypesModule } from '../ticket-types/ticket-types.module';
+import { StripeModule } from '../stripe/stripe.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { TicketTypesModule } from '../ticket-types/ticket-types.module';
     ]),
     CartModule,
     TicketTypesModule,
+    StripeModule,
   ],
   controllers: [OrdersController],
   providers: [OrdersService],

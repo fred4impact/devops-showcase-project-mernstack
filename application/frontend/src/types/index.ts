@@ -6,6 +6,7 @@ export interface User {
   role: 'attendee' | 'organizer' | 'admin'
   marketingConsent: boolean
   isActive: boolean
+  profilePicture?: string
   createdAt: string
   updatedAt: string
 }
@@ -35,6 +36,10 @@ export interface Event {
     type: 'reserved' | 'ga'
     svg?: string
     seats?: Seat[]
+    sections?: Section[]
+    width: number
+    height: number
+    stageLabel: string
   }
   createdAt: string
   updatedAt: string
@@ -47,6 +52,20 @@ export interface Seat {
   number: string
   priceModifier: number
   accessible: boolean
+  isBlocked?: boolean
+  blockedReason?: string
+  x: number
+  y: number
+  status?: 'available' | 'selected' | 'locked' | 'sold'
+}
+
+export interface Section {
+  name: string
+  color: string
+  x: number
+  y: number
+  width: number
+  height: number
 }
 
 export interface TicketType {

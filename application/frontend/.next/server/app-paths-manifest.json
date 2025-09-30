@@ -1,1 +1,24 @@
-{}
+{
+  "/_not-found/page": "app/_not-found/page.js",
+  "/admin/page": "app/admin/page.js",
+  "/checkout/page": "app/checkout/page.js",
+  "/auth/login/page": "app/auth/login/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/auth/register/page": "app/auth/register/page.js",
+  "/events/[id]/manage/page": "app/events/[id]/manage/page.js",
+  "/events/[id]/page": "app/events/[id]/page.js",
+  "/events/create/page": "app/events/create/page.js",
+  "/orders/[id]/success/page": "app/orders/[id]/success/page.js",
+  "/cart/page": "app/cart/page.js",
+  "/organizer/events/[id]/seating-plan/page": "app/organizer/events/[id]/seating-plan/page.js",
+  "/events/page": "app/events/page.js",
+  "/organizer/events/page": "app/organizer/events/page.js",
+  "/profile/page": "app/profile/page.js",
+  "/organizer/dashboard/page": "app/organizer/dashboard/page.js",
+  "/settings/page": "app/settings/page.js",
+  "/tickets/manage/page": "app/tickets/manage/page.js",
+  "/page": "app/page.js",
+  "/organizer/analytics/page": "app/organizer/analytics/page.js",
+  "/tickets/page": "app/tickets/page.js",
+  "/test/page": "app/test/page.js"
+}

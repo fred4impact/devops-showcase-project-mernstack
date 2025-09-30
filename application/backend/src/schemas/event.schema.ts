@@ -48,6 +48,39 @@ export class Seat {
 
   @Prop({ default: false })
   accessible: boolean;
+
+  @Prop({ default: false })
+  isBlocked: boolean;
+
+  @Prop()
+  blockedReason?: string;
+
+  @Prop({ default: 0 })
+  x: number;
+
+  @Prop({ default: 0 })
+  y: number;
+}
+
+@Schema({ _id: false })
+export class Section {
+  @Prop({ required: true })
+  name: string;
+
+  @Prop({ required: true })
+  color: string;
+
+  @Prop({ default: 0 })
+  x: number;
+
+  @Prop({ default: 0 })
+  y: number;
+
+  @Prop({ default: 100 })
+  width: number;
+
+  @Prop({ default: 100 })
+  height: number;
 }
 
 @Schema({ _id: false })
@@ -64,6 +97,18 @@ export class Seatmap {
 
   @Prop({ type: [Seat] })
   seats: Seat[];
+
+  @Prop({ type: [Section] })
+  sections: Section[];
+
+  @Prop({ default: 800 })
+  width: number;
+
+  @Prop({ default: 600 })
+  height: number;
+
+  @Prop({ default: 'Stage' })
+  stageLabel: string;
 }
 
 @Schema({ timestamps: true })

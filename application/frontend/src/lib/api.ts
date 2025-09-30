@@ -52,8 +52,15 @@ export const authApi = {
   
   getProfile: () => api.get<User>('/auth/me'),
   
-  updateProfile: (data: { name?: string; phone?: string; marketingConsent?: boolean }) =>
+  updateProfile: (data: { name?: string; phone?: string; marketingConsent?: boolean; profilePicture?: string }) =>
     api.put('/auth/me', data),
+  
+  uploadProfilePicture: (formData: FormData) =>
+    api.post('/auth/upload-profile-picture', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }),
   
   changePassword: (data: { currentPassword: string; newPassword: string }) =>
     api.put('/auth/change-password', data),

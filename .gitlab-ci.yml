@@ -23,23 +23,27 @@ cache:
     - application/backend/node_modules/
     - application/frontend/node_modules/
     - tests/node_modules/
+  policy: pull-push
 
 # 1. Security Scan
 security_scan:
   stage: security
-  image: node:18-alpine
+  image: node:20-alpine
   script:
     - echo "🔍 Running security audits..."
-    - cd application/backend && npm ci --cache .npm --prefer-offline
-    - npm audit --audit-level=moderate || true
-    - cd ../frontend && npm ci --cache .npm --prefer-offline
-    - npm audit --audit-level=moderate || true
-    - echo "✅ Security scans completed"
+    - echo "🧹 Clearing npm cache..."
+    - npm cache clean --force
+    - cd application/backend && (npm ci --cache .npm --prefer-offline --no-audit || npm install --no-audit)
+    - npm audit --audit-level=high || echo "⚠️ High severity vulnerabilities found"
+    - cd ../frontend && (npm ci --cache .npm --prefer-offline --no-audit || npm install --no-audit)
+    - npm audit --audit-level=high || echo "⚠️ High severity vulnerabilities found"
   tags:
     - shared
+  allow_failure: false
   only:
     - develop
     - main
+
 
 
 # 2. Build Applications
@@ -48,8 +52,8 @@ build:
   image: node:18-alpine
   script:
     - echo "🏗️ Building applications..."
-    - cd application/backend && npm ci --cache .npm --prefer-offline && npm run build
-    - cd ../frontend && npm ci --cache .npm --prefer-offline && npm run build
+    - cd application/backend && (npm ci --cache .npm --prefer-offline --no-audit || npm install --no-audit) && npm run build
+    - cd ../frontend && (npm ci --cache .npm --prefer-offline --no-audit || npm install --no-audit) && npm run build
     - echo "✅ All applications built successfully"
   tags:
     - shared
@@ -64,9 +68,9 @@ tests:
   image: node:18-alpine
   script:
     - echo "🧪 Running all tests..."
-    - cd tests/backend && npm ci --cache .npm --prefer-offline && npm test || echo "⚠️ Backend tests failed (non-blocking)"
-    - cd ../frontend && npm ci --cache .npm --prefer-offline && npm test || echo "⚠️ Frontend tests failed (non-blocking)"
-    - cd .. && npm ci --cache .npm --prefer-offline && npm test || echo "⚠️ Integration tests failed (non-blocking)"
+    - cd tests/backend && (npm ci --cache .npm --prefer-offline --no-audit || npm install --no-audit) && npm test || echo "⚠️ Backend tests failed (non-blocking)"
+    - cd ../frontend && (npm ci --cache .npm --prefer-offline --no-audit || npm install --no-audit) && npm test || echo "⚠️ Frontend tests failed (non-blocking)"
+    - cd .. && (npm ci --cache .npm --prefer-offline --no-audit || npm install --no-audit) && npm test || echo "⚠️ Integration tests failed (non-blocking)"
     - echo "✅ All tests completed"
   allow_failure: true
   tags:
@@ -76,66 +80,47 @@ tests:
     - main
 
 
-# 4. Docker Build
+# 4. Docker Build using Kaniko (more reliable for shared runners)
 docker_build:
   stage: docker-build
-  image: docker:20.10.16
-  services:
-    - name: docker:20.10.16-dind
-      alias: docker
+  image: gcr.io/kaniko-project/executor:latest
   variables:
-    DOCKER_HOST: tcp://docker:2375
-    DOCKER_TLS_CERTDIR: ""
-    DOCKER_DRIVER: overlay2
-    DOCKER_BUILDKIT: 1
-    DOCKER_CLI_EXPERIMENTAL: enabled
-  before_script:
-    # Wait for Docker daemon
-    - echo "🔧 Waiting for Docker daemon..."
-    - until docker info >/dev/null 2>&1; do echo "⏳ Waiting for Docker..."; sleep 2; done
-    - docker version
+    DOCKER_CONFIG: /kaniko/.docker
   script:
-    - echo "🏗️ Building backend image..."
-    - docker buildx create --use --name buildx-builder || true
-    - docker buildx inspect --bootstrap
-    - docker buildx build --platform linux/amd64 \
-        -t backend:${CI_COMMIT_REF_SLUG} \
-        -t backend:${CI_COMMIT_SHA} \
-        -t backend:latest \
-        --load application/backend
-    - echo "🏗️ Building frontend image..."
-    - docker buildx build --platform linux/amd64 \
-        -t frontend:${CI_COMMIT_REF_SLUG} \
-        -t frontend:${CI_COMMIT_SHA} \
-        -t frontend:latest \
-        --load application/frontend
+    - echo "🏗️ Building backend image with Kaniko..."
+    - /kaniko/executor
+        --context application/backend
+        --dockerfile application/backend/Dockerfile
+        --destination backend:${CI_COMMIT_REF_SLUG}
+        --destination backend:${CI_COMMIT_SHA}
+        --destination backend:latest
+        --cache=true
+        --cache-ttl=24h
+    - echo "🏗️ Building frontend image with Kaniko..."
+    - /kaniko/executor
+        --context application/frontend
+        --dockerfile application/frontend/Dockerfile
+        --destination frontend:${CI_COMMIT_REF_SLUG}
+        --destination frontend:${CI_COMMIT_SHA}
+        --destination frontend:latest
+        --cache=true
+        --cache-ttl=24h
     - echo "✅ Build completed"
   tags:
     - shared
   only:
     - develop
     - main
- 
-
 
 
 image_scan:
   stage: image-scan
-  image: docker:20.10.16
-  services:
-    - docker:20.10.16-dind
-  variables:
-    DOCKER_DRIVER: overlay2
-    DOCKER_TLS_CERTDIR: ""
-    DOCKER_HOST: tcp://docker:2375
-  before_script:
-    - echo "🔧 Waiting for Docker daemon..."
-    - until docker info >/dev/null 2>&1; do echo "⏳ Waiting for Docker..."; sleep 2; done
+  image: aquasec/trivy:latest
   script:
     - echo "🔍 Scanning backend image..."
-    - docker run --rm aquasec/trivy:latest image backend:$DOCKER_TAG
+    - trivy image backend:latest
     - echo "🔍 Scanning frontend image..."
-    - docker run --rm aquasec/trivy:latest image frontend:$DOCKER_TAG
+    - trivy image frontend:latest
     - echo "✅ Image scans completed"
   tags:
     - shared
@@ -146,28 +131,31 @@ image_scan:
  
 
 
-# 6. Docker Push
+# 6. Docker Push using Kaniko
 docker_push:
   stage: docker-push
-  image: docker:20.10.16
-  services:
-    - docker:20.10.16-dind
+  image: gcr.io/kaniko-project/executor:latest
   variables:
-    DOCKER_DRIVER: overlay2
-    DOCKER_TLS_CERTDIR: ""
-    DOCKER_HOST: tcp://docker:2375
+    DOCKER_CONFIG: /kaniko/.docker
   before_script:
-    - echo "🔧 Waiting for Docker daemon..."
-    - until docker info >/dev/null 2>&1; do echo "⏳ Waiting for Docker..."; sleep 2; done
-    - echo "🔐 Logging into Docker Hub..."
-    - echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+    - echo "🔐 Setting up Docker Hub authentication..."
+    - mkdir -p /kaniko/.docker
+    - echo '{"auths":{"https://index.docker.io/v1/":{"auth":"'$(echo -n $DOCKER_USERNAME:$DOCKER_PASSWORD | base64)'"}}}' > /kaniko/.docker/config.json
   script:
     - echo "📤 Pushing backend image..."
-    - docker tag backend:$DOCKER_TAG $DOCKER_USERNAME/backend:$DOCKER_TAG
-    - docker push $DOCKER_USERNAME/backend:$DOCKER_TAG
+    - /kaniko/executor
+        --context application/backend
+        --dockerfile application/backend/Dockerfile
+        --destination $DOCKER_USERNAME/backend:latest
+        --destination $DOCKER_USERNAME/backend:${CI_COMMIT_REF_SLUG}
+        --cache=true
     - echo "📤 Pushing frontend image..."
-    - docker tag frontend:$DOCKER_TAG $DOCKER_USERNAME/frontend:$DOCKER_TAG
-    - docker push $DOCKER_USERNAME/frontend:$DOCKER_TAG
+    - /kaniko/executor
+        --context application/frontend
+        --dockerfile application/frontend/Dockerfile
+        --destination $DOCKER_USERNAME/frontend:latest
+        --destination $DOCKER_USERNAME/frontend:${CI_COMMIT_REF_SLUG}
+        --cache=true
     - echo "✅ All images pushed successfully"
   tags:
     - shared

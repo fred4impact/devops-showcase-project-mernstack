@@ -35,6 +35,7 @@ export default function EventsPage() {
     'Business',
     'Education',
     'Arts',
+    'Festival',
     'Food & Drink',
     'Health & Fitness',
     'Other'
