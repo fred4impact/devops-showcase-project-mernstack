@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { authApi } from '@/lib/api';
+import api from '@/lib/api';
 import toast from 'react-hot-toast';
 import { 
   Users, 
@@ -89,7 +90,7 @@ export default function AdminDashboard() {
 
   const createAdminUser = async () => {
     try {
-      const response = await authApi.post('/users/create-admin', {
+      const response = await api.post('/users/create-admin', {
         name: 'Admin User',
         email: 'admin@ticketnow.com',
         password: 'admin123'

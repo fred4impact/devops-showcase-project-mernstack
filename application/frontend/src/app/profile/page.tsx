@@ -149,7 +149,20 @@ export default function Profile() {
       formData.append('image', file);
       
       const response = await authApi.uploadProfilePicture(formData);
-      updateUser({ ...user, profilePicture: response.data.profilePicture });
+      if (user) {
+        updateUser({ 
+          ...user, 
+          id: user.id || '', 
+          name: user.name || '',
+          email: user.email || '',
+          role: user.role || 'attendee',
+          marketingConsent: user.marketingConsent || false,
+          isActive: user.isActive || true,
+          createdAt: user.createdAt || new Date().toISOString(),
+          updatedAt: user.updatedAt || new Date().toISOString(),
+          profilePicture: response.data.profilePicture 
+        });
+      }
       toast.success('Profile picture updated successfully');
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to upload profile picture');
