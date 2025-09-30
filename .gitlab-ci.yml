@@ -28,29 +28,29 @@ cache:
 security_scan:
   stage: security
   image: node:18-alpine
+  before_script:
+    - npm install -g npm@latest
   script:
     - echo "🔍 Running security audits..."
-    - cd application/backend && npm ci --cache .npm --prefer-offline
+    - cd application/backend
+    - if [ -f package-lock.json ]; then npm ci --cache .npm --prefer-offline; else npm install --cache .npm --prefer-offline; fi
     - npm audit --audit-level=high || echo "⚠️ High severity vulnerabilities found"
     - npm audit --audit-level=moderate || echo "⚠️ Moderate severity vulnerabilities found"
     - npm audit --audit-level=low || echo "ℹ️ Low severity vulnerabilities found (acceptable for development)"
     - echo "✅ Backend security scan completed"
-    - cd ../frontend && npm ci --cache .npm --prefer-offline
+    - cd ../frontend
+    - if [ -f package-lock.json ]; then npm ci --cache .npm --prefer-offline; else npm install --cache .npm --prefer-offline; fi
     - npm audit --audit-level=high || echo "⚠️ High severity vulnerabilities found"
     - npm audit --audit-level=moderate || echo "⚠️ Moderate severity vulnerabilities found"
     - npm audit --audit-level=low || echo "ℹ️ Low severity vulnerabilities found (acceptable for development)"
     - echo "✅ Frontend security scan completed"
-    - echo "📋 Security scan summary:"
-    - echo "- ✅ No high severity vulnerabilities"
-    - echo "- ✅ No moderate severity vulnerabilities"
-    - echo "- ℹ️ Low severity vulnerabilities are acceptable for development"
-    - echo "✅ Security scans completed"
   tags:
     - shared
-  allow_failure: false  # Only fail on high/moderate severity
+  allow_failure: false
   only:
     - develop
     - main
+
 
 
 # 2. Build Applications
