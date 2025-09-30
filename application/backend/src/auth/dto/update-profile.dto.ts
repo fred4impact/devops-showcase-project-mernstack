@@ -18,4 +18,9 @@ export class UpdateProfileDto {
   @IsOptional()
   @IsBoolean()
   marketingConsent?: boolean;
+
+  @ApiProperty({ example: 'https://example.com/profile.jpg', required: false })
+  @IsOptional()
+  @IsString()
+  profilePicture?: string;
 }

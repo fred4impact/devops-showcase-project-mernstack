@@ -6,6 +6,7 @@ export interface User {
   role: 'attendee' | 'organizer' | 'admin'
   marketingConsent: boolean
   isActive: boolean
+  profilePicture?: string
   createdAt: string
   updatedAt: string
 }

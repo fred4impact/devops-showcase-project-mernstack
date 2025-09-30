@@ -442,6 +442,7 @@ export default function EventManagement() {
                         <option value="conference">Conference</option>
                         <option value="workshop">Workshop</option>
                         <option value="concert">Concert</option>
+                        <option value="festival">Festival</option>
                         <option value="sports">Sports</option>
                         <option value="networking">Networking</option>
                         <option value="other">Other</option>

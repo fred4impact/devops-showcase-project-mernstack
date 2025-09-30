@@ -34,10 +34,40 @@ export function InteractiveSeatingPlan({
   const [stageLabel, setStageLabel] = useState('Stage');
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [hoveredSeat, setHoveredSeat] = useState<string | null>(null);
+  const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 });
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchSeatmap();
   }, [eventId]);
+
+  // Fluid canvas sizing
+  useEffect(() => {
+    const updateCanvasSize = () => {
+      if (containerRef.current && canvasRef.current) {
+        const container = containerRef.current;
+        const containerWidth = container.clientWidth;
+        const containerHeight = Math.min(600, window.innerHeight * 0.5);
+        
+        // Calculate aspect ratio (4:3)
+        const aspectRatio = 4 / 3;
+        let newWidth = containerWidth - 20; // Account for padding
+        let newHeight = newWidth / aspectRatio;
+        
+        // If height is too large, constrain by height
+        if (newHeight > containerHeight) {
+          newHeight = containerHeight;
+          newWidth = newHeight * aspectRatio;
+        }
+        
+        setCanvasSize({ width: Math.floor(newWidth), height: Math.floor(newHeight) });
+      }
+    };
+
+    updateCanvasSize();
+    window.addEventListener('resize', updateCanvasSize);
+    return () => window.removeEventListener('resize', updateCanvasSize);
+  }, []);
 
   const fetchSeatmap = async () => {
     try {
@@ -114,13 +144,18 @@ export function InteractiveSeatingPlan({
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Draw stage
+    // Draw stage - adjust size based on canvas dimensions
+    const stageWidth = Math.min(700, canvas.width - 100);
+    const stageX = (canvas.width - stageWidth) / 2;
+    const stageY = 50;
+    const stageHeight = 60;
+    
     ctx.fillStyle = '#e5e7eb';
-    ctx.fillRect(50, 50, 700, 60);
+    ctx.fillRect(stageX, stageY, stageWidth, stageHeight);
     ctx.fillStyle = '#374151';
     ctx.font = '16px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText(stageLabel, 400, 90);
+    ctx.fillText(stageLabel, canvas.width / 2, stageY + 40);
 
     // Draw sections
     sections.forEach(section => {
@@ -250,15 +285,18 @@ export function InteractiveSeatingPlan({
           </div>
         </div>
 
-        <div className="relative">
-          <canvas
-            ref={canvasRef}
-            width={800}
-            height={600}
-            className="border border-gray-300 rounded cursor-pointer w-full"
-            onMouseMove={handleCanvasMouseMove}
-            onClick={handleCanvasClick}
-          />
+        <div className="relative w-full" ref={containerRef}>
+          <div className="w-full border border-gray-300 rounded overflow-hidden">
+            <canvas
+              ref={canvasRef}
+              width={canvasSize.width}
+              height={canvasSize.height}
+              className="cursor-pointer block w-full h-auto"
+              style={{ maxWidth: '100%', height: 'auto' }}
+              onMouseMove={handleCanvasMouseMove}
+              onClick={handleCanvasClick}
+            />
+          </div>
           
           {hoveredSeat && (
             <div className="absolute top-2 right-2 bg-black bg-opacity-75 text-white p-2 rounded text-sm">

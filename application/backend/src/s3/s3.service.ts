@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Image, ImageDocument } from '../schemas/image.schema';
+// import { CeleryService } from '../celery/celery.service';
 import * as AWS from 'aws-sdk';
 
 @Injectable()
@@ -12,7 +13,8 @@ export class S3Service {
 
   constructor(
     private configService: ConfigService,
-    @InjectModel(Image.name) private imageModel: Model<ImageDocument>
+    @InjectModel(Image.name) private imageModel: Model<ImageDocument>,
+    // private celeryService: CeleryService
   ) {
     // Check if S3 credentials are configured
     const hasS3Credentials = this.configService.get('S3_ACCESS_KEY') && 
@@ -92,6 +94,15 @@ export class S3Service {
     console.log('S3Service: useS3 flag:', this.useS3);
     const result = await this.uploadFile(imageBuffer, key, 'image/jpeg');
     console.log('S3Service: Upload result:', result);
+    
+    // Queue image processing task - DISABLED (Celery removed)
+    // try {
+    //   await this.celeryService.processImage(result, 'event');
+    //   console.log('S3Service: Image processing task queued');
+    // } catch (error) {
+    //   console.error('S3Service: Failed to queue image processing task:', error);
+    // }
+    
     return result;
   }
 

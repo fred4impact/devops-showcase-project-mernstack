@@ -24,6 +24,8 @@ export function SeatingPlanBuilder({ eventId, onSave, initialSeatmap }: SeatingP
   const [seatmapType, setSeatmapType] = useState<'reserved' | 'ga'>('reserved');
   const [stageLabel, setStageLabel] = useState('Stage');
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 });
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (initialSeatmap) {
@@ -33,6 +35,34 @@ export function SeatingPlanBuilder({ eventId, onSave, initialSeatmap }: SeatingP
       setStageLabel(initialSeatmap.stageLabel || 'Stage');
     }
   }, [initialSeatmap]);
+
+  // Fluid canvas sizing
+  useEffect(() => {
+    const updateCanvasSize = () => {
+      if (containerRef.current && canvasRef.current) {
+        const container = containerRef.current;
+        const containerWidth = container.clientWidth;
+        const containerHeight = Math.min(600, window.innerHeight * 0.5);
+        
+        // Calculate aspect ratio (4:3)
+        const aspectRatio = 4 / 3;
+        let newWidth = containerWidth - 20; // Account for padding
+        let newHeight = newWidth / aspectRatio;
+        
+        // If height is too large, constrain by height
+        if (newHeight > containerHeight) {
+          newHeight = containerHeight;
+          newWidth = newHeight * aspectRatio;
+        }
+        
+        setCanvasSize({ width: Math.floor(newWidth), height: Math.floor(newHeight) });
+      }
+    };
+
+    updateCanvasSize();
+    window.addEventListener('resize', updateCanvasSize);
+    return () => window.removeEventListener('resize', updateCanvasSize);
+  }, []);
 
   const handleCanvasClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
     if (!canvasRef.current) return;
@@ -122,13 +152,18 @@ export function SeatingPlanBuilder({ eventId, onSave, initialSeatmap }: SeatingP
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Draw stage
+    // Draw stage - adjust size based on canvas dimensions
+    const stageWidth = Math.min(700, canvas.width - 100);
+    const stageX = (canvas.width - stageWidth) / 2;
+    const stageY = 50;
+    const stageHeight = 60;
+    
     ctx.fillStyle = '#e5e7eb';
-    ctx.fillRect(50, 50, 700, 60);
+    ctx.fillRect(stageX, stageY, stageWidth, stageHeight);
     ctx.fillStyle = '#374151';
     ctx.font = '16px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText(stageLabel, 400, 90);
+    ctx.fillText(stageLabel, canvas.width / 2, stageY + 40);
 
     // Draw sections
     sections.forEach(section => {
@@ -159,6 +194,7 @@ export function SeatingPlanBuilder({ eventId, onSave, initialSeatmap }: SeatingP
   useEffect(() => {
     drawCanvas();
   }, [seats, sections, selectedSeats, stageLabel]);
+
 
   return (
     <div className="space-y-6">
@@ -257,14 +293,17 @@ export function SeatingPlanBuilder({ eventId, onSave, initialSeatmap }: SeatingP
           </div>
 
           {/* Canvas */}
-          <div>
-            <canvas
-              ref={canvasRef}
-              width={800}
-              height={600}
-              className="border border-gray-300 rounded cursor-crosshair"
-              onClick={handleCanvasClick}
-            />
+          <div className="w-full" ref={containerRef}>
+            <div className="w-full border border-gray-300 rounded overflow-hidden">
+              <canvas
+                ref={canvasRef}
+                width={canvasSize.width}
+                height={canvasSize.height}
+                className="cursor-crosshair block w-full h-auto"
+                style={{ maxWidth: '100%', height: 'auto' }}
+                onClick={handleCanvasClick}
+              />
+            </div>
             <p className="text-sm text-gray-500 mt-2">
               Click on the canvas to add seats (when drawing mode is enabled)
             </p>

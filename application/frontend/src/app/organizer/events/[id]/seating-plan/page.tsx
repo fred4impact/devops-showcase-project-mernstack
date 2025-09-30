@@ -112,7 +112,7 @@ export default function SeatingPlanManagement() {
             <div className="flex items-center space-x-4">
               <Button
                 variant="outline"
-                onClick={() => router.push(`/organizer/events/${eventId}/manage`)}
+                onClick={() => router.push(`/events/${eventId}/manage`)}
               >
                 Back to Event
               </Button>

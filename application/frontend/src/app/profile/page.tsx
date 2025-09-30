@@ -27,6 +27,7 @@ export default function Profile() {
   });
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [isUpgradingRole, setIsUpgradingRole] = useState(false);
+  const [isUploadingProfilePicture, setIsUploadingProfilePicture] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -123,6 +124,37 @@ export default function Profile() {
       toast.error(error.response?.data?.message || 'Failed to upgrade role');
     } finally {
       setIsUpgradingRole(false);
+    }
+  };
+
+  const handleProfilePictureUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size must be less than 5MB');
+      return;
+    }
+
+    try {
+      setIsUploadingProfilePicture(true);
+      const formData = new FormData();
+      formData.append('image', file);
+      
+      const response = await authApi.uploadProfilePicture(formData);
+      updateUser({ ...user, profilePicture: response.data.profilePicture });
+      toast.success('Profile picture updated successfully');
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to upload profile picture');
+    } finally {
+      setIsUploadingProfilePicture(false);
     }
   };
 
@@ -243,10 +275,37 @@ export default function Profile() {
               ) : (
                 <div className="space-y-4">
                   <div className="flex items-center space-x-4">
-                    <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center">
-                      <span className="text-2xl font-bold text-primary-600">
-                        {user.name?.charAt(0).toUpperCase()}
-                      </span>
+                    <div className="relative">
+                      <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center overflow-hidden">
+                        {user.profilePicture ? (
+                          <img
+                            src={user.profilePicture}
+                            alt="Profile"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-2xl font-bold text-primary-600">
+                            {user.name?.charAt(0).toUpperCase()}
+                          </span>
+                        )}
+                      </div>
+                      <label className="absolute -bottom-1 -right-1 bg-primary-600 text-white rounded-full p-1 cursor-pointer hover:bg-primary-700 transition-colors">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleProfilePictureUpload}
+                          className="hidden"
+                          disabled={isUploadingProfilePicture}
+                        />
+                        {isUploadingProfilePicture ? (
+                          <div className="w-4 h-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                        ) : (
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                          </svg>
+                        )}
+                      </label>
                     </div>
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900">{user.name}</h3>
