@@ -23,6 +23,7 @@ cache:
     - application/backend/node_modules/
     - application/frontend/node_modules/
     - tests/node_modules/
+  policy: pull-push
 
 # 1. Security Scan
 security_scan:
@@ -30,9 +31,11 @@ security_scan:
   image: node:20-alpine
   script:
     - echo "🔍 Running security audits..."
-    - cd application/backend && npm ci --cache .npm --prefer-offline
+    - echo "🧹 Clearing npm cache..."
+    - npm cache clean --force
+    - cd application/backend && (npm ci --cache .npm --prefer-offline --no-audit || npm install --no-audit)
     - npm audit --audit-level=high || echo "⚠️ High severity vulnerabilities found"
-    - cd ../frontend && npm ci --cache .npm --prefer-offline
+    - cd ../frontend && (npm ci --cache .npm --prefer-offline --no-audit || npm install --no-audit)
     - npm audit --audit-level=high || echo "⚠️ High severity vulnerabilities found"
   tags:
     - shared
@@ -49,8 +52,8 @@ build:
   image: node:18-alpine
   script:
     - echo "🏗️ Building applications..."
-    - cd application/backend && npm ci --cache .npm --prefer-offline && npm run build
-    - cd ../frontend && npm ci --cache .npm --prefer-offline && npm run build
+    - cd application/backend && (npm ci --cache .npm --prefer-offline --no-audit || npm install --no-audit) && npm run build
+    - cd ../frontend && (npm ci --cache .npm --prefer-offline --no-audit || npm install --no-audit) && npm run build
     - echo "✅ All applications built successfully"
   tags:
     - shared
@@ -65,9 +68,9 @@ tests:
   image: node:18-alpine
   script:
     - echo "🧪 Running all tests..."
-    - cd tests/backend && npm ci --cache .npm --prefer-offline && npm test || echo "⚠️ Backend tests failed (non-blocking)"
-    - cd ../frontend && npm ci --cache .npm --prefer-offline && npm test || echo "⚠️ Frontend tests failed (non-blocking)"
-    - cd .. && npm ci --cache .npm --prefer-offline && npm test || echo "⚠️ Integration tests failed (non-blocking)"
+    - cd tests/backend && (npm ci --cache .npm --prefer-offline --no-audit || npm install --no-audit) && npm test || echo "⚠️ Backend tests failed (non-blocking)"
+    - cd ../frontend && (npm ci --cache .npm --prefer-offline --no-audit || npm install --no-audit) && npm test || echo "⚠️ Frontend tests failed (non-blocking)"
+    - cd .. && (npm ci --cache .npm --prefer-offline --no-audit || npm install --no-audit) && npm test || echo "⚠️ Integration tests failed (non-blocking)"
     - echo "✅ All tests completed"
   allow_failure: true
   tags:
