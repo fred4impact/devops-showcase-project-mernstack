@@ -27,14 +27,12 @@ cache:
 # 1. Security Scan
 security_scan:
   stage: security
-  image: node:18-alpine
+  image: node:20-alpine
   script:
     - echo "🔍 Running security audits..."
-    - cd application/backend
-    - if [ -f package-lock.json ]; then npm ci --cache .npm --prefer-offline; else npm install --cache .npm --prefer-offline; fi
+    - cd application/backend && npm ci --cache .npm --prefer-offline
     - npm audit --audit-level=high || echo "⚠️ High severity vulnerabilities found"
-    - cd ../frontend
-    - if [ -f package-lock.json ]; then npm ci --cache .npm --prefer-offline; else npm install --cache .npm --prefer-offline; fi
+    - cd ../frontend && npm ci --cache .npm --prefer-offline
     - npm audit --audit-level=high || echo "⚠️ High severity vulnerabilities found"
   tags:
     - shared
@@ -42,7 +40,6 @@ security_scan:
   only:
     - develop
     - main
-
 
 
 
