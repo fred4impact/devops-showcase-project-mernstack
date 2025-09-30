@@ -37,13 +37,16 @@ export function Header() {
   ]
 
   const userNavigation = [
-    { name: 'Dashboard', href: user?.role === 'organizer' ? '/organizer/dashboard' : '/dashboard' },
+    { name: 'Dashboard', href: user?.role === 'organizer' ? '/organizer/dashboard' : user?.role === 'admin' ? '/admin' : '/dashboard' },
     { name: 'Profile', href: '/profile' },
     { name: 'My Tickets', href: '/tickets/manage' },
     { name: 'Create Event', href: '/events/create' },
     ...(user?.role === 'organizer' ? [
       { name: 'My Events', href: '/organizer/events' },
       { name: 'Event Analytics', href: '/organizer/analytics' },
+    ] : []),
+    ...(user?.role === 'admin' ? [
+      { name: 'Admin Panel', href: '/admin' },
     ] : []),
     { name: 'Settings', href: '/settings' },
   ]

@@ -200,14 +200,18 @@ export default function CreateEvent() {
         formData.append('image', selectedImage);
         
         try {
-          await eventsApi.uploadEventImage(response.data._id, formData);
+          console.log('Uploading image for event:', response.data._id);
+          const imageResponse = await eventsApi.uploadEventImage(response.data._id, formData);
+          console.log('Image upload response:', imageResponse);
+          toast.success('Event and image created successfully!');
         } catch (imageError) {
           console.error('Error uploading image:', imageError);
           toast.error('Event created but image upload failed');
         }
+      } else {
+        toast.success('Event created successfully!');
       }
       
-      toast.success('Event created successfully!');
       router.push(`/events/${response.data._id}`);
     } catch (error: any) {
       console.error('Error creating event:', error);
@@ -337,6 +341,7 @@ export default function CreateEvent() {
                   <option value="conference">Conference</option>
                   <option value="workshop">Workshop</option>
                   <option value="concert">Concert</option>
+                  <option value="festival">Festival</option>
                   <option value="sports">Sports</option>
                   <option value="networking">Networking</option>
                   <option value="other">Other</option>

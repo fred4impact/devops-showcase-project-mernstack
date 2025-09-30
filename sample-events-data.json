@@ -1,0 +1,345 @@
+{
+  "sampleEvents": [
+    {
+      "event": {
+        "title": "Summer Music Festival 2024",
+        "slug": "summer-music-festival-2024",
+        "description": "Join us for the biggest music festival of the year! Featuring top artists from around the world, food trucks, and amazing experiences. This 3-day festival promises unforgettable memories with performances across multiple stages.",
+        "category": "Music",
+        "venue": {
+          "name": "Golden Gate Park",
+          "address": "Golden Gate Park, San Francisco, CA 94117",
+          "capacity": 50000,
+          "timezone": "America/Los_Angeles"
+        },
+        "startAt": "2024-07-15T18:00:00.000Z",
+        "endAt": "2024-07-17T23:00:00.000Z",
+        "status": "PUBLISHED",
+        "images": [
+          "https://example.com/festival-banner.jpg",
+          "https://example.com/festival-stage.jpg"
+        ]
+      },
+      "ticketTypes": [
+        {
+          "name": "General Admission - Early Bird",
+          "description": "Early bird pricing for the full 3-day festival experience",
+          "priceCents": 15000,
+          "capacity": 20000,
+          "salesStart": "2024-01-15T00:00:00.000Z",
+          "salesEnd": "2024-07-10T23:59:59.000Z",
+          "refundable": true
+        },
+        {
+          "name": "General Admission - Regular",
+          "description": "Standard 3-day festival pass",
+          "priceCents": 20000,
+          "capacity": 25000,
+          "salesStart": "2024-03-01T00:00:00.000Z",
+          "salesEnd": "2024-07-14T23:59:59.000Z",
+          "refundable": true
+        },
+        {
+          "name": "VIP Experience",
+          "description": "VIP access with premium viewing areas, exclusive amenities, and meet & greet opportunities",
+          "priceCents": 50000,
+          "capacity": 1000,
+          "salesStart": "2024-01-15T00:00:00.000Z",
+          "salesEnd": "2024-07-10T23:59:59.000Z",
+          "refundable": true
+        },
+        {
+          "name": "Single Day Pass",
+          "description": "Access for one day of the festival",
+          "priceCents": 8000,
+          "capacity": 5000,
+          "salesStart": "2024-06-01T00:00:00.000Z",
+          "salesEnd": "2024-07-17T18:00:00.000Z",
+          "refundable": false
+        }
+      ],
+      "seatingPlan": {
+        "type": "GA",
+        "description": "General Admission - Standing room only with multiple stages and viewing areas"
+      }
+    },
+    {
+      "event": {
+        "title": "Broadway Musical: Hamilton",
+        "slug": "hamilton-broadway-2024",
+        "description": "Experience the revolutionary musical that has taken the world by storm. Lin-Manuel Miranda's Tony Award-winning masterpiece tells the story of Alexander Hamilton through hip-hop, R&B, and traditional show tunes.",
+        "category": "Theater",
+        "venue": {
+          "name": "Richard Rodgers Theatre",
+          "address": "226 W 46th St, New York, NY 10036",
+          "capacity": 1319,
+          "timezone": "America/New_York"
+        },
+        "startAt": "2024-08-15T19:30:00.000Z",
+        "endAt": "2024-08-15T22:30:00.000Z",
+        "status": "PUBLISHED",
+        "images": [
+          "https://example.com/hamilton-poster.jpg",
+          "https://example.com/theater-interior.jpg"
+        ]
+      },
+      "ticketTypes": [
+        {
+          "name": "Orchestra Center",
+          "description": "Premium center orchestra seats with the best view of the stage",
+          "priceCents": 25000,
+          "capacity": 200,
+          "salesStart": "2024-06-01T00:00:00.000Z",
+          "salesEnd": "2024-08-14T23:59:59.000Z",
+          "refundable": true
+        },
+        {
+          "name": "Orchestra Side",
+          "description": "Side orchestra seats with excellent stage view",
+          "priceCents": 20000,
+          "capacity": 300,
+          "salesStart": "2024-06-01T00:00:00.000Z",
+          "salesEnd": "2024-08-14T23:59:59.000Z",
+          "refundable": true
+        },
+        {
+          "name": "Mezzanine",
+          "description": "Elevated seating with great overview of the stage",
+          "priceCents": 15000,
+          "capacity": 400,
+          "salesStart": "2024-06-01T00:00:00.000Z",
+          "salesEnd": "2024-08-14T23:59:59.000Z",
+          "refundable": true
+        },
+        {
+          "name": "Balcony",
+          "description": "Upper level seating with good stage view",
+          "priceCents": 10000,
+          "capacity": 419,
+          "salesStart": "2024-06-01T00:00:00.000Z",
+          "salesEnd": "2024-08-14T23:59:59.000Z",
+          "refundable": true
+        }
+      ],
+      "seatingPlan": {
+        "type": "reserved",
+        "width": 800,
+        "height": 600,
+        "stageLabel": "Stage",
+        "sections": [
+          {
+            "name": "Orchestra Center",
+            "rows": 20,
+            "seatsPerRow": 10,
+            "priceModifier": 0,
+            "accessibleSeats": 4
+          },
+          {
+            "name": "Orchestra Left",
+            "rows": 20,
+            "seatsPerRow": 8,
+            "priceModifier": -500,
+            "accessibleSeats": 2
+          },
+          {
+            "name": "Orchestra Right",
+            "rows": 20,
+            "seatsPerRow": 8,
+            "priceModifier": -500,
+            "accessibleSeats": 2
+          },
+          {
+            "name": "Mezzanine Center",
+            "rows": 15,
+            "seatsPerRow": 12,
+            "priceModifier": -1000,
+            "accessibleSeats": 3
+          },
+          {
+            "name": "Mezzanine Side",
+            "rows": 15,
+            "seatsPerRow": 8,
+            "priceModifier": -1500,
+            "accessibleSeats": 2
+          },
+          {
+            "name": "Balcony Center",
+            "rows": 12,
+            "seatsPerRow": 15,
+            "priceModifier": -2000,
+            "accessibleSeats": 2
+          },
+          {
+            "name": "Balcony Side",
+            "rows": 12,
+            "seatsPerRow": 10,
+            "priceModifier": -2500,
+            "accessibleSeats": 1
+          }
+        ],
+        "seats": [
+          {
+            "seatId": "OrchestraCenter-1-1",
+            "section": "Orchestra Center",
+            "row": "1",
+            "number": "1",
+            "priceModifier": 0,
+            "accessible": false,
+            "x": 400,
+            "y": 500
+          },
+          {
+            "seatId": "OrchestraCenter-1-2",
+            "section": "Orchestra Center",
+            "row": "1",
+            "number": "2",
+            "priceModifier": 0,
+            "accessible": false,
+            "x": 420,
+            "y": 500
+          }
+        ]
+      }
+    },
+    {
+      "event": {
+        "title": "Tech Conference 2024: Future of AI",
+        "slug": "tech-conference-2024-ai",
+        "description": "Join industry leaders, researchers, and innovators as we explore the cutting-edge developments in Artificial Intelligence. Featuring keynote speakers, panel discussions, workshops, and networking opportunities.",
+        "category": "Conference",
+        "venue": {
+          "name": "Moscone Center",
+          "address": "747 Howard St, San Francisco, CA 94103",
+          "capacity": 5000,
+          "timezone": "America/Los_Angeles"
+        },
+        "startAt": "2024-09-20T08:00:00.000Z",
+        "endAt": "2024-09-22T18:00:00.000Z",
+        "status": "PUBLISHED",
+        "images": [
+          "https://example.com/tech-conference-banner.jpg",
+          "https://example.com/conference-hall.jpg"
+        ]
+      },
+      "ticketTypes": [
+        {
+          "name": "Early Bird - Full Conference",
+          "description": "Full 3-day conference access with all sessions, meals, and networking events",
+          "priceCents": 45000,
+          "capacity": 1000,
+          "salesStart": "2024-03-01T00:00:00.000Z",
+          "salesEnd": "2024-06-30T23:59:59.000Z",
+          "refundable": true
+        },
+        {
+          "name": "Regular - Full Conference",
+          "description": "Full 3-day conference access with all sessions, meals, and networking events",
+          "priceCents": 60000,
+          "capacity": 2000,
+          "salesStart": "2024-07-01T00:00:00.000Z",
+          "salesEnd": "2024-09-19T23:59:59.000Z",
+          "refundable": true
+        },
+        {
+          "name": "Student Pass",
+          "description": "Discounted rate for students with valid ID. Full conference access.",
+          "priceCents": 25000,
+          "capacity": 500,
+          "salesStart": "2024-03-01T00:00:00.000Z",
+          "salesEnd": "2024-09-19T23:59:59.000Z",
+          "refundable": true
+        },
+        {
+          "name": "Single Day Pass",
+          "description": "Access for one day of the conference",
+          "priceCents": 25000,
+          "capacity": 1000,
+          "salesStart": "2024-08-01T00:00:00.000Z",
+          "salesEnd": "2024-09-22T08:00:00.000Z",
+          "refundable": false
+        },
+        {
+          "name": "VIP Experience",
+          "description": "Premium access with exclusive sessions, private networking, and speaker meet & greets",
+          "priceCents": 100000,
+          "capacity": 100,
+          "salesStart": "2024-03-01T00:00:00.000Z",
+          "salesEnd": "2024-09-19T23:59:59.000Z",
+          "refundable": true
+        }
+      ],
+      "seatingPlan": {
+        "type": "reserved",
+        "width": 1000,
+        "height": 800,
+        "stageLabel": "Main Stage",
+        "sections": [
+          {
+            "name": "VIP Front",
+            "rows": 5,
+            "seatsPerRow": 20,
+            "priceModifier": 0,
+            "accessibleSeats": 4
+          },
+          {
+            "name": "Premium Center",
+            "rows": 10,
+            "seatsPerRow": 25,
+            "priceModifier": -2000,
+            "accessibleSeats": 8
+          },
+          {
+            "name": "Premium Side",
+            "rows": 10,
+            "seatsPerRow": 15,
+            "priceModifier": -3000,
+            "accessibleSeats": 6
+          },
+          {
+            "name": "Standard Center",
+            "rows": 15,
+            "seatsPerRow": 30,
+            "priceModifier": -5000,
+            "accessibleSeats": 12
+          },
+          {
+            "name": "Standard Side",
+            "rows": 15,
+            "seatsPerRow": 20,
+            "priceModifier": -6000,
+            "accessibleSeats": 8
+          },
+          {
+            "name": "Economy",
+            "rows": 20,
+            "seatsPerRow": 25,
+            "priceModifier": -8000,
+            "accessibleSeats": 10
+          }
+        ],
+        "seats": [
+          {
+            "seatId": "VIPFront-1-1",
+            "section": "VIP Front",
+            "row": "1",
+            "number": "1",
+            "priceModifier": 0,
+            "accessible": true,
+            "x": 500,
+            "y": 700
+          },
+          {
+            "seatId": "PremiumCenter-1-1",
+            "section": "Premium Center",
+            "row": "1",
+            "number": "1",
+            "priceModifier": -2000,
+            "accessible": false,
+            "x": 500,
+            "y": 650
+          }
+        ]
+      }
+    }
+  ]
+}

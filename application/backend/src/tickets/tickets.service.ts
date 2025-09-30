@@ -187,6 +187,51 @@ export class TicketsService {
     return tickets;
   }
 
+  async generateTicketsForOrder(orderId: string): Promise<Ticket[]> {
+    const order = await this.orderModel.findById(orderId).populate('items.ticketTypeId');
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    const tickets: Ticket[] = [];
+
+    for (const item of order.items) {
+      for (let i = 0; i < item.qty; i++) {
+        const ticket = new this.ticketModel({
+          orderId: order._id,
+          eventId: (item.ticketTypeId as any).eventId,
+          ticketTypeId: item.ticketTypeId,
+          seatId: item.seatId,
+          ticketUUID: this.generateUUID(),
+          qrPayload: this.generateQRPayload(),
+          status: TicketStatus.ISSUED,
+          issuedAt: new Date(),
+        });
+
+        const savedTicket = await ticket.save();
+        tickets.push(savedTicket);
+      }
+    }
+
+    return tickets;
+  }
+
+  private generateUUID(): string {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      const r = Math.random() * 16 | 0;
+      const v = c === 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
+  }
+
+  private generateQRPayload(): string {
+    // Generate a simple QR payload - in production, this would be more secure
+    return Buffer.from(JSON.stringify({
+      timestamp: Date.now(),
+      random: Math.random().toString(36).substring(7)
+    })).toString('base64');
+  }
+
   private async getUserOrderIds(userId: string) {
     const orders = await this.orderModel.find({ userId }).select('_id');
     return orders.map(order => order._id);

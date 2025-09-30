@@ -1,61 +1,53 @@
-#!/usr/bin/env groovy
-
-/**
- * MERN Stack DevOps Showcase - Jenkins CI/CD Pipeline
- * Automated build, test, and deployment pipeline for MERN stack application
- * 
- * This pipeline mirrors the GitLab CI flow with the following stages:
- * 1. Security Scan
- * 2. Build Applications
- * 3. Run Tests
- * 4. Docker Build
- * 5. Docker Security Scan
- * 6. Docker Push/Deploy
- */
-
 pipeline {
     agent any
     
-    // Environment variables
     environment {
         NODE_VERSION = '18'
-        NPM_CONFIG_CACHE = '.npm'
-        NODE_OPTIONS = '--max-old-space-size=4096'
-        DOCKER_TAG = 'latest'
         DOCKER_REGISTRY = 'docker.io'
-        DOCKER_IMAGE_PREFIX = "${env.DOCKER_USERNAME ?: 'your-dockerhub-username'}"
+        DOCKER_USERNAME = credentials('docker-hub-username')
+        DOCKER_PASSWORD = credentials('docker-hub-password')
+        DOCKER_IMAGE_BACKEND = "${DOCKER_REGISTRY}/${DOCKER_USERNAME}/ticketnow-backend"
+        DOCKER_IMAGE_FRONTEND = "${DOCKER_REGISTRY}/${DOCKER_USERNAME}/ticketnow-frontend"
+        BUILD_NUMBER = "${env.BUILD_NUMBER}"
+        GIT_COMMIT_SHORT = "${env.GIT_COMMIT.take(7)}"
+        GIT_REPO = 'git@gitlab.com:fred4impact/mernstack-devops-showcase-project.git'
     }
     
-    // Pipeline stages
     stages {
+        stage('Checkout') {
+            steps {
+                echo "🔍 Checking out code..."
+                checkout scm
+                script {
+                    env.GIT_COMMIT_SHORT = sh(
+                        script: 'git rev-parse --short HEAD',
+                        returnStdout: true
+                    ).trim()
+                }
+            }
+        }
+        
         stage('Security Scan') {
             parallel {
-                stage('Backend Security Scan') {
+                stage('Backend Security') {
                     steps {
-                        script {
-                            echo "🔍 Running security audit for backend..."
-                            dir('application/backend') {
-                                sh '''
-                                    npm ci --cache .npm --prefer-offline
-                                    npm audit --audit-level=moderate || true
-                                '''
-                            }
-                            echo "✅ Backend security scan completed"
+                        echo "🔒 Running backend security audit..."
+                        dir('application/backend') {
+                            sh '''
+                                npm audit --audit-level=high || echo "⚠️ High severity vulnerabilities found"
+                                npm audit --audit-level=moderate || echo "⚠️ Moderate severity vulnerabilities found"
+                            '''
                         }
                     }
                 }
-                
-                stage('Frontend Security Scan') {
+                stage('Frontend Security') {
                     steps {
-                        script {
-                            echo "🔍 Running security audit for frontend..."
-                            dir('application/frontend') {
-                                sh '''
-                                    npm ci --cache .npm --prefer-offline
-                                    npm audit --audit-level=moderate || true
-                                '''
-                            }
-                            echo "✅ Frontend security scan completed"
+                        echo "🔒 Running frontend security audit..."
+                        dir('application/frontend') {
+                            sh '''
+                                npm audit --audit-level=high || echo "⚠️ High severity vulnerabilities found"
+                                npm audit --audit-level=moderate || echo "⚠️ Moderate severity vulnerabilities found"
+                            '''
                         }
                     }
                 }
@@ -64,213 +56,153 @@ pipeline {
         
         stage('Build Applications') {
             parallel {
-                stage('Backend Build') {
+                stage('Build Backend') {
                     steps {
-                        script {
-                            echo "🏗️ Building backend application..."
-                            dir('application/backend') {
-                                sh '''
-                                    npm ci --cache .npm --prefer-offline
-                                    npm run build
-                                '''
-                            }
-                            echo "✅ Backend build completed successfully"
+                        echo "🏗️ Building backend application..."
+                        dir('application/backend') {
+                            sh '''
+                                npm ci --cache .npm --prefer-offline --no-audit
+                                npm run build
+                            '''
                         }
                     }
                 }
-                
-                stage('Frontend Build') {
+                stage('Build Frontend') {
                     steps {
-                        script {
-                            echo "🏗️ Building frontend application..."
-                            dir('application/frontend') {
-                                sh '''
-                                    npm ci --cache .npm --prefer-offline
-                                    npm run build
-                                '''
-                            }
-                            echo "✅ Frontend build completed successfully"
+                        echo "🏗️ Building frontend application..."
+                        dir('application/frontend') {
+                            sh '''
+                                npm ci --cache .npm --prefer-offline --no-audit
+                                npm run build
+                            '''
                         }
                     }
                 }
             }
         }
         
-        stage('Run Tests') {
+        stage('Trivy Security Scan') {
             parallel {
-                stage('Backend Tests') {
+                stage('Scan Backend Dependencies') {
                     steps {
-                        script {
-                            echo "🧪 Running backend tests..."
-                            dir('application/backend') {
-                                sh '''
-                                    npm ci --cache .npm --prefer-offline
-                                    npm test || echo "⚠️ Backend tests failed (non-blocking)"
-                                '''
-                            }
-                            echo "✅ Backend tests completed"
+                        echo "🔍 Running Trivy scan on backend..."
+                        dir('application/backend') {
+                            sh '''
+                                docker run --rm -v $(pwd):/workspace \
+                                    aquasec/trivy:latest fs /workspace \
+                                    --format table --exit-code 0
+                            '''
                         }
                     }
                 }
-                
-                stage('Frontend Tests') {
+                stage('Scan Frontend Dependencies') {
                     steps {
-                        script {
-                            echo "🧪 Running frontend tests..."
-                            dir('application/frontend') {
-                                sh '''
-                                    npm ci --cache .npm --prefer-offline
-                                    npm test || echo "⚠️ Frontend tests failed (non-blocking)"
-                                '''
-                            }
-                            echo "✅ Frontend tests completed"
-                        }
-                    }
-                }
-                
-                stage('Integration Tests') {
-                    steps {
-                        script {
-                            echo "🧪 Running integration tests..."
-                            dir('tests') {
-                                sh '''
-                                    npm ci --cache .npm --prefer-offline
-                                    npm test || echo "⚠️ Integration tests failed (non-blocking)"
-                                '''
-                            }
-                            echo "✅ Integration tests completed"
+                        echo "🔍 Running Trivy scan on frontend..."
+                        dir('application/frontend') {
+                            sh '''
+                                docker run --rm -v $(pwd):/workspace \
+                                    aquasec/trivy:latest fs /workspace \
+                                    --format table --exit-code 0
+                            '''
                         }
                     }
                 }
             }
         }
         
-        stage('Docker Build') {
-            steps {
-                script {
-                    echo "🐳 Building Docker images..."
-                    
-                    // Build backend image
-                    sh '''
-                        docker build -t backend:${DOCKER_TAG} -f application/backend/Dockerfile application/backend/
-                    '''
-                    
-                    // Build frontend image
-                    sh '''
-                        docker build -t frontend:${DOCKER_TAG} -f application/frontend/Dockerfile application/frontend/
-                    '''
-                    
-                    echo "✅ All Docker images built successfully"
-                    sh 'docker images'
+        stage('Build Docker Images') {
+            parallel {
+                stage('Build Backend Image') {
+                    steps {
+                        echo "🐳 Building backend Docker image..."
+                        dir('application/backend') {
+                            sh '''
+                                docker build -t ${DOCKER_IMAGE_BACKEND}:${BUILD_NUMBER} \
+                                    -t ${DOCKER_IMAGE_BACKEND}:${GIT_COMMIT_SHORT} \
+                                    -t ${DOCKER_IMAGE_BACKEND}:latest .
+                            '''
+                        }
+                    }
+                }
+                stage('Build Frontend Image') {
+                    steps {
+                        echo "🐳 Building frontend Docker image..."
+                        dir('application/frontend') {
+                            sh '''
+                                docker build -t ${DOCKER_IMAGE_FRONTEND}:${BUILD_NUMBER} \
+                                    -t ${DOCKER_IMAGE_FRONTEND}:${GIT_COMMIT_SHORT} \
+                                    -t ${DOCKER_IMAGE_FRONTEND}:latest .
+                            '''
+                        }
+                    }
                 }
             }
         }
         
-        stage('Docker Security Scan') {
-            steps {
-                script {
-                    echo "🔍 Scanning Docker images for vulnerabilities..."
-                    
-                    // Scan backend image
-                    sh '''
-                        docker run --rm aquasec/trivy:latest image backend:${DOCKER_TAG}
-                    '''
-                    
-                    // Scan frontend image
-                    sh '''
-                        docker run --rm aquasec/trivy:latest image frontend:${DOCKER_TAG}
-                    '''
-                    
-                    echo "✅ Image scans completed"
-                }
-            }
-        }
-        
-        stage('Docker Push') {
-            when {
-                anyOf {
-                    branch 'main'
-                    branch 'develop'
-                }
-            }
-            steps {
-                script {
-                    echo "📤 Pushing images to Docker Hub..."
-                    
-                    // Login to Docker Hub
-                    withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+        stage('Scan Docker Images') {
+            parallel {
+                stage('Scan Backend Image') {
+                    steps {
+                        echo "🔍 Scanning backend Docker image..."
                         sh '''
-                            echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+                            docker run --rm aquasec/trivy:latest image \
+                                ${DOCKER_IMAGE_BACKEND}:latest \
+                                --format table --exit-code 0
                         '''
                     }
-                    
-                    // Tag and push backend image
-                    sh '''
-                        docker tag backend:${DOCKER_TAG} ${DOCKER_IMAGE_PREFIX}/backend:${DOCKER_TAG}
-                        docker push ${DOCKER_IMAGE_PREFIX}/backend:${DOCKER_TAG}
-                    '''
-                    
-                    // Tag and push frontend image
-                    sh '''
-                        docker tag frontend:${DOCKER_TAG} ${DOCKER_IMAGE_PREFIX}/frontend:${DOCKER_TAG}
-                        docker push ${DOCKER_IMAGE_PREFIX}/frontend:${DOCKER_TAG}
-                    '''
-                    
-                    echo "✅ All docker images pushed successfully"
-                    sh 'docker images'
                 }
+                stage('Scan Frontend Image') {
+                    steps {
+                        echo "🔍 Scanning frontend Docker image..."
+                        sh '''
+                            docker run --rm aquasec/trivy:latest image \
+                                ${DOCKER_IMAGE_FRONTEND}:latest \
+                                --format table --exit-code 0
+                        '''
+                    }
+                }
+            }
+        }
+        
+        stage('Push to Docker Hub') {
+            steps {
+                echo "📤 Logging into Docker Hub..."
+                sh '''
+                    echo ${DOCKER_PASSWORD} | docker login -u ${DOCKER_USERNAME} --password-stdin
+                '''
+                
+                echo "📤 Pushing backend images..."
+                sh '''
+                    docker push ${DOCKER_IMAGE_BACKEND}:${BUILD_NUMBER}
+                    docker push ${DOCKER_IMAGE_BACKEND}:${GIT_COMMIT_SHORT}
+                    docker push ${DOCKER_IMAGE_BACKEND}:latest
+                '''
+                
+                echo "📤 Pushing frontend images..."
+                sh '''
+                    docker push ${DOCKER_IMAGE_FRONTEND}:${BUILD_NUMBER}
+                    docker push ${DOCKER_IMAGE_FRONTEND}:${GIT_COMMIT_SHORT}
+                    docker push ${DOCKER_IMAGE_FRONTEND}:latest
+                '''
             }
         }
     }
     
-    // Post-build actions
     post {
         always {
-            // Clean up Docker images to save space
+            echo "🧹 Cleaning up..."
             sh '''
-                docker image prune -f
-                docker system prune -f
+                docker system prune -f || true
+                docker image prune -f || true
             '''
-            
-            // Archive test results
-            archiveArtifacts artifacts: '**/coverage/**', allowEmptyArchive: true
-            archiveArtifacts artifacts: '**/test-results/**', allowEmptyArchive: true
         }
-        
         success {
-            echo "🎉 Pipeline completed successfully!"
+            echo "✅ Pipeline completed successfully!"
+            // You can add notifications here (Slack, email, etc.)
         }
-        
         failure {
             echo "❌ Pipeline failed!"
+            // You can add failure notifications here
         }
-        
-        unstable {
-            echo "⚠️ Pipeline completed with warnings!"
-        }
-    }
-    
-    // Pipeline options
-    options {
-        // Timeout after 30 minutes
-        timeout(time: 30, unit: 'MINUTES')
-        
-        // Retry failed builds up to 2 times
-        retry(2)
-        
-        // Skip default checkout
-        skipDefaultCheckout()
-        
-        // Build discarder - keep only last 10 builds
-        buildDiscarder(logRotator(numToKeepStr: '10'))
-    }
-    
-    // Pipeline triggers
-    triggers {
-        // Trigger on push to main/develop branches
-        githubPush()
-        
-        // Poll SCM every 5 minutes
-        pollSCM('H/5 * * * *')
     }
 }

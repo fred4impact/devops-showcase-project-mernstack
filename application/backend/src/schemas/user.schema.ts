@@ -35,6 +35,9 @@ export class User {
 
   @Prop({ default: true })
   isActive: boolean;
+
+  @Prop()
+  profilePicture?: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
