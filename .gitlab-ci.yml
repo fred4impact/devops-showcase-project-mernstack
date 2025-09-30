@@ -80,38 +80,31 @@ tests:
     - main
 
 
-# 4. Docker Build
+# 4. Docker Build using Kaniko (more reliable for shared runners)
 docker_build:
   stage: docker-build
-  image: docker:20.10.16
-  services:
-    - name: docker:20.10.16-dind
-      alias: docker
+  image: gcr.io/kaniko-project/executor:latest
   variables:
-    DOCKER_HOST: tcp://docker:2375
-    DOCKER_TLS_CERTDIR: ""
-    DOCKER_DRIVER: overlay2
-    DOCKER_BUILDKIT: 1
-  before_script:
-    - echo "🔧 Waiting for Docker daemon..."
-    - until docker info >/dev/null 2>&1; do echo "⏳ Waiting for Docker..."; sleep 2; done
-    - docker version
-    - docker info
+    DOCKER_CONFIG: /kaniko/.docker
   script:
-    - echo "🏗️ Building backend image..."
-    - cd application/backend
-    - docker build \
-        -t backend:${CI_COMMIT_REF_SLUG} \
-        -t backend:${CI_COMMIT_SHA} \
-        -t backend:latest \
-        -f Dockerfile .
-    - echo "🏗️ Building frontend image..."
-    - cd ../frontend
-    - docker build \
-        -t frontend:${CI_COMMIT_REF_SLUG} \
-        -t frontend:${CI_COMMIT_SHA} \
-        -t frontend:latest \
-        -f Dockerfile .
+    - echo "🏗️ Building backend image with Kaniko..."
+    - /kaniko/executor
+        --context application/backend
+        --dockerfile application/backend/Dockerfile
+        --destination backend:${CI_COMMIT_REF_SLUG}
+        --destination backend:${CI_COMMIT_SHA}
+        --destination backend:latest
+        --cache=true
+        --cache-ttl=24h
+    - echo "🏗️ Building frontend image with Kaniko..."
+    - /kaniko/executor
+        --context application/frontend
+        --dockerfile application/frontend/Dockerfile
+        --destination frontend:${CI_COMMIT_REF_SLUG}
+        --destination frontend:${CI_COMMIT_SHA}
+        --destination frontend:latest
+        --cache=true
+        --cache-ttl=24h
     - echo "✅ Build completed"
   tags:
     - shared
@@ -122,22 +115,12 @@ docker_build:
 
 image_scan:
   stage: image-scan
-  image: docker:20.10.16
-  services:
-    - name: docker:20.10.16-dind
-      alias: docker
-  variables:
-    DOCKER_DRIVER: overlay2
-    DOCKER_TLS_CERTDIR: ""
-    DOCKER_HOST: tcp://docker:2375
-  before_script:
-    - echo "🔧 Waiting for Docker daemon..."
-    - until docker info >/dev/null 2>&1; do echo "⏳ Waiting for Docker..."; sleep 2; done
+  image: aquasec/trivy:latest
   script:
     - echo "🔍 Scanning backend image..."
-    - docker run --rm aquasec/trivy:latest image backend:latest
+    - trivy image backend:latest
     - echo "🔍 Scanning frontend image..."
-    - docker run --rm aquasec/trivy:latest image frontend:latest
+    - trivy image frontend:latest
     - echo "✅ Image scans completed"
   tags:
     - shared
@@ -148,33 +131,31 @@ image_scan:
  
 
 
-# 6. Docker Push
+# 6. Docker Push using Kaniko
 docker_push:
   stage: docker-push
-  image: docker:20.10.16
-  services:
-    - name: docker:20.10.16-dind
-      alias: docker
+  image: gcr.io/kaniko-project/executor:latest
   variables:
-    DOCKER_DRIVER: overlay2
-    DOCKER_TLS_CERTDIR: ""
-    DOCKER_HOST: tcp://docker:2375
+    DOCKER_CONFIG: /kaniko/.docker
   before_script:
-    - echo "🔧 Waiting for Docker daemon..."
-    - until docker info >/dev/null 2>&1; do echo "⏳ Waiting for Docker..."; sleep 2; done
-    - echo "🔐 Logging into Docker Hub..."
-    - echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+    - echo "🔐 Setting up Docker Hub authentication..."
+    - mkdir -p /kaniko/.docker
+    - echo '{"auths":{"https://index.docker.io/v1/":{"auth":"'$(echo -n $DOCKER_USERNAME:$DOCKER_PASSWORD | base64)'"}}}' > /kaniko/.docker/config.json
   script:
     - echo "📤 Pushing backend image..."
-    - docker tag backend:latest $DOCKER_USERNAME/backend:latest
-    - docker tag backend:latest $DOCKER_USERNAME/backend:${CI_COMMIT_REF_SLUG}
-    - docker push $DOCKER_USERNAME/backend:latest
-    - docker push $DOCKER_USERNAME/backend:${CI_COMMIT_REF_SLUG}
+    - /kaniko/executor
+        --context application/backend
+        --dockerfile application/backend/Dockerfile
+        --destination $DOCKER_USERNAME/backend:latest
+        --destination $DOCKER_USERNAME/backend:${CI_COMMIT_REF_SLUG}
+        --cache=true
     - echo "📤 Pushing frontend image..."
-    - docker tag frontend:latest $DOCKER_USERNAME/frontend:latest
-    - docker tag frontend:latest $DOCKER_USERNAME/frontend:${CI_COMMIT_REF_SLUG}
-    - docker push $DOCKER_USERNAME/frontend:latest
-    - docker push $DOCKER_USERNAME/frontend:${CI_COMMIT_REF_SLUG}
+    - /kaniko/executor
+        --context application/frontend
+        --dockerfile application/frontend/Dockerfile
+        --destination $DOCKER_USERNAME/frontend:latest
+        --destination $DOCKER_USERNAME/frontend:${CI_COMMIT_REF_SLUG}
+        --cache=true
     - echo "✅ All images pushed successfully"
   tags:
     - shared
