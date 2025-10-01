@@ -143,6 +143,10 @@ jobs:
         with:
           node-version: "18"
           cache: "npm"
+          cache-dependency-path: |
+            application/backend/package-lock.json
+            application/frontend/package-lock.json
+            tests/package-lock.json
 
       - name: Install backend dependencies
         run: |
