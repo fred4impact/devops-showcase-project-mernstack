@@ -190,16 +190,6 @@ jobs:
             application/frontend/package-lock.json
             tests/package-lock.json
 
-      - name: Install backend dependencies
-        run: |
-          cd application/backend
-          npm ci
-
-      - name: Install frontend dependencies
-        run: |
-          cd application/frontend
-          npm ci
-
       - name: Install test dependencies
         run: |
           cd tests
@@ -207,8 +197,8 @@ jobs:
 
       - name: Run backend tests
         run: |
-          cd application/backend
-          npm run test:cov
+          cd tests
+          npm run test:backend
         env:
           MONGODB_URI: mongodb://localhost:27017/ticketnow-test
           REDIS_URL: redis://localhost:6379
@@ -217,10 +207,25 @@ jobs:
 
       - name: Run frontend tests
         run: |
-          cd application/frontend
-          npm run test || echo "Frontend tests not configured, skipping..."
+          cd tests
+          npm run test:frontend
+        env:
+          MONGODB_URI: mongodb://localhost:27017/ticketnow-test
+          REDIS_URL: redis://localhost:6379
+          JWT_SECRET: test-secret-key
+          NODE_ENV: test
 
       - name: Run integration tests
+        run: |
+          cd tests
+          npm run test:integration
+        env:
+          MONGODB_URI: mongodb://localhost:27017/ticketnow-test
+          REDIS_URL: redis://localhost:6379
+          JWT_SECRET: test-secret-key
+          NODE_ENV: test
+
+      - name: Run all tests with coverage
         run: |
           cd tests
           npm run test:ci
@@ -233,7 +238,7 @@ jobs:
       - name: Upload test coverage
         uses: codecov/codecov-action@v3
         with:
-          files: ./application/backend/coverage/lcov.info,./tests/coverage/lcov.info
+          files: ./tests/coverage/lcov.info
           flags: unittests
           name: codecov-umbrella
 
