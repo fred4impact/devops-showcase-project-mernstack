@@ -1,0 +1,23 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: ticketnow
+
+resources:
+  - namespace.yaml
+  - mongodb-deployment.yaml
+  - redis-deployment.yaml
+  - backend-configmap.yaml
+  - backend-secrets.yaml
+  - backend-deployment.yaml
+  - backend-service.yaml
+  - frontend-configmap.yaml
+  - frontend-secrets.yaml
+  - frontend-deployment.yaml
+  - frontend-service.yaml
+  - ingress.yaml
+
+commonLabels:
+  app.kubernetes.io/name: ticketnow
+  app.kubernetes.io/version: "1.0.0"
+  app.kubernetes.io/component: application
