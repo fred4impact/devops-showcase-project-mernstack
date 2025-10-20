@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: ghcr.io/your-username/your-repo/frontend:latest
+        image: runtesting/ticketnow-frontend:latest
         ports:
         - containerPort: 3000
         env:
