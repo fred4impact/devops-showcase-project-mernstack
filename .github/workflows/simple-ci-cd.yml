@@ -86,17 +86,23 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Download backend build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: backend-build
-          path: application/backend/dist
+      - name: Build applications for testing
+        run: |
+          echo "🔨 Building applications for testing..."
 
-      - name: Download frontend build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: frontend-build
-          path: application/frontend/dist
+          # Build backend
+          cd application/backend
+          npm ci
+          npm run build
+          cd ../..
+
+          # Build frontend  
+          cd application/frontend
+          npm ci
+          npm run build
+          cd ../..
+
+          echo "✅ Applications built successfully"
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -111,16 +117,6 @@ jobs:
       - name: Install test dependencies
         run: |
           cd tests
-          npm ci
-
-      - name: Install backend dependencies
-        run: |
-          cd application/backend
-          npm ci
-
-      - name: Install frontend dependencies
-        run: |
-          cd application/frontend
           npm ci
 
       - name: Fix Jest configuration conflict
