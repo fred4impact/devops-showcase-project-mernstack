@@ -1,26 +1,49 @@
-name: Job CI/CD Pipeline
+name: CI - Stage 1 & 2 (Checkout + Node Setup + Unit Tests)
 
 on:
     push:
-        branches: [main, develop]
-        tags:
-            - "v*"
+        branches: ["main", "develop"]
     pull_request:
-        branches: [main, develop]
+        branches: ["main", "develop"]
 
 jobs:
-    code-checkout:
+    install-and-test:
         runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                service:
+                    - backend
+                    - frontend
+                include:
+                    - service: backend
+                      path: runtesting/ticketnow-backend
+                    - service: frontend
+                      path: runtesting/ticketnow-frontend
 
         steps:
-            # 1. Checkout code
+            # ---------------------- 1. Checkout Code ----------------------
             - name: Checkout repository
               uses: actions/checkout@v4
               with:
-                  fetch-depth: 0 # gets full git history (useful for next stages later)
+                  fetch-depth: 0 # full history
 
-            # 2. Set up Node.js
+            # ---------------------- 2. Set up Node.js ----------------------
             - name: Set up Node.js 18
               uses: actions/setup-node@v4
               with:
                   node-version: "18"
+                  cache: "npm"
+
+            # ---------------------- 3. Install Dependencies ----------------------
+            - name: Install dependencies
+              working-directory: ${{ matrix.path }}
+              run: |
+                  echo "Installing dependencies for ${{ matrix.service }}"
+                  npm ci
+
+            # ---------------------- 4. Run Unit Tests (skip integration) ----------------------
+            - name: Run unit tests
+              working-directory: ${{ matrix.path }}
+              run: |
+                  echo "Running unit tests for ${{ matrix.service }} (skipping integration tests)"
+                  npm test --if-present -- --testPathIgnorePatterns=tests/integration
