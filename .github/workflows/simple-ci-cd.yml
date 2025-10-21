@@ -104,20 +104,27 @@ jobs:
 
                   echo "✅ Applications built successfully"
 
-            - name: Setup Node.js
-              uses: actions/setup-node@v4
-              with:
-                  node-version: "18"
-                  cache: "npm"
-                  cache-dependency-path: |
-                      application/backend/package-lock.json
-                      application/frontend/package-lock.json
-                      tests/package-lock.json
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "npm"
+          cache-dependency-path: tests/package-lock.json
 
       - name: Install test dependencies
         run: |
           cd tests
-          npm ci
+          echo "📁 Current directory: $(pwd)"
+          echo "📦 Package.json exists: $(test -f package.json && echo 'Yes' || echo 'No')"
+          echo "🔒 Package-lock.json exists: $(test -f package-lock.json && echo 'Yes' || echo 'No')"
+          
+          # List files in tests directory
+          echo "📋 Files in tests directory:"
+          ls -la
+          
+          # Install dependencies
+          echo "📦 Installing dependencies..."
+          npm install --verbose
 
       - name: Fix Jest configuration conflict
         run: |
