@@ -1,49 +1,125 @@
-name: CI - Stage 1 & 2 (Checkout + Node Setup + Unit Tests)
+name: CI/CD - MERN (Backend & Frontend)
 
+# Run on pushes and pull requests to main and develop
 on:
     push:
         branches: ["main", "develop"]
     pull_request:
         branches: ["main", "develop"]
 
+env:
+    # default values, overridden per job via matrix
+    DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+    DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
+
 jobs:
-    install-and-test:
+    build-and-push:
+        # run backend and frontend in parallel via matrix
         runs-on: ubuntu-latest
         strategy:
             matrix:
                 service:
                     - backend
                     - frontend
+                # map each service to its path and image name
                 include:
                     - service: backend
                       path: runtesting/ticketnow-backend
+                      image: fred4impact/ticketnow-backend
                     - service: frontend
                       path: runtesting/ticketnow-frontend
+                      image: fred4impact/ticketnow-frontend
 
         steps:
-            # ---------------------- 1. Checkout Code ----------------------
+            # 1) CHECKOUT
             - name: Checkout repository
               uses: actions/checkout@v4
               with:
-                  fetch-depth: 0 # full history
+                  fetch-depth: 0
 
-            # ---------------------- 2. Set up Node.js ----------------------
+            # 2) SAST - CodeQL init
+            - name: Initialize CodeQL
+              uses: github/codeql-action/init@v3
+              with:
+                  languages: javascript
+              # CodeQL may upload results to the repository code scanning alerts UI
+
+            - name: Run CodeQL analysis
+              uses: github/codeql-action/analyze@v3
+
+            # 3) Set up Node (shared for both backend & frontend)
             - name: Set up Node.js 18
               uses: actions/setup-node@v4
               with:
                   node-version: "18"
                   cache: "npm"
 
-            # ---------------------- 3. Install Dependencies ----------------------
+            # 4) Install dependencies (working in the service path)
             - name: Install dependencies
-              working-directory: ${{ matrix.path }}
+              working-directory: ${{ matrix.include[0].path == matrix.path && matrix.path || matrix.path }}
               run: |
-                  echo "Installing dependencies for ${{ matrix.service }}"
-                  npm install || echo "Dependencies installation failed, continuing..."
+                  echo "Installing dependencies for ${{ matrix.service }} (path: ${{ matrix.path }})"
+                  cd "${{ matrix.path }}"
+                  npm ci
 
-            # ---------------------- 4. Run Unit Tests (skip integration) ----------------------
-            - name: Run unit tests
+            # 5) Run unit tests (skip integration tests under tests/integration/)
+            - name: Run unit tests (skip integration tests)
               working-directory: ${{ matrix.path }}
               run: |
-                  echo "Running unit tests for ${{ matrix.service }} (skipping integration tests)"
+                  echo "Running unit tests for ${{ matrix.service }} - skipping tests/integration/"
+                  # If tests exist, run them; `--if-present` prevents failure when no test script
                   npm test --if-present -- --testPathIgnorePatterns=tests/integration
+
+            # 6) Build (if there is a build script)
+            - name: Build (if present)
+              working-directory: ${{ matrix.path }}
+              run: |
+                  echo "Building ${{ matrix.service }} (if build script exists)"
+                  npm run build --if-present
+
+            # 7) Docker login
+            - name: Login to DockerHub
+              uses: docker/login-action@v3
+              with:
+                  username: ${{ env.DOCKERHUB_USERNAME }}
+                  password: ${{ env.DOCKERHUB_PASSWORD }}
+
+            # 8) Build Docker image (tagged with SHA)
+            - name: Build Docker image
+              working-directory: ${{ matrix.path }}
+              run: |
+                  IMAGE=${{ matrix.image }}
+                  TAG=${{ github.sha }}
+                  echo "Building docker image ${IMAGE}:${TAG} from ${GITHUB_WORKSPACE}/${{ matrix.path }}"
+                  # ensure Dockerfile exists in the path; uses Dockerfile in that directory
+                  docker build -f Dockerfile -t ${IMAGE}:${TAG} .
+
+            # 9) Dynamic image scan with Trivy
+            - name: Scan Docker image with Trivy
+              uses: aquasecurity/trivy-action@master
+              with:
+                  image-ref: ${{ matrix.image }}:${{ github.sha }}
+                  format: "table"
+                  exit-code: "1" # fail job on vulnerabilities at/above severity configured
+                  severity: "CRITICAL,HIGH"
+                  ignore-unfixed: true
+
+            # 10) Tag and push image (sha + latest)
+            - name: Tag & Push Docker images
+              run: |
+                  IMAGE=${{ matrix.image }}
+                  SHA_TAG=${{ github.sha }}
+                  echo "Tagging and pushing ${IMAGE}:${SHA_TAG} and ${IMAGE}:latest"
+                  docker tag ${IMAGE}:${SHA_TAG} ${IMAGE}:latest
+                  docker push ${IMAGE}:${SHA_TAG}
+                  docker push ${IMAGE}:latest
+
+            # 11) Cleanup local docker caches to free runner disk space
+            - name: Cleanup docker and workspace
+              if: always()
+              run: |
+                  echo "Cleaning up docker images and workspace"
+                  docker image rm -f ${{ matrix.image }}:${{ github.sha }} || true
+                  docker image rm -f ${{ matrix.image }}:latest || true
+                  docker system prune -af || true
+                  # Do not delete $GITHUB_WORKSPACE completely; keep runner integrity.
