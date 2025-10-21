@@ -123,6 +123,29 @@ jobs:
           npm install @nestjs/testing @nestjs/common @nestjs/core @nestjs/platform-express
           npm install --save-dev @types/node
 
+      - name: Fix setup.ts to remove dotenv dependency
+        run: |
+          cd tests
+          # Create a new setup.ts without dotenv import
+          cat > setup.ts << 'EOF'
+          // Test setup file
+          // Removed dotenv import as environment variables are set in workflow
+          
+          // Global test timeout
+          jest.setTimeout(30000);
+          
+          // Mock console methods to reduce noise in tests
+          global.console = {
+            ...console,
+            // Uncomment to suppress console.log in tests
+            // log: jest.fn(),
+            // debug: jest.fn(),
+            // info: jest.fn(),
+            // warn: jest.fn(),
+            // error: jest.fn(),
+          };
+          EOF
+
       - name: Fix Jest configuration conflict
         run: |
           cd tests
