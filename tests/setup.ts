@@ -1,5 +1,5 @@
 // Test setup file
-import 'dotenv/config';
+// Removed dotenv import as environment variables are set in CI/CD workflow
 
 // Global test timeout
 jest.setTimeout(30000);
