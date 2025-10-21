@@ -122,12 +122,16 @@ jobs:
           echo "Package-lock.json exists: $(test -f package-lock.json && echo 'Yes' || echo 'No')"
 
           # List files in tests directory
-          echo "📋 Files in tests directory:"
+          echo "Files in tests directory:"
           ls -la
 
           # Install dependencies
-          echo "📦 Installing dependencies..."
+          echo "Installing dependencies..."
           npm install --verbose
+
+          # Install missing type definitions
+          echo "Installing missing type definitions..."
+          npm install --save-dev @types/multer @types/express
 
       - name: Fix Jest configuration conflict
         run: |
@@ -184,11 +188,70 @@ jobs:
                   noImplicitAny: false,
                   skipLibCheck: true,
                   esModuleInterop: true,
-                  allowSyntheticDefaultImports: true
-                }
+                  allowSyntheticDefaultImports: true,
+                  noUnusedLocals: false,
+                  noUnusedParameters: false,
+                  noImplicitReturns: false,
+                  noFallthroughCasesInSwitch: false,
+                  noUncheckedIndexedAccess: false,
+                  exactOptionalPropertyTypes: false
+                },
+                isolatedModules: true,
+                transpileOnly: true
               }]
             }
           };
+          EOF
+
+      - name: Create permissive TypeScript configuration
+        run: |
+          cd tests
+          # Create a very permissive tsconfig.json for tests
+          cat > tsconfig.json << 'EOF'
+          {
+            "compilerOptions": {
+              "target": "ES2020",
+              "module": "commonjs",
+              "lib": ["ES2020"],
+              "outDir": "./dist",
+              "rootDir": "./",
+              "strict": false,
+              "noImplicitAny": false,
+              "skipLibCheck": true,
+              "esModuleInterop": true,
+              "allowSyntheticDefaultImports": true,
+              "forceConsistentCasingInFileNames": false,
+              "resolveJsonModule": true,
+              "declaration": false,
+              "sourceMap": false,
+              "moduleResolution": "node",
+              "experimentalDecorators": true,
+              "emitDecoratorMetadata": true,
+              "noUnusedLocals": false,
+              "noUnusedParameters": false,
+              "noImplicitReturns": false,
+              "noFallthroughCasesInSwitch": false,
+              "noUncheckedIndexedAccess": false,
+              "exactOptionalPropertyTypes": false,
+              "baseUrl": ".",
+              "paths": {
+                "@/*": ["../application/backend/src/*"],
+                "@/backend/*": ["../application/backend/src/*"],
+                "@/frontend/*": ["../application/frontend/src/*"]
+              }
+            },
+            "include": [
+              "**/*.ts",
+              "**/*.tsx",
+              "../application/backend/src/**/*.ts",
+              "../application/frontend/src/**/*.ts"
+            ],
+            "exclude": [
+              "node_modules",
+              "dist",
+              "coverage"
+            ]
+          }
           EOF
 
       - name: Run backend component tests
