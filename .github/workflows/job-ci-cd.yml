@@ -1,0 +1,26 @@
+name: Job CI/CD Pipeline
+
+on:
+    push:
+        branches: [main, develop]
+        tags:
+            - "v*"
+    pull_request:
+        branches: [main, develop]
+
+jobs:
+    code-checkout:
+        runs-on: ubuntu-latest
+
+        steps:
+            # 1. Checkout code
+            - name: Checkout repository
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0 # gets full git history (useful for next stages later)
+
+            # 2. Set up Node.js
+            - name: Set up Node.js 18
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "18"
