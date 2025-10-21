@@ -114,60 +114,107 @@ jobs:
                       application/frontend/package-lock.json
                       tests/package-lock.json
 
-            - name: Install test dependencies
-              run: |
-                  cd tests
-                  npm ci
-                  # Install missing dotenv dependency
-                  npm install dotenv
+      - name: Install test dependencies
+        run: |
+          cd tests
+          npm ci
+          # Install missing dependencies
+          npm install dotenv
+          npm install @nestjs/testing @nestjs/common @nestjs/core @nestjs/platform-express
+          npm install --save-dev @types/node
 
-            - name: Fix Jest configuration conflict
-              run: |
-                  cd tests
-                  # Remove jest config from package.json to avoid conflict
-                  node -e "
-                    const fs = require('fs');
-                    const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-                    delete pkg.jest;
-                    fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));
-                  "
+      - name: Fix Jest configuration conflict
+        run: |
+          cd tests
+          # Remove jest config from package.json to avoid conflict
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            delete pkg.jest;
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));
+          "
 
-            - name: Run backend component tests
-              run: |
-                  cd tests
-                  npx jest --config jest.config.js --testPathPattern=backend --testNamePattern="(?!.*integration)"
-              env:
-                  MONGODB_URI: mongodb://localhost:27017/ticketnow-test
-                  REDIS_URL: redis://localhost:6379
-                  JWT_SECRET: test-secret-key
-                  NODE_ENV: test
+      - name: Create TypeScript configuration for tests
+        run: |
+          cd tests
+          # Create tsconfig.json with esModuleInterop enabled
+          cat > tsconfig.json << 'EOF'
+          {
+            "compilerOptions": {
+              "target": "ES2020",
+              "module": "commonjs",
+              "lib": ["ES2020"],
+              "outDir": "./dist",
+              "rootDir": "./",
+              "strict": true,
+              "esModuleInterop": true,
+              "skipLibCheck": true,
+              "forceConsistentCasingInFileNames": true,
+              "resolveJsonModule": true,
+              "declaration": true,
+              "declarationMap": true,
+              "sourceMap": true,
+              "moduleResolution": "node",
+              "allowSyntheticDefaultImports": true,
+              "experimentalDecorators": true,
+              "emitDecoratorMetadata": true,
+              "baseUrl": ".",
+              "paths": {
+                "@/*": ["../application/backend/src/*"],
+                "@/backend/*": ["../application/backend/src/*"],
+                "@/frontend/*": ["../application/frontend/src/*"]
+              }
+            },
+            "include": [
+              "**/*.ts",
+              "**/*.tsx",
+              "../application/backend/src/**/*.ts",
+              "../application/frontend/src/**/*.ts"
+            ],
+            "exclude": [
+              "node_modules",
+              "dist",
+              "coverage"
+            ]
+          }
+          EOF
 
-            - name: Run frontend component tests
-              run: |
-                  cd tests
-                  npx jest --config jest.config.js --testPathPattern=frontend --testNamePattern="(?!.*integration)"
-              env:
-                  MONGODB_URI: mongodb://localhost:27017/ticketnow-test
-                  REDIS_URL: redis://localhost:6379
-                  JWT_SECRET: test-secret-key
-                  NODE_ENV: test
+      - name: Run backend component tests
+        run: |
+          cd tests
+          npx jest --config jest.config.js --testPathPattern=backend --testNamePattern="(?!.*integration)"
+        env:
+          MONGODB_URI: mongodb://localhost:27017/ticketnow-test
+          REDIS_URL: redis://localhost:6379
+          JWT_SECRET: test-secret-key
+          NODE_ENV: test
 
-            - name: Run component tests with coverage
-              run: |
-                  cd tests
-                  npx jest --config jest.config.js --ci --coverage --watchAll=false --testPathPattern="(backend|frontend)" --testNamePattern="(?!.*integration)"
-              env:
-                  MONGODB_URI: mongodb://localhost:27017/ticketnow-test
-                  REDIS_URL: redis://localhost:6379
-                  JWT_SECRET: test-secret-key
-                  NODE_ENV: test
+      - name: Run frontend component tests
+        run: |
+          cd tests
+          npx jest --config jest.config.js --testPathPattern=frontend --testNamePattern="(?!.*integration)"
+        env:
+          MONGODB_URI: mongodb://localhost:27017/ticketnow-test
+          REDIS_URL: redis://localhost:6379
+          JWT_SECRET: test-secret-key
+          NODE_ENV: test
 
-            - name: Upload test coverage
-              uses: codecov/codecov-action@v3
-              with:
-                  files: ./tests/coverage/lcov.info
-                  flags: unittests
-                  name: codecov-umbrella
+      - name: Run component tests with coverage
+        run: |
+          cd tests
+          npx jest --config jest.config.js --ci --coverage --watchAll=false --testPathPattern="(backend|frontend)" --testNamePattern="(?!.*integration)"
+        env:
+          MONGODB_URI: mongodb://localhost:27017/ticketnow-test
+          REDIS_URL: redis://localhost:6379
+          JWT_SECRET: test-secret-key
+          NODE_ENV: test
+
+      - name: Upload test coverage
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./tests/coverage/lcov.info
+          flags: unittests
+          name: codecov-umbrella
 
     # Docker Build and Push Job
     docker-build-push:
