@@ -117,9 +117,9 @@ jobs:
       - name: Install test dependencies
         run: |
           cd tests
-          echo "📁 Current directory: $(pwd)"
-          echo "📦 Package.json exists: $(test -f package.json && echo 'Yes' || echo 'No')"
-          echo "🔒 Package-lock.json exists: $(test -f package-lock.json && echo 'Yes' || echo 'No')"
+          echo "Current directory: $(pwd)"
+          echo "Package.json exists: $(test -f package.json && echo 'Yes' || echo 'No')"
+          echo "Package-lock.json exists: $(test -f package-lock.json && echo 'Yes' || echo 'No')"
 
           # List files in tests directory
           echo "📋 Files in tests directory:"
