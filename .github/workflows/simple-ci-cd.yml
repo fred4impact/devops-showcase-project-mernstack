@@ -1,295 +1,287 @@
 name: TicketNow CI/CD Pipeline
 
 on:
-  push:
-    branches: [main, develop]
-    tags:
-      - "v*"
-  pull_request:
-    branches: [main, develop]
-  workflow_dispatch: # Manual trigger
+    push:
+        branches: [main, develop]
+        tags:
+            - "v*"
+    pull_request:
+        branches: [main, develop]
+    workflow_dispatch: # Manual trigger
 
 env:
-  REGISTRY: docker.io
-  BACKEND_IMAGE: runtesting/ticketnow-backend
-  FRONTEND_IMAGE: runtesting/ticketnow-frontend
+    REGISTRY: docker.io
+    BACKEND_IMAGE: runtesting/ticketnow-backend
+    FRONTEND_IMAGE: runtesting/ticketnow-frontend
 
 jobs:
-  # Build Job
-  build:
-    name: Build Applications
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        app: [backend, frontend]
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    # Build Job
+    build:
+        name: Build Applications
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                app: [backend, frontend]
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "18"
-          cache: "npm"
-          cache-dependency-path: application/${{ matrix.app }}/package-lock.json
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "18"
+                  cache: "npm"
+                  cache-dependency-path: application/${{ matrix.app }}/package-lock.json
 
-      - name: Install dependencies
-        run: |
-          cd application/${{ matrix.app }}
-          npm ci
+            - name: Install dependencies
+              run: |
+                  cd application/${{ matrix.app }}
+                  npm ci
 
-      - name: Run linting
-        run: |
-          cd application/${{ matrix.app }}
-          npm run lint || echo "Linting completed with issues"
+            - name: Run linting
+              run: |
+                  cd application/${{ matrix.app }}
+                  npm run lint || echo "Linting completed with issues"
 
-      - name: Build application
-        run: |
-          cd application/${{ matrix.app }}
-          npm run build
+            - name: Build application
+              run: |
+                  cd application/${{ matrix.app }}
+                  npm run build
 
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.app }}-build
-          path: application/${{ matrix.app }}/dist
-          retention-days: 7
+            - name: Upload build artifacts
+              uses: actions/upload-artifact@v4
+              with:
+                  name: ${{ matrix.app }}-build
+                  path: application/${{ matrix.app }}/dist
+                  retention-days: 7
 
-  # Test Job
-  test:
-    name: Run Tests
-    runs-on: ubuntu-latest
-    needs: build
-    if: ${{ !contains(github.event.head_commit.message, '[skip tests]') }}
-    services:
-      mongodb:
-        image: mongo:7.0
-        ports:
-          - 27017:27017
-        options: >-
-          --health-cmd "mongosh --eval 'db.adminCommand(\"ping\")'"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+    # Test Job
+    test:
+        name: Run Component Tests
+        runs-on: ubuntu-latest
+        needs: build
+        if: ${{ !contains(github.event.head_commit.message, '[skip tests]') }}
+        services:
+            mongodb:
+                image: mongo:7.0
+                ports:
+                    - 27017:27017
+                options: >-
+                    --health-cmd "mongosh --eval 'db.adminCommand(\"ping\")'"
+                    --health-interval 10s
+                    --health-timeout 5s
+                    --health-retries 5
 
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+            redis:
+                image: redis:7-alpine
+                ports:
+                    - 6379:6379
+                options: >-
+                    --health-cmd "redis-cli ping"
+                    --health-interval 10s
+                    --health-timeout 5s
+                    --health-retries 5
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
 
-      - name: Build applications for testing
-        run: |
-          echo "🔨 Building applications for testing..."
+            - name: Build applications for testing
+              run: |
+                  echo "🔨 Building applications for testing..."
 
-          # Build backend
-          cd application/backend
-          npm ci
-          npm run build
-          cd ../..
+                  # Build backend
+                  cd application/backend
+                  npm ci
+                  npm run build
+                  cd ../..
 
-          # Build frontend  
-          cd application/frontend
-          npm ci
-          npm run build
-          cd ../..
+                  # Build frontend  
+                  cd application/frontend
+                  npm ci
+                  npm run build
+                  cd ../..
 
-          echo "✅ Applications built successfully"
+                  echo "✅ Applications built successfully"
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "18"
-          cache: "npm"
-          cache-dependency-path: |
-            application/backend/package-lock.json
-            application/frontend/package-lock.json
-            tests/package-lock.json
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "18"
+                  cache: "npm"
+                  cache-dependency-path: |
+                      application/backend/package-lock.json
+                      application/frontend/package-lock.json
+                      tests/package-lock.json
 
-      - name: Install test dependencies
-        run: |
-          cd tests
-          npm ci
+            - name: Install test dependencies
+              run: |
+                  cd tests
+                  npm ci
+                  # Install missing dotenv dependency
+                  npm install dotenv
 
-      - name: Fix Jest configuration conflict
-        run: |
-          cd tests
-          # Remove jest config from package.json to avoid conflict
-          node -e "
-            const fs = require('fs');
-            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-            delete pkg.jest;
-            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));
-          "
+            - name: Fix Jest configuration conflict
+              run: |
+                  cd tests
+                  # Remove jest config from package.json to avoid conflict
+                  node -e "
+                    const fs = require('fs');
+                    const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+                    delete pkg.jest;
+                    fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));
+                  "
 
-      - name: Run backend tests
-        run: |
-          cd tests
-          npx jest --config jest.config.js --testPathPattern=backend
-        env:
-          MONGODB_URI: mongodb://localhost:27017/ticketnow-test
-          REDIS_URL: redis://localhost:6379
-          JWT_SECRET: test-secret-key
-          NODE_ENV: test
+            - name: Run backend component tests
+              run: |
+                  cd tests
+                  npx jest --config jest.config.js --testPathPattern=backend --testNamePattern="(?!.*integration)"
+              env:
+                  MONGODB_URI: mongodb://localhost:27017/ticketnow-test
+                  REDIS_URL: redis://localhost:6379
+                  JWT_SECRET: test-secret-key
+                  NODE_ENV: test
 
-      - name: Run frontend tests
-        run: |
-          cd tests
-          npx jest --config jest.config.js --testPathPattern=frontend
-        env:
-          MONGODB_URI: mongodb://localhost:27017/ticketnow-test
-          REDIS_URL: redis://localhost:6379
-          JWT_SECRET: test-secret-key
-          NODE_ENV: test
+            - name: Run frontend component tests
+              run: |
+                  cd tests
+                  npx jest --config jest.config.js --testPathPattern=frontend --testNamePattern="(?!.*integration)"
+              env:
+                  MONGODB_URI: mongodb://localhost:27017/ticketnow-test
+                  REDIS_URL: redis://localhost:6379
+                  JWT_SECRET: test-secret-key
+                  NODE_ENV: test
 
-      - name: Run integration tests
-        run: |
-          cd tests
-          npx jest --config jest.config.js --testPathPattern=integration
-        env:
-          MONGODB_URI: mongodb://localhost:27017/ticketnow-test
-          REDIS_URL: redis://localhost:6379
-          JWT_SECRET: test-secret-key
-          NODE_ENV: test
+            - name: Run component tests with coverage
+              run: |
+                  cd tests
+                  npx jest --config jest.config.js --ci --coverage --watchAll=false --testPathPattern="(backend|frontend)" --testNamePattern="(?!.*integration)"
+              env:
+                  MONGODB_URI: mongodb://localhost:27017/ticketnow-test
+                  REDIS_URL: redis://localhost:6379
+                  JWT_SECRET: test-secret-key
+                  NODE_ENV: test
 
-      - name: Run all tests with coverage
-        run: |
-          cd tests
-          npx jest --config jest.config.js --ci --coverage --watchAll=false
-        env:
-          MONGODB_URI: mongodb://localhost:27017/ticketnow-test
-          REDIS_URL: redis://localhost:6379
-          JWT_SECRET: test-secret-key
-          NODE_ENV: test
+            - name: Upload test coverage
+              uses: codecov/codecov-action@v3
+              with:
+                  files: ./tests/coverage/lcov.info
+                  flags: unittests
+                  name: codecov-umbrella
 
-      - name: Upload test coverage
-        uses: codecov/codecov-action@v3
-        with:
-          files: ./tests/coverage/lcov.info
-          flags: unittests
-          name: codecov-umbrella
+    # Docker Build and Push Job
+    docker-build-push:
+        name: Build and Push Docker Images
+        runs-on: ubuntu-latest
+        needs: [build, test]
+        if: github.event_name == 'push'
+        permissions:
+            contents: write
+            packages: write
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+              with:
+                  token: ${{ secrets.GITHUB_TOKEN }}
 
-  # Docker Build and Push Job
-  docker-build-push:
-    name: Build and Push Docker Images
-    runs-on: ubuntu-latest
-    needs: [build, test]
-    if: github.event_name == 'push'
-    permissions:
-      contents: write
-      packages: write
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v3
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+            - name: Log in to Docker Hub
+              uses: docker/login-action@v3
+              with:
+                  username: ${{ secrets.DOCKER_USERNAME }}
+                  password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+            - name: Extract metadata for backend
+              id: meta-backend
+              uses: docker/metadata-action@v5
+              with:
+                  images: ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}
+                  tags: |
+                      type=ref,event=branch
+                      type=ref,event=tag
+                      type=sha,prefix={{branch}}-
+                      type=raw,value=latest,enable={{is_default_branch}}
 
-      - name: Extract metadata for backend
-        id: meta-backend
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}
-          tags: |
-            type=ref,event=branch
-            type=ref,event=tag
-            type=sha,prefix={{branch}}-
-            type=raw,value=latest,enable={{is_default_branch}}
+            - name: Extract metadata for frontend
+              id: meta-frontend
+              uses: docker/metadata-action@v5
+              with:
+                  images: ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}
+                  tags: |
+                      type=ref,event=branch
+                      type=ref,event=tag
+                      type=sha,prefix={{branch}}-
+                      type=raw,value=latest,enable={{is_default_branch}}
 
-      - name: Extract metadata for frontend
-        id: meta-frontend
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}
-          tags: |
-            type=ref,event=branch
-            type=ref,event=tag
-            type=sha,prefix={{branch}}-
-            type=raw,value=latest,enable={{is_default_branch}}
+            - name: Build and push backend image
+              uses: docker/build-push-action@v5
+              with:
+                  context: ./application/backend
+                  file: ./application/backend/Dockerfile
+                  push: true
+                  tags: ${{ steps.meta-backend.outputs.tags }}
+                  labels: ${{ steps.meta-backend.outputs.labels }}
+                  cache-from: type=gha
+                  cache-to: type=gha,mode=max
 
-      - name: Build and push backend image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./application/backend
-          file: ./application/backend/Dockerfile
-          push: true
-          tags: ${{ steps.meta-backend.outputs.tags }}
-          labels: ${{ steps.meta-backend.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+            - name: Build and push frontend image
+              uses: docker/build-push-action@v5
+              with:
+                  context: ./application/frontend
+                  file: ./application/frontend/Dockerfile
+                  push: true
+                  tags: ${{ steps.meta-frontend.outputs.tags }}
+                  labels: ${{ steps.meta-frontend.outputs.labels }}
+                  cache-from: type=gha
+                  cache-to: type=gha,mode=max
 
-      - name: Build and push frontend image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./application/frontend
-          file: ./application/frontend/Dockerfile
-          push: true
-          tags: ${{ steps.meta-frontend.outputs.tags }}
-          labels: ${{ steps.meta-frontend.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+            - name: Update Kubernetes manifests with new image tags
+              run: |
+                  # Update backend image in K8s manifest
+                  sed -i "s|image: .*backend.*|image: ${{ steps.meta-backend.outputs.tags }}|g" k8s/backend-deployment.yaml
 
-      - name: Update Kubernetes manifests with new image tags
-        run: |
-          # Update backend image in K8s manifest
-          sed -i "s|image: .*backend.*|image: ${{ steps.meta-backend.outputs.tags }}|g" k8s/backend-deployment.yaml
+                  # Update frontend image in K8s manifest  
+                  sed -i "s|image: .*frontend.*|image: ${{ steps.meta-frontend.outputs.tags }}|g" k8s/frontend-deployment.yaml
 
-          # Update frontend image in K8s manifest  
-          sed -i "s|image: .*frontend.*|image: ${{ steps.meta-frontend.outputs.tags }}|g" k8s/frontend-deployment.yaml
+                  echo "Updated Kubernetes manifests:"
+                  echo "Backend: ${{ steps.meta-backend.outputs.tags }}"
+                  echo "Frontend: ${{ steps.meta-frontend.outputs.tags }}"
 
-          echo "Updated Kubernetes manifests:"
-          echo "Backend: ${{ steps.meta-backend.outputs.tags }}"
-          echo "Frontend: ${{ steps.meta-frontend.outputs.tags }}"
+            - name: Commit updated Kubernetes manifests
+              run: |
+                  git config --local user.email "action@github.com"
+                  git config --local user.name "GitHub Action"
+                  git add k8s/backend-deployment.yaml k8s/frontend-deployment.yaml
+                  git commit -m "chore: update image tags in K8s manifests [skip ci]" || echo "No changes to commit"
+                  git push || echo "No changes to push"
 
-      - name: Commit updated Kubernetes manifests
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add k8s/backend-deployment.yaml k8s/frontend-deployment.yaml
-          git commit -m "chore: update image tags in K8s manifests [skip ci]" || echo "No changes to commit"
-          git push || echo "No changes to push"
+            - name: Output image information
+              run: |
+                  echo "🐳 Built and pushed images:"
+                  echo "Backend: ${{ steps.meta-backend.outputs.tags }}"
+                  echo "Frontend: ${{ steps.meta-frontend.outputs.tags }}"
 
-      - name: Output image information
-        run: |
-          echo "🐳 Built and pushed images:"
-          echo "Backend: ${{ steps.meta-backend.outputs.tags }}"
-          echo "Frontend: ${{ steps.meta-frontend.outputs.tags }}"
+    # Cleanup Job
+    cleanup:
+        name: Cleanup
+        runs-on: ubuntu-latest
+        needs: [build, test, docker-build-push]
+        if: always()
+        steps:
+            - name: Cleanup build artifacts
+              run: |
+                  echo "🧹 Cleaning up build artifacts..."
+                  echo "✅ Build artifacts will be automatically cleaned up by GitHub Actions"
+                  echo "📦 Docker images are stored in registry"
+                  echo "🗑️  Local build files are cleaned up automatically"
 
-  # Cleanup Job
-  cleanup:
-    name: Cleanup
-    runs-on: ubuntu-latest
-    needs: [build, test, docker-build-push]
-    if: always()
-    steps:
-      - name: Cleanup build artifacts
-        run: |
-          echo "🧹 Cleaning up build artifacts..."
-          echo "✅ Build artifacts will be automatically cleaned up by GitHub Actions"
-          echo "📦 Docker images are stored in registry"
-          echo "🗑️  Local build files are cleaned up automatically"
-
-      - name: Cleanup summary
-        run: |
-          echo "🎯 Cleanup Summary:"
-          echo "✅ Build artifacts: Auto-cleaned by GitHub"
-          echo "✅ Docker images: Stored in registry"
-          echo "✅ Test coverage: Uploaded to Codecov"
-          echo "✅ K8s manifests: Updated and committed"
-          echo "🚀 Pipeline completed successfully!"
+            - name: Cleanup summary
+              run: |
+                  echo "🎯 Cleanup Summary:"
+                  echo "✅ Build artifacts: Auto-cleaned by GitHub"
+                  echo "✅ Docker images: Stored in registry"
+                  echo "✅ Test coverage: Uploaded to Codecov"
+                  echo "✅ K8s manifests: Updated and committed"
+                  echo "🚀 Pipeline completed successfully!"
