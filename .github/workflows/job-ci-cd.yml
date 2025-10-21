@@ -2,9 +2,9 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
 
 env:
   REGISTRY: docker.io
@@ -23,8 +23,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Fetch all history for better analysis
-      
+          fetch-depth: 0 # Fetch all history for better analysis
+
       - name: Generate version
         id: version
         run: |
@@ -33,9 +33,9 @@ jobs:
           else
             echo "version=${{ github.sha }}" >> $GITHUB_OUTPUT
           fi
-      
+
       - name: Display version
-        run: echo "Building version: ${{ steps.version.outputs.version }}"
+        run: 'echo "Building version: ${{ steps.version.outputs.version }}"'
 
   # Stage 2: SAST Scan (CodeQL)
   sast-scan:
@@ -49,17 +49,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: ['javascript', 'typescript']
+        language: ["javascript", "typescript"]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
+
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
           queries: security-and-quality
-      
+
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
         with:
@@ -76,22 +76,22 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'npm'
+          node-version: "18"
+          cache: "npm"
           cache-dependency-path: application/${{ matrix.service }}/package-lock.json
-      
+
       - name: Install dependencies
         working-directory: application/${{ matrix.service }}
         run: npm ci
-      
+
       - name: Run linting
         working-directory: application/${{ matrix.service }}
         run: npm run lint
-      
+
       - name: Run type checking
         working-directory: application/${{ matrix.service }}
         run: |
@@ -100,7 +100,7 @@ jobs:
           else
             npx tsc --noEmit
           fi
-      
+
       - name: Run unit tests
         working-directory: application/${{ matrix.service }}
         run: |
@@ -109,11 +109,11 @@ jobs:
           else
             echo "Frontend tests would run here (if configured)"
           fi
-      
+
       - name: Build application
         working-directory: application/${{ matrix.service }}
         run: npm run build
-      
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -132,16 +132,16 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-      
+
       - name: Log in to DockerHub
         uses: docker/login-action@v3
         with:
           username: ${{ env.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      
+
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
@@ -152,7 +152,7 @@ jobs:
             type=ref,event=pr
             type=sha,prefix={{branch}}-
             type=raw,value=latest,enable={{is_default_branch}}
-      
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
@@ -176,31 +176,31 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
+
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: ${{ env.REGISTRY }}/${{ env.DOCKERHUB_USERNAME }}/${{ matrix.service == 'backend' && env.IMAGE_NAME_BACKEND || env.IMAGE_NAME_FRONTEND }}:${{ github.sha }}
-          format: 'sarif'
-          output: 'trivy-results-${{ matrix.service }}.sarif'
-      
+          format: "sarif"
+          output: "trivy-results-${{ matrix.service }}.sarif"
+
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
-          sarif_file: 'trivy-results-${{ matrix.service }}.sarif'
-      
+          sarif_file: "trivy-results-${{ matrix.service }}.sarif"
+
       - name: Run Trivy for high/critical vulnerabilities
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: ${{ env.REGISTRY }}/${{ env.DOCKERHUB_USERNAME }}/${{ matrix.service == 'backend' && env.IMAGE_NAME_BACKEND || env.IMAGE_NAME_FRONTEND }}:${{ github.sha }}
-          format: 'table'
-          severity: 'HIGH,CRITICAL'
-          exit-code: '1'
+          format: "table"
+          severity: "HIGH,CRITICAL"
+          exit-code: "1"
 
   # Stage 6: Push to DockerHub (already done in build-docker stage)
   # This stage is for documentation and potential additional registry pushes
-  
+
   # Stage 7: Cleanup
   cleanup:
     name: Cleanup
@@ -212,20 +212,20 @@ jobs:
         run: |
           echo "Cleaning up local Docker images and cache"
           docker system prune -f
-      
+
       - name: Clean up build artifacts
         uses: geekyeggo/delete-artifact@v5
         with:
           name: |
             backend-build
             frontend-build
-      
+
       - name: Clean up old DockerHub images
         if: github.ref == 'refs/heads/main'
         run: |
           echo "In a real scenario, you would clean up old images from DockerHub"
           echo "This could be done using DockerHub API or a cleanup script"
-      
+
       - name: Notification
         run: |
           echo "Pipeline completed successfully!"
