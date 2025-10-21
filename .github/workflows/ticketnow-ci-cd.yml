@@ -177,16 +177,16 @@ jobs:
             verbose: true,
             forceExit: true,
             detectOpenHandles: true,
-            globals: {
-              'ts-jest': {
+            transform: {
+              '^.+\\.(ts|tsx)$': ['ts-jest', {
                 tsconfig: {
-                  compilerOptions: {
-                    strict: false,
-                    noImplicitAny: false,
-                    skipLibCheck: true
-                  }
+                  strict: false,
+                  noImplicitAny: false,
+                  skipLibCheck: true,
+                  esModuleInterop: true,
+                  allowSyntheticDefaultImports: true
                 }
-              }
+              }]
             }
           };
           EOF
