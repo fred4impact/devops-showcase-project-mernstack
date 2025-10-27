@@ -6,9 +6,7 @@ import { Image, ImageSchema } from '../schemas/image.schema';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([
-      { name: Image.name, schema: ImageSchema }
-    ]),
+    MongooseModule.forFeature([{ name: Image.name, schema: ImageSchema }]),
     // CeleryModule,
   ],
   providers: [S3Service],

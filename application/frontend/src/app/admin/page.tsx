@@ -9,10 +9,10 @@ import { Badge } from '@/components/ui/Badge';
 import { authApi } from '@/lib/api';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
-import { 
-  Users, 
-  Calendar, 
-  DollarSign, 
+import {
+  Users,
+  Calendar,
+  DollarSign,
   TrendingUp,
   Shield,
   BarChart3,
@@ -22,7 +22,7 @@ import {
   Edit,
   Trash2,
   Download,
-  RefreshCw
+  RefreshCw,
 } from 'lucide-react';
 
 interface AdminStats {
@@ -60,7 +60,7 @@ export default function AdminDashboard() {
   const fetchAdminData = async () => {
     try {
       setLoadingData(true);
-      
+
       // For now, we'll use mock data since admin endpoints aren't implemented yet
       // In a real implementation, you'd call admin-specific endpoints
       const mockStats: AdminStats = {
@@ -69,16 +69,46 @@ export default function AdminDashboard() {
         totalRevenue: 125000,
         totalTicketsSold: 3200,
         recentUsers: [
-          { id: '1', name: 'John Doe', email: 'john@example.com', role: 'attendee', createdAt: '2024-01-15' },
-          { id: '2', name: 'Jane Smith', email: 'jane@example.com', role: 'organizer', createdAt: '2024-01-14' },
-          { id: '3', name: 'Bob Johnson', email: 'bob@example.com', role: 'attendee', createdAt: '2024-01-13' },
+          {
+            id: '1',
+            name: 'John Doe',
+            email: 'john@example.com',
+            role: 'attendee',
+            createdAt: '2024-01-15',
+          },
+          {
+            id: '2',
+            name: 'Jane Smith',
+            email: 'jane@example.com',
+            role: 'organizer',
+            createdAt: '2024-01-14',
+          },
+          {
+            id: '3',
+            name: 'Bob Johnson',
+            email: 'bob@example.com',
+            role: 'attendee',
+            createdAt: '2024-01-13',
+          },
         ],
         recentEvents: [
-          { id: '1', title: 'Tech Conference 2024', organizer: 'Jane Smith', status: 'published', createdAt: '2024-01-15' },
-          { id: '2', title: 'Music Festival', organizer: 'Mike Wilson', status: 'draft', createdAt: '2024-01-14' },
-        ]
+          {
+            id: '1',
+            title: 'Tech Conference 2024',
+            organizer: 'Jane Smith',
+            status: 'published',
+            createdAt: '2024-01-15',
+          },
+          {
+            id: '2',
+            title: 'Music Festival',
+            organizer: 'Mike Wilson',
+            status: 'draft',
+            createdAt: '2024-01-14',
+          },
+        ],
       };
-      
+
       setStats(mockStats);
     } catch (error) {
       console.error('Error fetching admin data:', error);
@@ -93,7 +123,7 @@ export default function AdminDashboard() {
       const response = await api.post('/users/create-admin', {
         name: 'Admin User',
         email: 'admin@ticketnow.com',
-        password: 'admin123'
+        password: 'admin123',
       });
       toast.success('Admin user created successfully!');
     } catch (error: any) {
@@ -132,7 +162,9 @@ export default function AdminDashboard() {
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+              <h1 className="text-3xl font-bold text-gray-900">
+                Admin Dashboard
+              </h1>
               <p className="text-gray-600 mt-2">
                 Manage your platform and monitor system performance
               </p>
@@ -189,8 +221,12 @@ export default function AdminDashboard() {
                         <Users className="h-6 w-6 text-blue-600" />
                       </div>
                       <div className="ml-4">
-                        <p className="text-sm font-medium text-gray-600">Total Users</p>
-                        <p className="text-2xl font-bold text-gray-900">{stats.totalUsers.toLocaleString()}</p>
+                        <p className="text-sm font-medium text-gray-600">
+                          Total Users
+                        </p>
+                        <p className="text-2xl font-bold text-gray-900">
+                          {stats.totalUsers.toLocaleString()}
+                        </p>
                       </div>
                     </div>
                   </Card>
@@ -201,8 +237,12 @@ export default function AdminDashboard() {
                         <Calendar className="h-6 w-6 text-green-600" />
                       </div>
                       <div className="ml-4">
-                        <p className="text-sm font-medium text-gray-600">Total Events</p>
-                        <p className="text-2xl font-bold text-gray-900">{stats.totalEvents}</p>
+                        <p className="text-sm font-medium text-gray-600">
+                          Total Events
+                        </p>
+                        <p className="text-2xl font-bold text-gray-900">
+                          {stats.totalEvents}
+                        </p>
                       </div>
                     </div>
                   </Card>
@@ -213,8 +253,12 @@ export default function AdminDashboard() {
                         <DollarSign className="h-6 w-6 text-yellow-600" />
                       </div>
                       <div className="ml-4">
-                        <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-                        <p className="text-2xl font-bold text-gray-900">${stats.totalRevenue.toLocaleString()}</p>
+                        <p className="text-sm font-medium text-gray-600">
+                          Total Revenue
+                        </p>
+                        <p className="text-2xl font-bold text-gray-900">
+                          ${stats.totalRevenue.toLocaleString()}
+                        </p>
                       </div>
                     </div>
                   </Card>
@@ -225,8 +269,12 @@ export default function AdminDashboard() {
                         <TrendingUp className="h-6 w-6 text-purple-600" />
                       </div>
                       <div className="ml-4">
-                        <p className="text-sm font-medium text-gray-600">Tickets Sold</p>
-                        <p className="text-2xl font-bold text-gray-900">{stats.totalTicketsSold.toLocaleString()}</p>
+                        <p className="text-sm font-medium text-gray-600">
+                          Tickets Sold
+                        </p>
+                        <p className="text-2xl font-bold text-gray-900">
+                          {stats.totalTicketsSold.toLocaleString()}
+                        </p>
                       </div>
                     </div>
                   </Card>
@@ -235,15 +283,32 @@ export default function AdminDashboard() {
                 {/* Recent Activity */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <Card className="p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Users</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                      Recent Users
+                    </h3>
                     <div className="space-y-3">
                       {stats.recentUsers.map((user) => (
-                        <div key={user.id} className="flex items-center justify-between">
+                        <div
+                          key={user.id}
+                          className="flex items-center justify-between"
+                        >
                           <div>
-                            <p className="text-sm font-medium text-gray-900">{user.name}</p>
-                            <p className="text-sm text-gray-500">{user.email}</p>
+                            <p className="text-sm font-medium text-gray-900">
+                              {user.name}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              {user.email}
+                            </p>
                           </div>
-                          <Badge variant={user.role === 'admin' ? 'error' : user.role === 'organizer' ? 'success' : 'secondary'}>
+                          <Badge
+                            variant={
+                              user.role === 'admin'
+                                ? 'error'
+                                : user.role === 'organizer'
+                                  ? 'success'
+                                  : 'secondary'
+                            }
+                          >
                             {user.role}
                           </Badge>
                         </div>
@@ -252,15 +317,30 @@ export default function AdminDashboard() {
                   </Card>
 
                   <Card className="p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Events</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                      Recent Events
+                    </h3>
                     <div className="space-y-3">
                       {stats.recentEvents.map((event) => (
-                        <div key={event.id} className="flex items-center justify-between">
+                        <div
+                          key={event.id}
+                          className="flex items-center justify-between"
+                        >
                           <div>
-                            <p className="text-sm font-medium text-gray-900">{event.title}</p>
-                            <p className="text-sm text-gray-500">by {event.organizer}</p>
+                            <p className="text-sm font-medium text-gray-900">
+                              {event.title}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              by {event.organizer}
+                            </p>
                           </div>
-                          <Badge variant={event.status === 'published' ? 'success' : 'warning'}>
+                          <Badge
+                            variant={
+                              event.status === 'published'
+                                ? 'success'
+                                : 'warning'
+                            }
+                          >
                             {event.status}
                           </Badge>
                         </div>
@@ -275,7 +355,9 @@ export default function AdminDashboard() {
             {activeTab === 'users' && (
               <Card className="p-6">
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-semibold text-gray-900">User Management</h2>
+                  <h2 className="text-xl font-semibold text-gray-900">
+                    User Management
+                  </h2>
                   <div className="flex space-x-2">
                     <Button variant="outline" size="sm">
                       <Download className="mr-2 h-4 w-4" />
@@ -289,7 +371,9 @@ export default function AdminDashboard() {
                 </div>
                 <div className="bg-gray-50 p-8 rounded-lg text-center">
                   <Users className="mx-auto h-12 w-12 text-gray-400" />
-                  <h3 className="mt-2 text-sm font-medium text-gray-900">User Management</h3>
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">
+                    User Management
+                  </h3>
                   <p className="mt-1 text-sm text-gray-500">
                     Full user management functionality will be implemented here.
                   </p>
@@ -301,7 +385,9 @@ export default function AdminDashboard() {
             {activeTab === 'events' && (
               <Card className="p-6">
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-semibold text-gray-900">Event Management</h2>
+                  <h2 className="text-xl font-semibold text-gray-900">
+                    Event Management
+                  </h2>
                   <div className="flex space-x-2">
                     <Button variant="outline" size="sm">
                       <Download className="mr-2 h-4 w-4" />
@@ -315,9 +401,12 @@ export default function AdminDashboard() {
                 </div>
                 <div className="bg-gray-50 p-8 rounded-lg text-center">
                   <Calendar className="mx-auto h-12 w-12 text-gray-400" />
-                  <h3 className="mt-2 text-sm font-medium text-gray-900">Event Management</h3>
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">
+                    Event Management
+                  </h3>
                   <p className="mt-1 text-sm text-gray-500">
-                    Full event management functionality will be implemented here.
+                    Full event management functionality will be implemented
+                    here.
                   </p>
                 </div>
               </Card>
@@ -326,10 +415,14 @@ export default function AdminDashboard() {
             {/* Analytics Tab */}
             {activeTab === 'analytics' && (
               <Card className="p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-6">Platform Analytics</h2>
+                <h2 className="text-xl font-semibold text-gray-900 mb-6">
+                  Platform Analytics
+                </h2>
                 <div className="bg-gray-50 p-8 rounded-lg text-center">
                   <BarChart3 className="mx-auto h-12 w-12 text-gray-400" />
-                  <h3 className="mt-2 text-sm font-medium text-gray-900">Analytics Dashboard</h3>
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">
+                    Analytics Dashboard
+                  </h3>
                   <p className="mt-1 text-sm text-gray-500">
                     Advanced analytics and reporting will be implemented here.
                   </p>
@@ -340,12 +433,17 @@ export default function AdminDashboard() {
             {/* Settings Tab */}
             {activeTab === 'settings' && (
               <Card className="p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-6">Platform Settings</h2>
+                <h2 className="text-xl font-semibold text-gray-900 mb-6">
+                  Platform Settings
+                </h2>
                 <div className="bg-gray-50 p-8 rounded-lg text-center">
                   <Settings className="mx-auto h-12 w-12 text-gray-400" />
-                  <h3 className="mt-2 text-sm font-medium text-gray-900">Platform Configuration</h3>
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">
+                    Platform Configuration
+                  </h3>
                   <p className="mt-1 text-sm text-gray-500">
-                    Platform-wide settings and configuration will be implemented here.
+                    Platform-wide settings and configuration will be implemented
+                    here.
                   </p>
                 </div>
               </Card>

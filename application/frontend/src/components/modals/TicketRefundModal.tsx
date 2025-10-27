@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
 import { X, AlertTriangle, DollarSign } from 'lucide-react';
@@ -23,7 +22,12 @@ const REFUND_REASONS = [
   { value: 'other', label: 'Other' },
 ];
 
-export function TicketRefundModal({ isOpen, onClose, ticket, onSuccess }: TicketRefundModalProps) {
+export function TicketRefundModal({
+  isOpen,
+  onClose,
+  ticket,
+  onSuccess,
+}: TicketRefundModalProps) {
   const [formData, setFormData] = useState({
     reason: '',
     description: '',
@@ -32,7 +36,7 @@ export function TicketRefundModal({ isOpen, onClose, ticket, onSuccess }: Ticket
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.reason) {
       toast.error('Please select a refund reason');
       return;
@@ -47,7 +51,9 @@ export function TicketRefundModal({ isOpen, onClose, ticket, onSuccess }: Ticket
       setFormData({ reason: '', description: '' });
     } catch (error: any) {
       console.error('Error requesting refund:', error);
-      toast.error(error.response?.data?.message || 'Failed to submit refund request');
+      toast.error(
+        error.response?.data?.message || 'Failed to submit refund request',
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -64,7 +70,9 @@ export function TicketRefundModal({ isOpen, onClose, ticket, onSuccess }: Ticket
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <Card className="w-full max-w-md p-6">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-gray-900">Request Refund</h2>
+          <h2 className="text-xl font-semibold text-gray-900">
+            Request Refund
+          </h2>
           <Button
             onClick={handleClose}
             variant="outline"
@@ -76,11 +84,13 @@ export function TicketRefundModal({ isOpen, onClose, ticket, onSuccess }: Ticket
         </div>
 
         <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-          <h3 className="font-medium text-gray-900 mb-2">{ticket?.eventId?.title}</h3>
+          <h3 className="font-medium text-gray-900 mb-2">
+            {ticket?.eventId?.title}
+          </h3>
           <p className="text-sm text-gray-600">{ticket?.ticketTypeId?.name}</p>
           <div className="flex items-center text-sm text-gray-500 mt-1">
-            <DollarSign className="w-4 h-4 mr-1" />
-            ${(ticket?.ticketTypeId?.priceCents / 100).toFixed(2)}
+            <DollarSign className="w-4 h-4 mr-1" />$
+            {(ticket?.ticketTypeId?.priceCents / 100).toFixed(2)}
           </div>
         </div>
 
@@ -91,7 +101,9 @@ export function TicketRefundModal({ isOpen, onClose, ticket, onSuccess }: Ticket
             </label>
             <select
               value={formData.reason}
-              onChange={(e) => setFormData(prev => ({ ...prev, reason: e.target.value }))}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, reason: e.target.value }))
+              }
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
               required
             >
@@ -110,7 +122,12 @@ export function TicketRefundModal({ isOpen, onClose, ticket, onSuccess }: Ticket
             </label>
             <textarea
               value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  description: e.target.value,
+                }))
+              }
               placeholder="Please provide more details about your refund request..."
               rows={3}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
@@ -141,8 +158,10 @@ export function TicketRefundModal({ isOpen, onClose, ticket, onSuccess }: Ticket
             <AlertTriangle className="w-4 h-4 text-blue-600 mt-0.5 mr-2 flex-shrink-0" />
             <div className="text-sm text-blue-800">
               <p className="font-medium mb-1">Refund Policy</p>
-              <p>Refund requests are subject to the event organizer's refund policy. 
-              You will be notified once your request is reviewed.</p>
+              <p>
+                Refund requests are subject to the event organizer&apos;s refund
+                policy. You will be notified once your request is reviewed.
+              </p>
             </div>
           </div>
         </div>

@@ -50,7 +50,11 @@ export default function Checkout() {
   const router = useRouter();
   const { user } = useAuth();
   const { sessionId } = useCart();
-  const [cart, setCart] = useState<Cart>({ items: [], totalCents: 0, itemCount: 0 });
+  const [cart, setCart] = useState<Cart>({
+    items: [],
+    totalCents: 0,
+    itemCount: 0,
+  });
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [paymentForm, setPaymentForm] = useState<PaymentForm>({
@@ -77,7 +81,7 @@ export default function Checkout() {
       setLoading(true);
       const response = await api.get(`/cart?sessionId=${sessionId}`);
       setCart(response.data);
-      
+
       if (response.data.items.length === 0) {
         router.push('/cart');
       }
@@ -90,9 +94,11 @@ export default function Checkout() {
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
     const { name, value } = e.target;
-    setPaymentForm(prev => ({
+    setPaymentForm((prev) => ({
       ...prev,
       [name]: value,
     }));
@@ -107,9 +113,9 @@ export default function Checkout() {
 
     try {
       setProcessing(true);
-      
+
       const orderData = {
-        items: cart.items.map(item => ({
+        items: cart.items.map((item) => ({
           ticketTypeId: item.ticketTypeId,
           qty: item.quantity,
           seatId: item.seatId,
@@ -121,7 +127,7 @@ export default function Checkout() {
 
       // Create payment intent
       const response = await api.post('/orders/payment-intent', orderData);
-      
+
       if (response.data.paymentIntent) {
         const stripe = await getStripe();
         if (!stripe) {
@@ -190,11 +196,11 @@ export default function Checkout() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Your cart is empty</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            Your cart is empty
+          </h1>
           <p className="text-gray-600 mb-4">Add some events to get started!</p>
-          <Button onClick={() => router.push('/events')}>
-            Browse Events
-          </Button>
+          <Button onClick={() => router.push('/events')}>Browse Events</Button>
         </div>
       </div>
     );
@@ -214,12 +220,17 @@ export default function Checkout() {
           <div className="space-y-6">
             {/* Customer Information */}
             <Card className="p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Customer Information</h2>
-              
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                Customer Information
+              </h2>
+
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label
+                      htmlFor="name"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
                       Full Name *
                     </label>
                     <Input
@@ -232,7 +243,10 @@ export default function Checkout() {
                     />
                   </div>
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label
+                      htmlFor="email"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
                       Email Address *
                     </label>
                     <Input
@@ -245,9 +259,12 @@ export default function Checkout() {
                     />
                   </div>
                 </div>
-                
+
                 <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="phone"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Phone Number
                   </label>
                   <Input
@@ -263,11 +280,16 @@ export default function Checkout() {
 
             {/* Billing Address */}
             <Card className="p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Billing Address</h2>
-              
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                Billing Address
+              </h2>
+
               <div className="space-y-4">
                 <div>
-                  <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="address"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Street Address *
                   </label>
                   <Input
@@ -279,10 +301,13 @@ export default function Checkout() {
                     required
                   />
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label
+                      htmlFor="city"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
                       City *
                     </label>
                     <Input
@@ -295,7 +320,10 @@ export default function Checkout() {
                     />
                   </div>
                   <div>
-                    <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label
+                      htmlFor="state"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
                       State *
                     </label>
                     <Input
@@ -308,7 +336,10 @@ export default function Checkout() {
                     />
                   </div>
                   <div>
-                    <label htmlFor="zipCode" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label
+                      htmlFor="zipCode"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
                       ZIP Code *
                     </label>
                     <Input
@@ -321,9 +352,12 @@ export default function Checkout() {
                     />
                   </div>
                 </div>
-                
+
                 <div>
-                  <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="country"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Country *
                   </label>
                   <select
@@ -351,26 +385,35 @@ export default function Checkout() {
 
             {/* Payment Method */}
             <Card className="p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Payment Method</h2>
-              
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                Payment Method
+              </h2>
+
               {/* Payment Placeholder for Testing */}
               <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                 <div className="flex items-center space-x-2 mb-2">
                   <div className="w-4 h-4 bg-yellow-500 rounded-full"></div>
-                  <span className="font-medium text-yellow-800">Payment System - Development Mode</span>
+                  <span className="font-medium text-yellow-800">
+                    Payment System - Development Mode
+                  </span>
                 </div>
                 <p className="text-sm text-yellow-700">
-                  Payment processing is disabled for testing. In production, this will integrate with Stripe.
+                  Payment processing is disabled for testing. In production,
+                  this will integrate with Stripe.
                 </p>
               </div>
-              
+
               <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg">
                 <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center">
                   <span className="text-white text-sm font-bold">S</span>
                 </div>
                 <div>
-                  <p className="font-medium text-gray-900">Stripe (Coming Soon)</p>
-                  <p className="text-sm text-gray-600">Secure payment processing</p>
+                  <p className="font-medium text-gray-900">
+                    Stripe (Coming Soon)
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Secure payment processing
+                  </p>
                 </div>
               </div>
             </Card>
@@ -379,16 +422,23 @@ export default function Checkout() {
           {/* Order Summary */}
           <div className="space-y-6">
             <Card className="p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Order Summary</h2>
-              
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                Order Summary
+              </h2>
+
               <div className="space-y-4">
                 {cart.items.map((item, index) => (
-                  <div key={index} className="flex items-center justify-between py-2 border-b border-gray-200">
+                  <div
+                    key={index}
+                    className="flex items-center justify-between py-2 border-b border-gray-200"
+                  >
                     <div className="flex-1">
                       <p className="font-medium text-gray-900">
                         {item.ticketType?.event?.title || 'Loading...'}
                       </p>
-                      <p className="text-sm text-gray-600">{item.ticketType?.name}</p>
+                      <p className="text-sm text-gray-600">
+                        {item.ticketType?.name}
+                      </p>
                       {item.seatId && (
                         <Badge variant="secondary" className="mt-1">
                           Seat: {item.seatId}
@@ -399,16 +449,20 @@ export default function Checkout() {
                       <p className="font-medium text-gray-900">
                         ${formatPrice(item.priceCents * item.quantity)}
                       </p>
-                      <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
+                      <p className="text-sm text-gray-500">
+                        Qty: {item.quantity}
+                      </p>
                     </div>
                   </div>
                 ))}
               </div>
-              
+
               <div className="mt-6 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Subtotal</span>
-                  <span className="text-gray-900">${formatPrice(cart.totalCents)}</span>
+                  <span className="text-gray-900">
+                    ${formatPrice(cart.totalCents)}
+                  </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Processing Fee</span>
@@ -421,16 +475,22 @@ export default function Checkout() {
                 <hr className="border-gray-200" />
                 <div className="flex justify-between text-lg font-semibold">
                   <span className="text-gray-900">Total</span>
-                  <span className="text-gray-900">${formatPrice(cart.totalCents)}</span>
+                  <span className="text-gray-900">
+                    ${formatPrice(cart.totalCents)}
+                  </span>
                 </div>
               </div>
             </Card>
 
             {/* Terms and Conditions */}
             <Card className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Terms & Conditions</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Terms & Conditions
+              </h3>
               <div className="text-sm text-gray-600 space-y-2">
-                <p>• All sales are final. No refunds unless event is cancelled.</p>
+                <p>
+                  • All sales are final. No refunds unless event is cancelled.
+                </p>
                 <p>• Tickets are non-transferable.</p>
                 <p>• Valid photo ID required for entry.</p>
                 <p>• Event organizers reserve the right to refuse entry.</p>
@@ -440,11 +500,18 @@ export default function Checkout() {
             {/* Complete Purchase */}
             <Button
               onClick={createOrder}
-              disabled={processing || !paymentForm.name || !paymentForm.email || !paymentForm.address}
+              disabled={
+                processing ||
+                !paymentForm.name ||
+                !paymentForm.email ||
+                !paymentForm.address
+              }
               className="w-full bg-primary-600 hover:bg-primary-700"
               size="lg"
             >
-              {processing ? 'Processing...' : `Complete Purchase - $${formatPrice(cart.totalCents)}`}
+              {processing
+                ? 'Processing...'
+                : `Complete Purchase - $${formatPrice(cart.totalCents)}`}
             </Button>
           </div>
         </div>

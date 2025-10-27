@@ -34,14 +34,17 @@ export class StripeService {
     }
   }
 
-  async confirmPaymentIntent(paymentIntentId: string): Promise<Stripe.PaymentIntent> {
+  async confirmPaymentIntent(
+    paymentIntentId: string,
+  ): Promise<Stripe.PaymentIntent> {
     try {
-      const paymentIntent = await this.stripe.paymentIntents.retrieve(paymentIntentId);
-      
+      const paymentIntent =
+        await this.stripe.paymentIntents.retrieve(paymentIntentId);
+
       if (paymentIntent.status === 'succeeded') {
         return paymentIntent;
       }
-      
+
       throw new BadRequestException('Payment not completed');
     } catch (error) {
       console.error('Error confirming payment intent:', error);
@@ -72,7 +75,9 @@ export class StripeService {
     }
   }
 
-  async retrievePaymentIntent(paymentIntentId: string): Promise<Stripe.PaymentIntent> {
+  async retrievePaymentIntent(
+    paymentIntentId: string,
+  ): Promise<Stripe.PaymentIntent> {
     try {
       return await this.stripe.paymentIntents.retrieve(paymentIntentId);
     } catch (error) {
@@ -81,7 +86,10 @@ export class StripeService {
     }
   }
 
-  async createRefund(paymentIntentId: string, amount?: number): Promise<Stripe.Refund> {
+  async createRefund(
+    paymentIntentId: string,
+    amount?: number,
+  ): Promise<Stripe.Refund> {
     try {
       const refundData: Stripe.RefundCreateParams = {
         payment_intent: paymentIntentId,
@@ -98,11 +106,18 @@ export class StripeService {
     }
   }
 
-  constructWebhookEvent(payload: string | Buffer, signature: string): Stripe.Event {
+  constructWebhookEvent(
+    payload: string | Buffer,
+    signature: string,
+  ): Stripe.Event {
     const webhookSecret = this.configService.get('STRIPE_WEBHOOK_SECRET');
-    
+
     try {
-      return this.stripe.webhooks.constructEvent(payload, signature, webhookSecret);
+      return this.stripe.webhooks.constructEvent(
+        payload,
+        signature,
+        webhookSecret,
+      );
     } catch (error) {
       console.error('Error constructing webhook event:', error);
       throw new BadRequestException('Invalid webhook signature');

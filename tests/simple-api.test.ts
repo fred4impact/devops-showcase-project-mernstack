@@ -1,8 +1,8 @@
 import axios from 'axios';
 
-// Test configuration
-const API_BASE_URL = 'http://localhost:3001';
-const FRONTEND_URL = 'http://localhost:3000';
+// Test configuration - use environment variables for CI/CD compatibility
+const API_BASE_URL = process.env.BACKEND_URL || 'http://localhost:3001';
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 
 describe('Simple API Tests against Running Application', () => {
   let authToken: string;
@@ -20,7 +20,7 @@ describe('Simple API Tests against Running Application', () => {
         const response = await axios.get(`${API_BASE_URL}/health`);
         expect(response.status).toBe(200);
         console.log('✅ Health check passed');
-      } catch (error) {
+      } catch (error: any) {
         console.log('❌ Health check failed:', error.message);
         throw error;
       }
@@ -32,7 +32,7 @@ describe('Simple API Tests against Running Application', () => {
         expect(response.status).toBe(200);
         expect(response.data).toHaveProperty('status');
         console.log('✅ API health check passed');
-      } catch (error) {
+      } catch (error: any) {
         console.log('❌ API health check failed:', error.message);
         throw error;
       }
@@ -57,7 +57,7 @@ describe('Simple API Tests against Running Application', () => {
         authToken = response.data.token;
         testUser = response.data.user;
         console.log('✅ User registration successful');
-      } catch (error) {
+      } catch (error: any) {
         console.log('❌ User registration failed:', error.response?.data || error.message);
         throw error;
       }
@@ -74,7 +74,7 @@ describe('Simple API Tests against Running Application', () => {
         expect(response.status).toBe(201);
         expect(response.data).toHaveProperty('token');
         console.log('✅ User login successful');
-      } catch (error) {
+      } catch (error: any) {
         console.log('❌ User login failed:', error.response?.data || error.message);
         throw error;
       }
@@ -90,7 +90,7 @@ describe('Simple API Tests against Running Application', () => {
         expect(response.status).toBe(200);
         expect(response.data.email).toBe(testUser.email);
         console.log('✅ User profile retrieval successful');
-      } catch (error) {
+      } catch (error: any) {
         console.log('❌ User profile retrieval failed:', error.response?.data || error.message);
         throw error;
       }
@@ -127,8 +127,43 @@ describe('Simple API Tests against Running Application', () => {
         
         testEvent = response.data;
         console.log('✅ Event creation successful');
-      } catch (error) {
+      } catch (error: any) {
         console.log('❌ Event creation failed:', error.response?.data || error.message);
+        throw error;
+      }
+    });
+
+    it('should create a ticket type for the event', async () => {
+      const ticketTypeData = {
+        name: 'General Admission',
+        description: 'General admission ticket',
+        priceCents: 5000, // $50.00
+        currency: 'USD',
+        capacity: 100,
+        salesStart: new Date(Date.now() + 5 * 1000).toISOString(), // 5 seconds from now
+        salesEnd: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toISOString(), // Day before event
+        refundable: true
+      };
+
+      try {
+        const response = await axios.post(`${API_BASE_URL}/ticket-types/event/${testEvent._id}`, ticketTypeData, {
+          headers: {
+            'Authorization': `Bearer ${authToken}`
+          }
+        });
+        expect(response.status).toBe(201);
+        expect(response.data).toHaveProperty('_id');
+        
+        // Store the ticket type ID for cart tests
+        testEvent.ticketTypeId = response.data._id;
+        console.log('✅ Ticket type creation successful');
+        
+        // Wait for sales to start (5 seconds + buffer)
+        console.log('⏳ Waiting for ticket sales to start...');
+        await new Promise(resolve => setTimeout(resolve, 6 * 1000)); // 6 seconds
+        console.log('✅ Ticket sales should now be active');
+      } catch (error: any) {
+        console.log('❌ Ticket type creation failed:', error.response?.data || error.message);
         throw error;
       }
     });
@@ -140,7 +175,7 @@ describe('Simple API Tests against Running Application', () => {
         expect(response.data).toHaveProperty('events');
         expect(Array.isArray(response.data.events)).toBe(true);
         console.log('✅ Event listing successful');
-      } catch (error) {
+      } catch (error: any) {
         console.log('❌ Event listing failed:', error.response?.data || error.message);
         throw error;
       }
@@ -152,7 +187,7 @@ describe('Simple API Tests against Running Application', () => {
         expect(response.status).toBe(200);
         expect(response.data._id).toBe(testEvent._id);
         console.log('✅ Event retrieval successful');
-      } catch (error) {
+      } catch (error: any) {
         console.log('❌ Event retrieval failed:', error.response?.data || error.message);
         throw error;
       }
@@ -173,7 +208,7 @@ describe('Simple API Tests against Running Application', () => {
         expect(response.status).toBe(200);
         expect(response.data.title).toBe(updateData.title);
         console.log('✅ Event update successful');
-      } catch (error) {
+      } catch (error: any) {
         console.log('❌ Event update failed:', error.response?.data || error.message);
         throw error;
       }
@@ -184,7 +219,7 @@ describe('Simple API Tests against Running Application', () => {
     it('should add item to cart', async () => {
       const sessionId = `test-session-${Date.now()}`;
       const cartItem = {
-        ticketTypeId: testEvent.ticketTypes?.[0]?._id || 'default-ticket-type',
+        ticketTypeId: testEvent.ticketTypeId,
         quantity: 2
       };
 
@@ -193,9 +228,12 @@ describe('Simple API Tests against Running Application', () => {
           params: { sessionId }
         });
         expect(response.status).toBe(201);
-        expect(response.data).toHaveProperty('_id');
+        expect(response.data).toHaveProperty('sessionId');
+        expect(response.data).toHaveProperty('items');
+        expect(response.data.items).toHaveLength(1);
+        expect(response.data.items[0].quantity).toBe(2);
         console.log('✅ Cart item addition successful');
-      } catch (error) {
+      } catch (error: any) {
         console.log('❌ Cart item addition failed:', error.response?.data || error.message);
         throw error;
       }
@@ -212,7 +250,7 @@ describe('Simple API Tests against Running Application', () => {
         expect(response.data).toHaveProperty('items');
         expect(Array.isArray(response.data.items)).toBe(true);
         console.log('✅ Cart retrieval successful');
-      } catch (error) {
+      } catch (error: any) {
         console.log('❌ Cart retrieval failed:', error.response?.data || error.message);
         throw error;
       }
@@ -225,7 +263,7 @@ describe('Simple API Tests against Running Application', () => {
         const response = await axios.get(FRONTEND_URL);
         expect(response.status).toBe(200);
         console.log('✅ Frontend application accessible');
-      } catch (error) {
+      } catch (error: any) {
         console.log('❌ Frontend application not accessible:', error.message);
         throw error;
       }

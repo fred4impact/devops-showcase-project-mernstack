@@ -71,7 +71,11 @@ export default function OrganizerEvents() {
   };
 
   const deleteEvent = async (eventId: string) => {
-    if (!confirm('Are you sure you want to delete this event? This action cannot be undone.')) {
+    if (
+      !confirm(
+        'Are you sure you want to delete this event? This action cannot be undone.',
+      )
+    ) {
       return;
     }
 
@@ -140,7 +144,7 @@ export default function OrganizerEvents() {
       return 0;
     }
     return event.ticketTypes.reduce((total, ticketType) => {
-      return total + (ticketType.priceCents * ticketType.soldCount);
+      return total + ticketType.priceCents * ticketType.soldCount;
     }, 0);
   };
 
@@ -153,10 +157,12 @@ export default function OrganizerEvents() {
     }, 0);
   };
 
-  const filteredEvents = (events || []).filter(event => {
-    const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         event.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || event.status === statusFilter;
+  const filteredEvents = (events || []).filter((event) => {
+    const matchesSearch =
+      event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      event.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus =
+      statusFilter === 'all' || event.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
@@ -180,7 +186,9 @@ export default function OrganizerEvents() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">My Events</h1>
-              <p className="text-gray-600 mt-2">Manage your events and track performance</p>
+              <p className="text-gray-600 mt-2">
+                Manage your events and track performance
+              </p>
             </div>
             <Button
               onClick={() => router.push('/events/create')}
@@ -219,16 +227,27 @@ export default function OrganizerEvents() {
         {filteredEvents.length === 0 ? (
           <Card className="p-12 text-center">
             <div className="text-gray-500 mb-4">
-              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              <svg
+                className="mx-auto h-12 w-12 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
               </svg>
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No events found</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              No events found
+            </h3>
             <p className="text-gray-500 mb-4">
-              {searchTerm || statusFilter !== 'all' 
-                ? 'Try adjusting your search or filters' 
-                : 'Create your first event to get started'
-              }
+              {searchTerm || statusFilter !== 'all'
+                ? 'Try adjusting your search or filters'
+                : 'Create your first event to get started'}
             </p>
             <Button
               onClick={() => router.push('/events/create')}
@@ -243,18 +262,47 @@ export default function OrganizerEvents() {
               <Card key={event._id} className="p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">{event.title}</h3>
-                    <p className="text-gray-600 text-sm mb-2 line-clamp-2">{event.description}</p>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                      {event.title}
+                    </h3>
+                    <p className="text-gray-600 text-sm mb-2 line-clamp-2">
+                      {event.description}
+                    </p>
                     <div className="flex items-center text-sm text-gray-500 mb-2">
-                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      <svg
+                        className="w-4 h-4 mr-1"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
                       </svg>
                       {formatDate(event.startAt)}
                     </div>
                     <div className="flex items-center text-sm text-gray-500">
-                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <svg
+                        className="w-4 h-4 mr-1"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
                       </svg>
                       {event.venue.name}
                     </div>
@@ -267,24 +315,34 @@ export default function OrganizerEvents() {
                 {/* Event Stats */}
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   <div className="text-center p-3 bg-gray-50 rounded-lg">
-                    <p className="text-2xl font-bold text-gray-900">${formatPrice(getTotalRevenue(event))}</p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      ${formatPrice(getTotalRevenue(event))}
+                    </p>
                     <p className="text-xs text-gray-500">Revenue</p>
                   </div>
                   <div className="text-center p-3 bg-gray-50 rounded-lg">
-                    <p className="text-2xl font-bold text-gray-900">{getTotalTicketsSold(event)}</p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {getTotalTicketsSold(event)}
+                    </p>
                     <p className="text-xs text-gray-500">Tickets Sold</p>
                   </div>
                 </div>
 
                 {/* Ticket Types */}
                 <div className="mb-4">
-                  <h4 className="text-sm font-medium text-gray-700 mb-2">Ticket Types</h4>
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">
+                    Ticket Types
+                  </h4>
                   <div className="space-y-1">
                     {event.ticketTypes.map((ticketType) => (
-                      <div key={ticketType._id} className="flex justify-between text-sm">
+                      <div
+                        key={ticketType._id}
+                        className="flex justify-between text-sm"
+                      >
                         <span className="text-gray-600">{ticketType.name}</span>
                         <span className="text-gray-900">
-                          {ticketType.soldCount}/{ticketType.capacity} - ${formatPrice(ticketType.priceCents)}
+                          {ticketType.soldCount}/{ticketType.capacity} - $
+                          {formatPrice(ticketType.priceCents)}
                         </span>
                       </div>
                     ))}
@@ -320,14 +378,16 @@ export default function OrganizerEvents() {
                       Duplicate
                     </Button>
                   </div>
-                  
+
                   {/* Secondary Actions Row */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <label className="text-xs text-gray-500">Status:</label>
                       <select
                         value={event.status}
-                        onChange={(e) => updateEventStatus(event._id, e.target.value)}
+                        onChange={(e) =>
+                          updateEventStatus(event._id, e.target.value)
+                        }
                         className="text-xs px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                       >
                         <option value="draft">Draft</option>

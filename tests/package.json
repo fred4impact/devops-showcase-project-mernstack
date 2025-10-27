@@ -4,9 +4,6 @@
   "description": "Smoke tests for TicketNow MERN stack application",
   "scripts": {
     "test": "jest",
-    "test:backend": "jest --testPathPattern=backend",
-    "test:frontend": "jest --testPathPattern=frontend",
-    "test:integration": "jest --testPathPattern=integration",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:ci": "jest --ci --coverage --watchAll=false",
@@ -15,10 +12,7 @@
     "test:events": "jest --testPathPattern=events",
     "test:orders": "jest --testPathPattern=orders",
     "test:cart": "jest --testPathPattern=cart",
-    "test:components": "jest --testPathPattern=components",
-    "test:pages": "jest --testPathPattern=pages",
-    "test:flows": "jest --testPathPattern=user-flows",
-    "test:api": "jest --testPathPattern=api-integration",
+    "test:api": "jest --testPathPattern=api",
     "setup": "npm install && npm run test:setup",
     "test:setup": "node -e \"console.log('Test setup completed')\"",
     "clean": "rm -rf coverage node_modules/.cache",
@@ -27,53 +21,19 @@
     "type-check": "tsc --noEmit"
   },
   "devDependencies": {
-    "jest": "^29.5.0",
-    "supertest": "^6.3.3",
     "@types/jest": "^29.5.2",
-    "@types/supertest": "^2.0.12",
-    "axios": "^1.6.0",
-    "puppeteer": "^21.5.0",
     "@types/node": "^20.8.0",
-    "typescript": "^5.2.2",
-    "ts-jest": "^29.1.0",
-    "@testing-library/react": "^13.4.0",
-    "@testing-library/jest-dom": "^6.1.0",
-    "@testing-library/user-event": "^14.4.3",
-    "eslint": "^8.52.0",
+    "@types/supertest": "^2.0.12",
     "@typescript-eslint/eslint-plugin": "^6.9.1",
-    "@typescript-eslint/parser": "^6.9.1"
-  },
-  "jest": {
-    "preset": "ts-jest",
-    "testEnvironment": "node",
-    "testMatch": [
-      "**/tests/**/*.test.ts",
-      "**/tests/**/*.test.tsx",
-      "**/tests/**/*.spec.ts",
-      "**/tests/**/*.spec.tsx"
-    ],
-    "collectCoverageFrom": [
-      "**/*.{ts,tsx}",
-      "!**/*.d.ts",
-      "!**/node_modules/**",
-      "!**/coverage/**",
-      "!**/dist/**"
-    ],
-    "coverageDirectory": "coverage",
-    "coverageReporters": ["text", "lcov", "html", "json"],
-    "coverageThreshold": {
-      "global": {
-        "branches": 70,
-        "functions": 70,
-        "lines": 70,
-        "statements": 70
-      }
-    },
-    "setupFilesAfterEnv": ["<rootDir>/setup.ts"],
-    "testTimeout": 30000,
-    "verbose": true,
-    "forceExit": true,
-    "detectOpenHandles": true
+    "@typescript-eslint/parser": "^6.9.1",
+    "axios": "^1.6.0",
+    "dotenv": "^16.3.1",
+    "eslint": "^8.52.0",
+    "jest": "^29.5.0",
+    "puppeteer": "^21.5.0",
+    "supertest": "^6.3.3",
+    "ts-jest": "^29.1.0",
+    "typescript": "^5.2.2"
   },
   "keywords": [
     "testing",

@@ -12,7 +12,7 @@ import { StripeModule } from '../stripe/stripe.module';
   imports: [
     MongooseModule.forFeature([
       { name: Order.name, schema: OrderSchema },
-      { name: TicketType.name, schema: TicketTypeSchema }
+      { name: TicketType.name, schema: TicketTypeSchema },
     ]),
     CartModule,
     TicketTypesModule,

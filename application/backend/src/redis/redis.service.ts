@@ -45,7 +45,12 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     return result === 1;
   }
 
-  async lockSeat(eventId: string, seatId: string, sessionId: string, ttl: number = 600): Promise<boolean> {
+  async lockSeat(
+    eventId: string,
+    seatId: string,
+    sessionId: string,
+    ttl: number = 600,
+  ): Promise<boolean> {
     const key = `seat-lock:${eventId}:${seatId}`;
     const result = await this.client.set(key, sessionId, 'EX', ttl, 'NX');
     return result === 'OK';

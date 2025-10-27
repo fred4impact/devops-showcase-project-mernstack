@@ -1,6 +1,22 @@
-import { Controller, Post, Body, UseGuards, Get, Request, Put, UseInterceptors, UploadedFile } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  UseGuards,
+  Get,
+  Request,
+  Put,
+  UseInterceptors,
+  UploadedFile,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiConsumes,
+} from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -14,7 +30,7 @@ import { S3Service } from '../s3/s3.service';
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
-    private readonly s3Service: S3Service
+    private readonly s3Service: S3Service,
   ) {}
 
   @Post('register')
@@ -45,7 +61,10 @@ export class AuthController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update user profile' })
   @ApiResponse({ status: 200, description: 'Profile updated successfully' })
-  async updateProfile(@Request() req, @Body() updateProfileDto: UpdateProfileDto) {
+  async updateProfile(
+    @Request() req,
+    @Body() updateProfileDto: UpdateProfileDto,
+  ) {
     return this.authService.updateProfile(req.user.id, updateProfileDto);
   }
 
@@ -55,11 +74,14 @@ export class AuthController {
   @ApiOperation({ summary: 'Change user password' })
   @ApiResponse({ status: 200, description: 'Password changed successfully' })
   @ApiResponse({ status: 401, description: 'Current password is incorrect' })
-  async changePassword(@Request() req, @Body() changePasswordDto: ChangePasswordDto) {
+  async changePassword(
+    @Request() req,
+    @Body() changePasswordDto: ChangePasswordDto,
+  ) {
     return this.authService.changePassword(
       req.user.id,
       changePasswordDto.currentPassword,
-      changePasswordDto.newPassword
+      changePasswordDto.newPassword,
     );
   }
 
@@ -78,32 +100,37 @@ export class AuthController {
   @UseInterceptors(FileInterceptor('image'))
   @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'Upload profile picture' })
-  @ApiResponse({ status: 200, description: 'Profile picture uploaded successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Profile picture uploaded successfully',
+  })
   async uploadProfilePicture(
     @Request() req,
-    @UploadedFile() file: Express.Multer.File
+    @UploadedFile() file: Express.Multer.File,
   ) {
     try {
       console.log('Uploading profile picture for user:', req.user.id);
       console.log('File details:', {
         originalname: file.originalname,
         mimetype: file.mimetype,
-        size: file.size
+        size: file.size,
       });
-      
+
       const imageUrl = await this.s3Service.uploadFile(
         file.buffer,
         `users/${req.user.id}/profile-${Date.now()}.${file.originalname.split('.').pop()}`,
-        file.mimetype
+        file.mimetype,
       );
-      
+
       console.log('Profile picture uploaded, URL:', imageUrl);
-      
+
       // Update user profile with image URL
-      await this.authService.updateProfile(req.user.id, { profilePicture: imageUrl });
-      
+      await this.authService.updateProfile(req.user.id, {
+        profilePicture: imageUrl,
+      });
+
       console.log('User profile updated with image URL');
-      
+
       // Queue profile picture processing task - DISABLED (Celery removed)
       // try {
       //   await this.s3Service['celeryService'].processImage(imageUrl, 'profile', req.user.id);
@@ -111,7 +138,7 @@ export class AuthController {
       // } catch (error) {
       //   console.error('Failed to queue profile picture processing task:', error);
       // }
-      
+
       return { profilePicture: imageUrl };
     } catch (error) {
       console.error('Error uploading profile picture:', error);

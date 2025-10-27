@@ -9,23 +9,16 @@ import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
 import { authApi } from '@/lib/api';
 import toast from 'react-hot-toast';
-import { 
-  User, 
-  Bell, 
-  Shield, 
-  CreditCard, 
-  Globe, 
+import {
+  User,
+  Bell,
+  Shield,
   Database,
-  Users,
   BarChart3,
-  Settings as SettingsIcon,
-  Mail,
-  Phone,
-  MapPin,
   Save,
   Edit,
   Eye,
-  EyeOff
+  EyeOff,
 } from 'lucide-react';
 
 export default function Settings() {
@@ -78,22 +71,24 @@ export default function Settings() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
   };
 
-  const handlePasswordInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePasswordInputChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const { name, value } = e.target;
-    setPasswordData(prev => ({
+    setPasswordData((prev) => ({
       ...prev,
       [name]: value,
     }));
   };
 
   const handleNotificationChange = (setting: string) => {
-    setNotificationSettings(prev => ({
+    setNotificationSettings((prev) => ({
       ...prev,
       [setting]: !prev[setting as keyof typeof prev],
     }));
@@ -114,7 +109,7 @@ export default function Settings() {
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       toast.error('New passwords do not match');
       return;
@@ -162,7 +157,9 @@ export default function Settings() {
       toast.success('Successfully upgraded to organizer!');
     } catch (error: any) {
       console.error('Error upgrading to organizer:', error);
-      toast.error(error.response?.data?.message || 'Failed to upgrade to organizer');
+      toast.error(
+        error.response?.data?.message || 'Failed to upgrade to organizer',
+      );
     }
   };
 
@@ -182,12 +179,12 @@ export default function Settings() {
     { id: 'profile', name: 'Profile', icon: User },
     { id: 'notifications', name: 'Notifications', icon: Bell },
     { id: 'security', name: 'Security', icon: Shield },
-    ...(user.role === 'organizer' ? [
-      { id: 'organizer', name: 'Organizer Settings', icon: BarChart3 },
-    ] : []),
-    ...(user.role === 'admin' ? [
-      { id: 'admin', name: 'Admin Panel', icon: Database },
-    ] : []),
+    ...(user.role === 'organizer'
+      ? [{ id: 'organizer', name: 'Organizer Settings', icon: BarChart3 }]
+      : []),
+    ...(user.role === 'admin'
+      ? [{ id: 'admin', name: 'Admin Panel', icon: Database }]
+      : []),
   ];
 
   return (
@@ -233,7 +230,9 @@ export default function Settings() {
             {activeTab === 'profile' && (
               <Card className="p-6">
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-semibold text-gray-900">Profile Information</h2>
+                  <h2 className="text-xl font-semibold text-gray-900">
+                    Profile Information
+                  </h2>
                   {!isEditing && (
                     <Button
                       onClick={() => setIsEditing(true)}
@@ -325,13 +324,23 @@ export default function Settings() {
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           Phone
                         </label>
-                        <p className="text-gray-900">{formData.phone || 'Not provided'}</p>
+                        <p className="text-gray-900">
+                          {formData.phone || 'Not provided'}
+                        </p>
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           Role
                         </label>
-                        <Badge variant={user.role === 'admin' ? 'error' : user.role === 'organizer' ? 'success' : 'secondary'}>
+                        <Badge
+                          variant={
+                            user.role === 'admin'
+                              ? 'error'
+                              : user.role === 'organizer'
+                                ? 'success'
+                                : 'secondary'
+                          }
+                        >
                           {user.role}
                         </Badge>
                       </div>
@@ -344,18 +353,26 @@ export default function Settings() {
             {/* Notifications Tab */}
             {activeTab === 'notifications' && (
               <Card className="p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-6">Notification Preferences</h2>
+                <h2 className="text-xl font-semibold text-gray-900 mb-6">
+                  Notification Preferences
+                </h2>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-sm font-medium text-gray-900">Email Notifications</h3>
-                      <p className="text-sm text-gray-500">Receive notifications via email</p>
+                      <h3 className="text-sm font-medium text-gray-900">
+                        Email Notifications
+                      </h3>
+                      <p className="text-sm text-gray-500">
+                        Receive notifications via email
+                      </p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
                         type="checkbox"
                         checked={notificationSettings.emailNotifications}
-                        onChange={() => handleNotificationChange('emailNotifications')}
+                        onChange={() =>
+                          handleNotificationChange('emailNotifications')
+                        }
                         className="sr-only peer"
                       />
                       <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
@@ -364,14 +381,20 @@ export default function Settings() {
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-sm font-medium text-gray-900">SMS Notifications</h3>
-                      <p className="text-sm text-gray-500">Receive notifications via SMS</p>
+                      <h3 className="text-sm font-medium text-gray-900">
+                        SMS Notifications
+                      </h3>
+                      <p className="text-sm text-gray-500">
+                        Receive notifications via SMS
+                      </p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
                         type="checkbox"
                         checked={notificationSettings.smsNotifications}
-                        onChange={() => handleNotificationChange('smsNotifications')}
+                        onChange={() =>
+                          handleNotificationChange('smsNotifications')
+                        }
                         className="sr-only peer"
                       />
                       <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
@@ -380,14 +403,20 @@ export default function Settings() {
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-sm font-medium text-gray-900">Marketing Emails</h3>
-                      <p className="text-sm text-gray-500">Receive promotional content and updates</p>
+                      <h3 className="text-sm font-medium text-gray-900">
+                        Marketing Emails
+                      </h3>
+                      <p className="text-sm text-gray-500">
+                        Receive promotional content and updates
+                      </p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
                         type="checkbox"
                         checked={notificationSettings.marketingEmails}
-                        onChange={() => handleNotificationChange('marketingEmails')}
+                        onChange={() =>
+                          handleNotificationChange('marketingEmails')
+                        }
                         className="sr-only peer"
                       />
                       <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
@@ -396,14 +425,20 @@ export default function Settings() {
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-sm font-medium text-gray-900">Event Updates</h3>
-                      <p className="text-sm text-gray-500">Get notified about event changes</p>
+                      <h3 className="text-sm font-medium text-gray-900">
+                        Event Updates
+                      </h3>
+                      <p className="text-sm text-gray-500">
+                        Get notified about event changes
+                      </p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
                         type="checkbox"
                         checked={notificationSettings.eventUpdates}
-                        onChange={() => handleNotificationChange('eventUpdates')}
+                        onChange={() =>
+                          handleNotificationChange('eventUpdates')
+                        }
                         className="sr-only peer"
                       />
                       <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
@@ -412,14 +447,20 @@ export default function Settings() {
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-sm font-medium text-gray-900">Payment Reminders</h3>
-                      <p className="text-sm text-gray-500">Reminders for pending payments</p>
+                      <h3 className="text-sm font-medium text-gray-900">
+                        Payment Reminders
+                      </h3>
+                      <p className="text-sm text-gray-500">
+                        Reminders for pending payments
+                      </p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
                         type="checkbox"
                         checked={notificationSettings.paymentReminders}
-                        onChange={() => handleNotificationChange('paymentReminders')}
+                        onChange={() =>
+                          handleNotificationChange('paymentReminders')
+                        }
                         className="sr-only peer"
                       />
                       <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
@@ -439,11 +480,15 @@ export default function Settings() {
             {/* Security Tab */}
             {activeTab === 'security' && (
               <Card className="p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-6">Security Settings</h2>
-                
+                <h2 className="text-xl font-semibold text-gray-900 mb-6">
+                  Security Settings
+                </h2>
+
                 {/* Change Password */}
                 <div className="mb-8">
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">Change Password</h3>
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">
+                    Change Password
+                  </h3>
                   <form onSubmit={handlePasswordChange} className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -462,7 +507,11 @@ export default function Settings() {
                           onClick={() => setShowPassword(!showPassword)}
                           className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                         >
-                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
                         </button>
                       </div>
                     </div>
@@ -500,14 +549,19 @@ export default function Settings() {
                 {/* Role Upgrade */}
                 {user.role === 'attendee' && (
                   <div className="border-t pt-6">
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">Account Upgrade</h3>
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">
+                      Account Upgrade
+                    </h3>
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                       <div className="flex items-start">
                         <BarChart3 className="h-5 w-5 text-blue-600 mt-0.5 mr-3" />
                         <div>
-                          <h4 className="text-sm font-medium text-blue-900">Upgrade to Organizer</h4>
+                          <h4 className="text-sm font-medium text-blue-900">
+                            Upgrade to Organizer
+                          </h4>
                           <p className="text-sm text-blue-700 mt-1">
-                            Become an event organizer to create and manage your own events.
+                            Become an event organizer to create and manage your
+                            own events.
                           </p>
                           <Button
                             onClick={upgradeToOrganizer}
@@ -527,21 +581,33 @@ export default function Settings() {
             {/* Organizer Settings Tab */}
             {activeTab === 'organizer' && user.role === 'organizer' && (
               <Card className="p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-6">Organizer Settings</h2>
+                <h2 className="text-xl font-semibold text-gray-900 mb-6">
+                  Organizer Settings
+                </h2>
                 <div className="space-y-6">
                   <div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">Event Management</h3>
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">
+                      Event Management
+                    </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="bg-gray-50 p-4 rounded-lg">
-                        <h4 className="font-medium text-gray-900">Default Event Settings</h4>
-                        <p className="text-sm text-gray-600 mt-1">Configure default settings for new events</p>
+                        <h4 className="font-medium text-gray-900">
+                          Default Event Settings
+                        </h4>
+                        <p className="text-sm text-gray-600 mt-1">
+                          Configure default settings for new events
+                        </p>
                         <Button variant="outline" className="mt-2" size="sm">
                           Configure
                         </Button>
                       </div>
                       <div className="bg-gray-50 p-4 rounded-lg">
-                        <h4 className="font-medium text-gray-900">Ticket Templates</h4>
-                        <p className="text-sm text-gray-600 mt-1">Manage your ticket type templates</p>
+                        <h4 className="font-medium text-gray-900">
+                          Ticket Templates
+                        </h4>
+                        <p className="text-sm text-gray-600 mt-1">
+                          Manage your ticket type templates
+                        </p>
                         <Button variant="outline" className="mt-2" size="sm">
                           Manage
                         </Button>
@@ -550,10 +616,16 @@ export default function Settings() {
                   </div>
 
                   <div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">Payment & Billing</h3>
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">
+                      Payment & Billing
+                    </h3>
                     <div className="bg-gray-50 p-4 rounded-lg">
-                      <h4 className="font-medium text-gray-900">Stripe Account</h4>
-                      <p className="text-sm text-gray-600 mt-1">Manage your payment processing settings</p>
+                      <h4 className="font-medium text-gray-900">
+                        Stripe Account
+                      </h4>
+                      <p className="text-sm text-gray-600 mt-1">
+                        Manage your payment processing settings
+                      </p>
                       <Button variant="outline" className="mt-2" size="sm">
                         Configure Stripe
                       </Button>
@@ -561,18 +633,28 @@ export default function Settings() {
                   </div>
 
                   <div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">Analytics & Reporting</h3>
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">
+                      Analytics & Reporting
+                    </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="bg-gray-50 p-4 rounded-lg">
-                        <h4 className="font-medium text-gray-900">Export Data</h4>
-                        <p className="text-sm text-gray-600 mt-1">Export event and sales data</p>
+                        <h4 className="font-medium text-gray-900">
+                          Export Data
+                        </h4>
+                        <p className="text-sm text-gray-600 mt-1">
+                          Export event and sales data
+                        </p>
                         <Button variant="outline" className="mt-2" size="sm">
                           Export
                         </Button>
                       </div>
                       <div className="bg-gray-50 p-4 rounded-lg">
-                        <h4 className="font-medium text-gray-900">Report Settings</h4>
-                        <p className="text-sm text-gray-600 mt-1">Configure automated reports</p>
+                        <h4 className="font-medium text-gray-900">
+                          Report Settings
+                        </h4>
+                        <p className="text-sm text-gray-600 mt-1">
+                          Configure automated reports
+                        </p>
                         <Button variant="outline" className="mt-2" size="sm">
                           Configure
                         </Button>
@@ -586,21 +668,31 @@ export default function Settings() {
             {/* Admin Panel Tab */}
             {activeTab === 'admin' && user.role === 'admin' && (
               <Card className="p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-6">Admin Panel</h2>
+                <h2 className="text-xl font-semibold text-gray-900 mb-6">
+                  Admin Panel
+                </h2>
                 <div className="space-y-6">
                   <div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">User Management</h3>
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">
+                      User Management
+                    </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="bg-gray-50 p-4 rounded-lg">
                         <h4 className="font-medium text-gray-900">All Users</h4>
-                        <p className="text-sm text-gray-600 mt-1">View and manage all users</p>
+                        <p className="text-sm text-gray-600 mt-1">
+                          View and manage all users
+                        </p>
                         <Button variant="outline" className="mt-2" size="sm">
                           Manage Users
                         </Button>
                       </div>
                       <div className="bg-gray-50 p-4 rounded-lg">
-                        <h4 className="font-medium text-gray-900">Role Management</h4>
-                        <p className="text-sm text-gray-600 mt-1">Assign and modify user roles</p>
+                        <h4 className="font-medium text-gray-900">
+                          Role Management
+                        </h4>
+                        <p className="text-sm text-gray-600 mt-1">
+                          Assign and modify user roles
+                        </p>
                         <Button variant="outline" className="mt-2" size="sm">
                           Manage Roles
                         </Button>
@@ -609,18 +701,28 @@ export default function Settings() {
                   </div>
 
                   <div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">System Management</h3>
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">
+                      System Management
+                    </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="bg-gray-50 p-4 rounded-lg">
-                        <h4 className="font-medium text-gray-900">All Events</h4>
-                        <p className="text-sm text-gray-600 mt-1">Monitor and manage all events</p>
+                        <h4 className="font-medium text-gray-900">
+                          All Events
+                        </h4>
+                        <p className="text-sm text-gray-600 mt-1">
+                          Monitor and manage all events
+                        </p>
                         <Button variant="outline" className="mt-2" size="sm">
                           View Events
                         </Button>
                       </div>
                       <div className="bg-gray-50 p-4 rounded-lg">
-                        <h4 className="font-medium text-gray-900">System Analytics</h4>
-                        <p className="text-sm text-gray-600 mt-1">Platform-wide analytics and insights</p>
+                        <h4 className="font-medium text-gray-900">
+                          System Analytics
+                        </h4>
+                        <p className="text-sm text-gray-600 mt-1">
+                          Platform-wide analytics and insights
+                        </p>
                         <Button variant="outline" className="mt-2" size="sm">
                           View Analytics
                         </Button>
@@ -629,10 +731,16 @@ export default function Settings() {
                   </div>
 
                   <div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">Platform Settings</h3>
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">
+                      Platform Settings
+                    </h3>
                     <div className="bg-gray-50 p-4 rounded-lg">
-                      <h4 className="font-medium text-gray-900">Global Configuration</h4>
-                      <p className="text-sm text-gray-600 mt-1">Configure platform-wide settings</p>
+                      <h4 className="font-medium text-gray-900">
+                        Global Configuration
+                      </h4>
+                      <p className="text-sm text-gray-600 mt-1">
+                        Configure platform-wide settings
+                      </p>
                       <Button variant="outline" className="mt-2" size="sm">
                         Configure Platform
                       </Button>

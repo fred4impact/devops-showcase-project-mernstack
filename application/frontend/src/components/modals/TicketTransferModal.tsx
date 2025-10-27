@@ -15,7 +15,12 @@ interface TicketTransferModalProps {
   onSuccess: () => void;
 }
 
-export function TicketTransferModal({ isOpen, onClose, ticket, onSuccess }: TicketTransferModalProps) {
+export function TicketTransferModal({
+  isOpen,
+  onClose,
+  ticket,
+  onSuccess,
+}: TicketTransferModalProps) {
   const [formData, setFormData] = useState({
     recipientEmail: '',
     recipientName: '',
@@ -25,7 +30,7 @@ export function TicketTransferModal({ isOpen, onClose, ticket, onSuccess }: Tick
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.recipientEmail) {
       toast.error('Recipient email is required');
       return;
@@ -57,7 +62,9 @@ export function TicketTransferModal({ isOpen, onClose, ticket, onSuccess }: Tick
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <Card className="w-full max-w-md p-6">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-gray-900">Transfer Ticket</h2>
+          <h2 className="text-xl font-semibold text-gray-900">
+            Transfer Ticket
+          </h2>
           <Button
             onClick={handleClose}
             variant="outline"
@@ -69,7 +76,9 @@ export function TicketTransferModal({ isOpen, onClose, ticket, onSuccess }: Tick
         </div>
 
         <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-          <h3 className="font-medium text-gray-900 mb-2">{ticket?.eventId?.title}</h3>
+          <h3 className="font-medium text-gray-900 mb-2">
+            {ticket?.eventId?.title}
+          </h3>
           <p className="text-sm text-gray-600">{ticket?.ticketTypeId?.name}</p>
           <p className="text-sm text-gray-500">
             {new Date(ticket?.eventId?.startAt).toLocaleDateString()}
@@ -86,7 +95,12 @@ export function TicketTransferModal({ isOpen, onClose, ticket, onSuccess }: Tick
               <Input
                 type="email"
                 value={formData.recipientEmail}
-                onChange={(e) => setFormData(prev => ({ ...prev, recipientEmail: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    recipientEmail: e.target.value,
+                  }))
+                }
                 placeholder="recipient@example.com"
                 className="pl-10"
                 required
@@ -103,7 +117,12 @@ export function TicketTransferModal({ isOpen, onClose, ticket, onSuccess }: Tick
               <Input
                 type="text"
                 value={formData.recipientName}
-                onChange={(e) => setFormData(prev => ({ ...prev, recipientName: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    recipientName: e.target.value,
+                  }))
+                }
                 placeholder="John Doe"
                 className="pl-10"
               />
@@ -118,7 +137,9 @@ export function TicketTransferModal({ isOpen, onClose, ticket, onSuccess }: Tick
               <MessageSquare className="absolute left-3 top-3 text-gray-400 w-4 h-4" />
               <textarea
                 value={formData.message}
-                onChange={(e) => setFormData(prev => ({ ...prev, message: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, message: e.target.value }))
+                }
                 placeholder="Add a personal message..."
                 rows={3}
                 className="w-full px-3 py-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
@@ -147,8 +168,9 @@ export function TicketTransferModal({ isOpen, onClose, ticket, onSuccess }: Tick
 
         <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
           <p className="text-sm text-yellow-800">
-            <strong>Note:</strong> Once transferred, you will no longer have access to this ticket. 
-            The recipient will receive an email notification.
+            <strong>Note:</strong> Once transferred, you will no longer have
+            access to this ticket. The recipient will receive an email
+            notification.
           </p>
         </div>
       </Card>

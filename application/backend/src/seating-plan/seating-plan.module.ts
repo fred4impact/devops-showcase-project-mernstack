@@ -14,7 +14,7 @@ import { Order, OrderSchema } from '../schemas/order.schema';
       { name: SeatLock.name, schema: SeatLockSchema },
       { name: Ticket.name, schema: TicketSchema },
       { name: Order.name, schema: OrderSchema },
-    ])
+    ]),
   ],
   controllers: [SeatingPlanController],
   providers: [SeatingPlanService],

@@ -72,7 +72,9 @@ export default function EventManagement() {
   const [isEditing, setIsEditing] = useState(false);
   const [showTicketForm, setShowTicketForm] = useState(false);
   const [showSeatForm, setShowSeatForm] = useState(false);
-  const [editingTicketType, setEditingTicketType] = useState<string | null>(null);
+  const [editingTicketType, setEditingTicketType] = useState<string | null>(
+    null,
+  );
 
   const [eventForm, setEventForm] = useState({
     title: '',
@@ -130,18 +132,20 @@ export default function EventManagement() {
       setLoadingData(true);
       const [eventResponse, ticketTypesResponse] = await Promise.all([
         api.get(`/events/${params.id}`),
-        api.get(`/ticket-types/event/${params.id}`)
+        api.get(`/ticket-types/event/${params.id}`),
       ]);
-      
+
       setEvent(eventResponse.data);
       setTicketTypes(ticketTypesResponse.data);
-      
+
       // Populate form with event data
       setEventForm({
         title: eventResponse.data.title,
         description: eventResponse.data.description,
         category: eventResponse.data.category,
-        startAt: new Date(eventResponse.data.startAt).toISOString().slice(0, 16),
+        startAt: new Date(eventResponse.data.startAt)
+          .toISOString()
+          .slice(0, 16),
         endAt: new Date(eventResponse.data.endAt).toISOString().slice(0, 16),
         status: eventResponse.data.status,
         venue: eventResponse.data.venue,
@@ -169,7 +173,7 @@ export default function EventManagement() {
 
   const handleTicketCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validate required fields
     if (!ticketForm.name || !ticketForm.priceCents || !ticketForm.capacity) {
       toast.error('Please fill in all required fields');
@@ -185,8 +189,12 @@ export default function EventManagement() {
       // Convert datetime-local format to ISO 8601
       const formData = {
         ...ticketForm,
-        salesStart: ticketForm.salesStart ? new Date(ticketForm.salesStart).toISOString() : '',
-        salesEnd: ticketForm.salesEnd ? new Date(ticketForm.salesEnd).toISOString() : '',
+        salesStart: ticketForm.salesStart
+          ? new Date(ticketForm.salesStart).toISOString()
+          : '',
+        salesEnd: ticketForm.salesEnd
+          ? new Date(ticketForm.salesEnd).toISOString()
+          : '',
       };
 
       if (editingTicketType) {
@@ -210,7 +218,9 @@ export default function EventManagement() {
       fetchEventData();
     } catch (error: any) {
       console.error('Error creating/updating ticket type:', error);
-      toast.error(error.response?.data?.message || 'Failed to create/update ticket type');
+      toast.error(
+        error.response?.data?.message || 'Failed to create/update ticket type',
+      );
     }
   };
 
@@ -221,8 +231,12 @@ export default function EventManagement() {
       description: ticketType.description,
       priceCents: ticketType.priceCents,
       capacity: ticketType.capacity,
-      salesStart: ticketType.salesStart ? new Date(ticketType.salesStart).toISOString().slice(0, 16) : '',
-      salesEnd: ticketType.salesEnd ? new Date(ticketType.salesEnd).toISOString().slice(0, 16) : '',
+      salesStart: ticketType.salesStart
+        ? new Date(ticketType.salesStart).toISOString().slice(0, 16)
+        : '',
+      salesEnd: ticketType.salesEnd
+        ? new Date(ticketType.salesEnd).toISOString().slice(0, 16)
+        : '',
       refundable: ticketType.refundable,
     });
     setShowTicketForm(true);
@@ -239,7 +253,9 @@ export default function EventManagement() {
       fetchEventData();
     } catch (error: any) {
       console.error('Error deleting ticket type:', error);
-      toast.error(error.response?.data?.message || 'Failed to delete ticket type');
+      toast.error(
+        error.response?.data?.message || 'Failed to delete ticket type',
+      );
     }
   };
 
@@ -248,12 +264,12 @@ export default function EventManagement() {
       if (seatForm.type === 'ga') {
         // For general admission, just save the type
         await api.put(`/events/${params.id}`, {
-          seatmap: { type: 'ga' }
+          seatmap: { type: 'ga' },
         });
       } else {
         // For reserved seating, generate seats from sections
         const seats: any[] = [];
-        seatForm.sections.forEach(section => {
+        seatForm.sections.forEach((section) => {
           for (let row = 1; row <= section.rows; row++) {
             for (let seat = 1; seat <= section.seatsPerRow; seat++) {
               seats.push({
@@ -262,7 +278,7 @@ export default function EventManagement() {
                 row: row.toString(),
                 number: seat.toString(),
                 priceModifier: section.priceModifier,
-                accessible: false
+                accessible: false,
               });
             }
           }
@@ -271,8 +287,8 @@ export default function EventManagement() {
         await api.put(`/events/${params.id}`, {
           seatmap: {
             type: 'reserved',
-            seats: seats
-          }
+            seats: seats,
+          },
         });
       }
 
@@ -281,24 +297,31 @@ export default function EventManagement() {
       fetchEventData();
     } catch (error: any) {
       console.error('Error saving seatmap:', error);
-      toast.error(error.response?.data?.message || 'Failed to save seating configuration');
+      toast.error(
+        error.response?.data?.message || 'Failed to save seating configuration',
+      );
     }
   };
 
   const handleSeatmapDelete = async () => {
-    if (!confirm('Are you sure you want to remove the seating configuration?')) {
+    if (
+      !confirm('Are you sure you want to remove the seating configuration?')
+    ) {
       return;
     }
 
     try {
       await api.put(`/events/${params.id}`, {
-        seatmap: null
+        seatmap: null,
       });
       toast.success('Seating configuration removed');
       fetchEventData();
     } catch (error: any) {
       console.error('Error removing seatmap:', error);
-      toast.error(error.response?.data?.message || 'Failed to remove seating configuration');
+      toast.error(
+        error.response?.data?.message ||
+          'Failed to remove seating configuration',
+      );
     }
   };
 
@@ -309,7 +332,9 @@ export default function EventManagement() {
       fetchEventData();
     } catch (error: any) {
       console.error('Error updating event status:', error);
-      toast.error(error.response?.data?.message || 'Failed to update event status');
+      toast.error(
+        error.response?.data?.message || 'Failed to update event status',
+      );
     }
   };
 
@@ -359,8 +384,12 @@ export default function EventManagement() {
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">{event.title}</h1>
-              <p className="text-gray-600 mt-2">Manage your event details, tickets, and seating</p>
+              <h1 className="text-3xl font-bold text-gray-900">
+                {event.title}
+              </h1>
+              <p className="text-gray-600 mt-2">
+                Manage your event details, tickets, and seating
+              </p>
             </div>
             <div className="flex items-center space-x-4">
               <Badge variant={getStatusColor(event.status)}>
@@ -406,7 +435,9 @@ export default function EventManagement() {
             {/* Event Details */}
             <Card className="p-6">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900">Event Details</h2>
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Event Details
+                </h2>
                 <Button
                   onClick={() => setIsEditing(!isEditing)}
                   variant="outline"
@@ -424,7 +455,12 @@ export default function EventManagement() {
                       </label>
                       <Input
                         value={eventForm.title}
-                        onChange={(e) => setEventForm(prev => ({ ...prev, title: e.target.value }))}
+                        onChange={(e) =>
+                          setEventForm((prev) => ({
+                            ...prev,
+                            title: e.target.value,
+                          }))
+                        }
                         required
                       />
                     </div>
@@ -434,7 +470,12 @@ export default function EventManagement() {
                       </label>
                       <select
                         value={eventForm.category}
-                        onChange={(e) => setEventForm(prev => ({ ...prev, category: e.target.value }))}
+                        onChange={(e) =>
+                          setEventForm((prev) => ({
+                            ...prev,
+                            category: e.target.value,
+                          }))
+                        }
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                         required
                       >
@@ -455,7 +496,12 @@ export default function EventManagement() {
                       <Input
                         type="datetime-local"
                         value={eventForm.startAt}
-                        onChange={(e) => setEventForm(prev => ({ ...prev, startAt: e.target.value }))}
+                        onChange={(e) =>
+                          setEventForm((prev) => ({
+                            ...prev,
+                            startAt: e.target.value,
+                          }))
+                        }
                         required
                       />
                     </div>
@@ -466,7 +512,12 @@ export default function EventManagement() {
                       <Input
                         type="datetime-local"
                         value={eventForm.endAt}
-                        onChange={(e) => setEventForm(prev => ({ ...prev, endAt: e.target.value }))}
+                        onChange={(e) =>
+                          setEventForm((prev) => ({
+                            ...prev,
+                            endAt: e.target.value,
+                          }))
+                        }
                         required
                       />
                     </div>
@@ -476,7 +527,12 @@ export default function EventManagement() {
                       </label>
                       <select
                         value={eventForm.status}
-                        onChange={(e) => setEventForm(prev => ({ ...prev, status: e.target.value }))}
+                        onChange={(e) =>
+                          setEventForm((prev) => ({
+                            ...prev,
+                            status: e.target.value,
+                          }))
+                        }
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                       >
                         <option value="draft">Draft</option>
@@ -490,10 +546,12 @@ export default function EventManagement() {
                       </label>
                       <Input
                         value={eventForm.venue.name}
-                        onChange={(e) => setEventForm(prev => ({ 
-                          ...prev, 
-                          venue: { ...prev.venue, name: e.target.value }
-                        }))}
+                        onChange={(e) =>
+                          setEventForm((prev) => ({
+                            ...prev,
+                            venue: { ...prev.venue, name: e.target.value },
+                          }))
+                        }
                         required
                       />
                     </div>
@@ -503,10 +561,12 @@ export default function EventManagement() {
                       </label>
                       <Input
                         value={eventForm.venue.address}
-                        onChange={(e) => setEventForm(prev => ({ 
-                          ...prev, 
-                          venue: { ...prev.venue, address: e.target.value }
-                        }))}
+                        onChange={(e) =>
+                          setEventForm((prev) => ({
+                            ...prev,
+                            venue: { ...prev.venue, address: e.target.value },
+                          }))
+                        }
                         required
                       />
                     </div>
@@ -517,10 +577,15 @@ export default function EventManagement() {
                       <Input
                         type="number"
                         value={eventForm.venue.capacity}
-                        onChange={(e) => setEventForm(prev => ({ 
-                          ...prev, 
-                          venue: { ...prev.venue, capacity: parseInt(e.target.value) || 0 }
-                        }))}
+                        onChange={(e) =>
+                          setEventForm((prev) => ({
+                            ...prev,
+                            venue: {
+                              ...prev.venue,
+                              capacity: parseInt(e.target.value) || 0,
+                            },
+                          }))
+                        }
                         required
                       />
                     </div>
@@ -530,10 +595,12 @@ export default function EventManagement() {
                       </label>
                       <select
                         value={eventForm.venue.timezone}
-                        onChange={(e) => setEventForm(prev => ({ 
-                          ...prev, 
-                          venue: { ...prev.venue, timezone: e.target.value }
-                        }))}
+                        onChange={(e) =>
+                          setEventForm((prev) => ({
+                            ...prev,
+                            venue: { ...prev.venue, timezone: e.target.value },
+                          }))
+                        }
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                         required
                       >
@@ -541,21 +608,28 @@ export default function EventManagement() {
                         <option value="America/New_York">Eastern Time</option>
                         <option value="America/Chicago">Central Time</option>
                         <option value="America/Denver">Mountain Time</option>
-                        <option value="America/Los_Angeles">Pacific Time</option>
+                        <option value="America/Los_Angeles">
+                          Pacific Time
+                        </option>
                         <option value="Europe/London">London</option>
                         <option value="Europe/Paris">Paris</option>
                         <option value="Asia/Tokyo">Tokyo</option>
                       </select>
                     </div>
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Description *
                     </label>
                     <textarea
                       value={eventForm.description}
-                      onChange={(e) => setEventForm(prev => ({ ...prev, description: e.target.value }))}
+                      onChange={(e) =>
+                        setEventForm((prev) => ({
+                          ...prev,
+                          description: e.target.value,
+                        }))
+                      }
                       rows={4}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                       required
@@ -563,9 +637,7 @@ export default function EventManagement() {
                   </div>
 
                   <div className="flex items-center space-x-4">
-                    <Button type="submit">
-                      Save Changes
-                    </Button>
+                    <Button type="submit">Save Changes</Button>
                     <Button
                       type="button"
                       variant="outline"
@@ -579,47 +651,73 @@ export default function EventManagement() {
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Event Title</label>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Event Title
+                      </label>
                       <p className="text-gray-900">{event.title}</p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Category</label>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Category
+                      </label>
                       <p className="text-gray-900">{event.category}</p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Start Date</label>
-                      <p className="text-gray-900">{formatDate(event.startAt)}</p>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Start Date
+                      </label>
+                      <p className="text-gray-900">
+                        {formatDate(event.startAt)}
+                      </p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">End Date</label>
+                      <label className="block text-sm font-medium text-gray-700">
+                        End Date
+                      </label>
                       <p className="text-gray-900">{formatDate(event.endAt)}</p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Status</label>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Status
+                      </label>
                       <Badge variant={getStatusColor(event.status)}>
                         {event.status}
                       </Badge>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Venue Name</label>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Venue Name
+                      </label>
                       <p className="text-gray-900">{event.venue.name}</p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Venue Address</label>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Venue Address
+                      </label>
                       <p className="text-gray-900">{event.venue.address}</p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Venue Capacity</label>
-                      <p className="text-gray-900">{event.venue.capacity.toLocaleString()}</p>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Venue Capacity
+                      </label>
+                      <p className="text-gray-900">
+                        {event.venue.capacity.toLocaleString()}
+                      </p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Timezone</label>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Timezone
+                      </label>
                       <p className="text-gray-900">{event.venue.timezone}</p>
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Description</label>
-                    <p className="text-gray-900 whitespace-pre-line">{event.description}</p>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Description
+                    </label>
+                    <p className="text-gray-900 whitespace-pre-line">
+                      {event.description}
+                    </p>
                   </div>
                 </div>
               )}
@@ -631,7 +729,9 @@ export default function EventManagement() {
           <div className="space-y-6">
             <Card className="p-6">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900">Ticket Types</h2>
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Ticket Types
+                </h2>
                 <Button
                   onClick={() => setShowTicketForm(!showTicketForm)}
                   className="bg-primary-600 hover:bg-primary-700"
@@ -641,9 +741,14 @@ export default function EventManagement() {
               </div>
 
               {showTicketForm && (
-                <form onSubmit={handleTicketCreate} className="mb-6 p-4 border border-gray-200 rounded-lg">
+                <form
+                  onSubmit={handleTicketCreate}
+                  className="mb-6 p-4 border border-gray-200 rounded-lg"
+                >
                   <h3 className="text-lg font-medium text-gray-900 mb-4">
-                    {editingTicketType ? 'Edit Ticket Type' : 'Create New Ticket Type'}
+                    {editingTicketType
+                      ? 'Edit Ticket Type'
+                      : 'Create New Ticket Type'}
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -652,7 +757,12 @@ export default function EventManagement() {
                       </label>
                       <Input
                         value={ticketForm.name}
-                        onChange={(e) => setTicketForm(prev => ({ ...prev, name: e.target.value }))}
+                        onChange={(e) =>
+                          setTicketForm((prev) => ({
+                            ...prev,
+                            name: e.target.value,
+                          }))
+                        }
                         required
                       />
                     </div>
@@ -665,7 +775,14 @@ export default function EventManagement() {
                         step="0.01"
                         min="0"
                         value={ticketForm.priceCents / 100}
-                        onChange={(e) => setTicketForm(prev => ({ ...prev, priceCents: Math.round(parseFloat(e.target.value) * 100) }))}
+                        onChange={(e) =>
+                          setTicketForm((prev) => ({
+                            ...prev,
+                            priceCents: Math.round(
+                              parseFloat(e.target.value) * 100,
+                            ),
+                          }))
+                        }
                         required
                       />
                     </div>
@@ -677,7 +794,12 @@ export default function EventManagement() {
                         type="number"
                         min="1"
                         value={ticketForm.capacity}
-                        onChange={(e) => setTicketForm(prev => ({ ...prev, capacity: parseInt(e.target.value) || 0 }))}
+                        onChange={(e) =>
+                          setTicketForm((prev) => ({
+                            ...prev,
+                            capacity: parseInt(e.target.value) || 0,
+                          }))
+                        }
                         required
                       />
                     </div>
@@ -688,7 +810,12 @@ export default function EventManagement() {
                       <Input
                         type="datetime-local"
                         value={ticketForm.salesStart}
-                        onChange={(e) => setTicketForm(prev => ({ ...prev, salesStart: e.target.value }))}
+                        onChange={(e) =>
+                          setTicketForm((prev) => ({
+                            ...prev,
+                            salesStart: e.target.value,
+                          }))
+                        }
                       />
                     </div>
                     <div>
@@ -698,17 +825,29 @@ export default function EventManagement() {
                       <Input
                         type="datetime-local"
                         value={ticketForm.salesEnd}
-                        onChange={(e) => setTicketForm(prev => ({ ...prev, salesEnd: e.target.value }))}
+                        onChange={(e) =>
+                          setTicketForm((prev) => ({
+                            ...prev,
+                            salesEnd: e.target.value,
+                          }))
+                        }
                       />
                     </div>
                     <div className="flex items-center">
                       <input
                         type="checkbox"
                         checked={ticketForm.refundable}
-                        onChange={(e) => setTicketForm(prev => ({ ...prev, refundable: e.target.checked }))}
+                        onChange={(e) =>
+                          setTicketForm((prev) => ({
+                            ...prev,
+                            refundable: e.target.checked,
+                          }))
+                        }
                         className="mr-2"
                       />
-                      <label className="text-sm text-gray-700">Refundable</label>
+                      <label className="text-sm text-gray-700">
+                        Refundable
+                      </label>
                     </div>
                   </div>
                   <div className="mt-4">
@@ -717,14 +856,21 @@ export default function EventManagement() {
                     </label>
                     <textarea
                       value={ticketForm.description}
-                      onChange={(e) => setTicketForm(prev => ({ ...prev, description: e.target.value }))}
+                      onChange={(e) =>
+                        setTicketForm((prev) => ({
+                          ...prev,
+                          description: e.target.value,
+                        }))
+                      }
                       rows={3}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                     />
                   </div>
                   <div className="flex items-center space-x-4 mt-4">
                     <Button type="submit">
-                      {editingTicketType ? 'Update Ticket Type' : 'Create Ticket Type'}
+                      {editingTicketType
+                        ? 'Update Ticket Type'
+                        : 'Create Ticket Type'}
                     </Button>
                     <Button
                       type="button"
@@ -751,16 +897,28 @@ export default function EventManagement() {
 
               <div className="space-y-4">
                 {ticketTypes.map((ticketType) => (
-                  <div key={ticketType._id} className="border border-gray-200 rounded-lg p-4">
+                  <div
+                    key={ticketType._id}
+                    className="border border-gray-200 rounded-lg p-4"
+                  >
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
-                        <h4 className="font-medium text-gray-900">{ticketType.name}</h4>
-                        <p className="text-sm text-gray-600">{ticketType.description}</p>
+                        <h4 className="font-medium text-gray-900">
+                          {ticketType.name}
+                        </h4>
+                        <p className="text-sm text-gray-600">
+                          {ticketType.description}
+                        </p>
                         <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500">
-                          <span>Price: ${formatPrice(ticketType.priceCents)}</span>
+                          <span>
+                            Price: ${formatPrice(ticketType.priceCents)}
+                          </span>
                           <span>Capacity: {ticketType.capacity}</span>
                           <span>Sold: {ticketType.soldCount}</span>
-                          <span>Available: {ticketType.capacity - ticketType.soldCount}</span>
+                          <span>
+                            Available:{' '}
+                            {ticketType.capacity - ticketType.soldCount}
+                          </span>
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
@@ -792,13 +950,19 @@ export default function EventManagement() {
           <div className="space-y-6">
             <Card className="p-6">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900">Seating Configuration</h2>
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Seating Configuration
+                </h2>
                 <div className="flex items-center space-x-4">
                   <Button
-                    onClick={() => router.push(`/organizer/events/${params.id}/seating-plan`)}
+                    onClick={() =>
+                      router.push(`/organizer/events/${params.id}/seating-plan`)
+                    }
                     className="bg-primary-600 hover:bg-primary-700"
                   >
-                    {event.seatmap ? 'Manage Seating Plan' : 'Create Seating Plan'}
+                    {event.seatmap
+                      ? 'Manage Seating Plan'
+                      : 'Create Seating Plan'}
                   </Button>
                 </div>
               </div>
@@ -808,8 +972,16 @@ export default function EventManagement() {
                 {event.seatmap ? (
                   <div className="space-y-4">
                     <div className="flex items-center space-x-4">
-                      <Badge variant={event.seatmap.type === 'reserved' ? 'default' : 'secondary'}>
-                        {event.seatmap.type === 'reserved' ? 'Reserved Seating' : 'General Admission'}
+                      <Badge
+                        variant={
+                          event.seatmap.type === 'reserved'
+                            ? 'default'
+                            : 'secondary'
+                        }
+                      >
+                        {event.seatmap.type === 'reserved'
+                          ? 'Reserved Seating'
+                          : 'General Admission'}
                       </Badge>
                       <span className="text-sm text-gray-600">
                         {event.seatmap.seats?.length || 0} seats
@@ -818,29 +990,38 @@ export default function EventManagement() {
                         {event.seatmap.sections?.length || 0} sections
                       </span>
                     </div>
-                    
-                    {event.seatmap.sections && event.seatmap.sections.length > 0 && (
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-700 mb-2">Sections:</h3>
-                        <div className="flex flex-wrap gap-2">
-                          {event.seatmap.sections.map((section, index) => (
-                            <div key={index} className="flex items-center space-x-2">
-                              <div 
-                                className="w-4 h-4 rounded" 
-                                style={{ backgroundColor: section.color }}
-                              />
-                              <span className="text-sm">{section.name}</span>
-                            </div>
-                          ))}
+
+                    {event.seatmap.sections &&
+                      event.seatmap.sections.length > 0 && (
+                        <div>
+                          <h3 className="text-sm font-medium text-gray-700 mb-2">
+                            Sections:
+                          </h3>
+                          <div className="flex flex-wrap gap-2">
+                            {event.seatmap.sections.map((section, index) => (
+                              <div
+                                key={index}
+                                className="flex items-center space-x-2"
+                              >
+                                <div
+                                  className="w-4 h-4 rounded"
+                                  style={{ backgroundColor: section.color }}
+                                />
+                                <span className="text-sm">{section.name}</span>
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
                   </div>
                 ) : (
                   <div className="text-center py-8">
-                    <p className="text-gray-600 mb-4">No seating plan configured for this event.</p>
+                    <p className="text-gray-600 mb-4">
+                      No seating plan configured for this event.
+                    </p>
                     <p className="text-sm text-gray-500">
-                      Create a seating plan to enable reserved seating for your event.
+                      Create a seating plan to enable reserved seating for your
+                      event.
                     </p>
                   </div>
                 )}
@@ -856,15 +1037,30 @@ export default function EventManagement() {
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
                     <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 6v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-6V7a2 2 0 00-2-2H5z" />
+                      <svg
+                        className="w-5 h-5 text-blue-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 6v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-6V7a2 2 0 00-2-2H5z"
+                        />
                       </svg>
                     </div>
                   </div>
                   <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-500">Total Tickets Sold</p>
+                    <p className="text-sm font-medium text-gray-500">
+                      Total Tickets Sold
+                    </p>
                     <p className="text-2xl font-semibold text-gray-900">
-                      {ticketTypes.reduce((sum, type) => sum + type.soldCount, 0)}
+                      {ticketTypes.reduce(
+                        (sum, type) => sum + type.soldCount,
+                        0,
+                      )}
                     </p>
                   </div>
                 </div>
@@ -874,15 +1070,29 @@ export default function EventManagement() {
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
                     <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                      <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                      <svg
+                        className="w-5 h-5 text-green-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
+                        />
                       </svg>
                     </div>
                   </div>
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-500">Revenue</p>
                     <p className="text-2xl font-semibold text-gray-900">
-                      ${ticketTypes.reduce((sum, type) => sum + (type.soldCount * type.priceCents), 0) / 100}
+                      $
+                      {ticketTypes.reduce(
+                        (sum, type) => sum + type.soldCount * type.priceCents,
+                        0,
+                      ) / 100}
                     </p>
                   </div>
                 </div>
@@ -892,15 +1102,30 @@ export default function EventManagement() {
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
                     <div className="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
-                      <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                      <svg
+                        className="w-5 h-5 text-yellow-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                        />
                       </svg>
                     </div>
                   </div>
                   <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-500">Available Tickets</p>
+                    <p className="text-sm font-medium text-gray-500">
+                      Available Tickets
+                    </p>
                     <p className="text-2xl font-semibold text-gray-900">
-                      {ticketTypes.reduce((sum, type) => sum + (type.capacity - type.soldCount), 0)}
+                      {ticketTypes.reduce(
+                        (sum, type) => sum + (type.capacity - type.soldCount),
+                        0,
+                      )}
                     </p>
                   </div>
                 </div>
@@ -910,15 +1135,40 @@ export default function EventManagement() {
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
                     <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                      <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      <svg
+                        className="w-5 h-5 text-purple-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                        />
                       </svg>
                     </div>
                   </div>
                   <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-500">Conversion Rate</p>
+                    <p className="text-sm font-medium text-gray-500">
+                      Conversion Rate
+                    </p>
                     <p className="text-2xl font-semibold text-gray-900">
-                      {ticketTypes.length > 0 ? Math.round((ticketTypes.reduce((sum, type) => sum + type.soldCount, 0) / ticketTypes.reduce((sum, type) => sum + type.capacity, 0)) * 100) : 0}%
+                      {ticketTypes.length > 0
+                        ? Math.round(
+                            (ticketTypes.reduce(
+                              (sum, type) => sum + type.soldCount,
+                              0,
+                            ) /
+                              ticketTypes.reduce(
+                                (sum, type) => sum + type.capacity,
+                                0,
+                              )) *
+                              100,
+                          )
+                        : 0}
+                      %
                     </p>
                   </div>
                 </div>
@@ -927,14 +1177,22 @@ export default function EventManagement() {
 
             {/* Ticket Type Performance */}
             <Card className="p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">Ticket Type Performance</h2>
+              <h2 className="text-xl font-semibold text-gray-900 mb-6">
+                Ticket Type Performance
+              </h2>
               <div className="space-y-4">
                 {ticketTypes.map((ticketType) => {
-                  const soldPercentage = (ticketType.soldCount / ticketType.capacity) * 100;
+                  const soldPercentage =
+                    (ticketType.soldCount / ticketType.capacity) * 100;
                   return (
-                    <div key={ticketType._id} className="border border-gray-200 rounded-lg p-4">
+                    <div
+                      key={ticketType._id}
+                      className="border border-gray-200 rounded-lg p-4"
+                    >
                       <div className="flex items-center justify-between mb-2">
-                        <h3 className="font-medium text-gray-900">{ticketType.name}</h3>
+                        <h3 className="font-medium text-gray-900">
+                          {ticketType.name}
+                        </h3>
                         <div className="text-sm text-gray-500">
                           {ticketType.soldCount} / {ticketType.capacity} sold
                         </div>
@@ -947,7 +1205,13 @@ export default function EventManagement() {
                       </div>
                       <div className="flex items-center justify-between text-sm text-gray-600">
                         <span>${formatPrice(ticketType.priceCents)} each</span>
-                        <span>${formatPrice(ticketType.soldCount * ticketType.priceCents)} total</span>
+                        <span>
+                          $
+                          {formatPrice(
+                            ticketType.soldCount * ticketType.priceCents,
+                          )}{' '}
+                          total
+                        </span>
                       </div>
                     </div>
                   );
@@ -957,21 +1221,40 @@ export default function EventManagement() {
 
             {/* Sales Timeline */}
             <Card className="p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">Sales Timeline</h2>
+              <h2 className="text-xl font-semibold text-gray-900 mb-6">
+                Sales Timeline
+              </h2>
               <div className="text-center py-12">
                 <div className="text-gray-500 mb-4">
-                  <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  <svg
+                    className="mx-auto h-12 w-12 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                    />
                   </svg>
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Sales Timeline Coming Soon</h3>
-                <p className="text-gray-500">Track your sales performance over time with detailed charts and insights</p>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  Sales Timeline Coming Soon
+                </h3>
+                <p className="text-gray-500">
+                  Track your sales performance over time with detailed charts
+                  and insights
+                </p>
               </div>
             </Card>
 
             {/* Event Status Actions */}
             <Card className="p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">Event Status Management</h2>
+              <h2 className="text-xl font-semibold text-gray-900 mb-6">
+                Event Status Management
+              </h2>
               <div className="flex items-center space-x-4">
                 <Button
                   onClick={() => handleEventStatusUpdate('published')}

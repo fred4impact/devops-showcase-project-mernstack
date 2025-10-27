@@ -1,4 +1,15 @@
-import { IsString, IsDateString, IsEnum, IsOptional, IsArray, IsObject, ValidateNested, IsNumber, MinLength, MaxLength } from 'class-validator';
+import {
+  IsString,
+  IsDateString,
+  IsEnum,
+  IsOptional,
+  IsArray,
+  IsObject,
+  ValidateNested,
+  IsNumber,
+  MinLength,
+  MaxLength,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { EventStatus, SeatmapType } from '../../schemas/event.schema';
@@ -84,7 +95,9 @@ export class CreateEventDto {
   @MaxLength(50)
   slug: string;
 
-  @ApiProperty({ example: 'Join us for the biggest music festival of the year!' })
+  @ApiProperty({
+    example: 'Join us for the biggest music festival of the year!',
+  })
   @IsString()
   @MinLength(20)
   @MaxLength(1000)
@@ -110,7 +123,11 @@ export class CreateEventDto {
   @IsDateString()
   endAt: string;
 
-  @ApiProperty({ enum: EventStatus, example: EventStatus.DRAFT, required: false })
+  @ApiProperty({
+    enum: EventStatus,
+    example: EventStatus.DRAFT,
+    required: false,
+  })
   @IsOptional()
   @IsEnum(EventStatus)
   status?: EventStatus;

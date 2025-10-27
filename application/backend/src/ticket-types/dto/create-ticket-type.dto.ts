@@ -1,4 +1,14 @@
-import { IsString, IsNumber, IsDateString, IsBoolean, IsOptional, MinLength, MaxLength, Min, Max } from 'class-validator';
+import {
+  IsString,
+  IsNumber,
+  IsDateString,
+  IsBoolean,
+  IsOptional,
+  MinLength,
+  MaxLength,
+  Min,
+  Max,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateTicketTypeDto {
@@ -8,7 +18,10 @@ export class CreateTicketTypeDto {
   @MaxLength(50)
   name: string;
 
-  @ApiProperty({ example: 'General admission ticket for the event', required: false })
+  @ApiProperty({
+    example: 'General admission ticket for the event',
+    required: false,
+  })
   @IsOptional()
   @IsString()
   @MaxLength(500)

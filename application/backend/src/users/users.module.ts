@@ -9,8 +9,8 @@ import { Order, OrderSchema } from '../schemas/order.schema';
   imports: [
     MongooseModule.forFeature([
       { name: User.name, schema: UserSchema },
-      { name: Order.name, schema: OrderSchema }
-    ])
+      { name: Order.name, schema: OrderSchema },
+    ]),
   ],
   controllers: [UsersController],
   providers: [UsersService],

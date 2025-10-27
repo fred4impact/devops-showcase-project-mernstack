@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Order, OrderDocument, OrderStatus } from '../schemas/order.schema';
@@ -12,18 +16,25 @@ import { StripeService } from '../stripe/stripe.service';
 export class OrdersService {
   constructor(
     @InjectModel(Order.name) private orderModel: Model<OrderDocument>,
-    @InjectModel(TicketType.name) private ticketTypeModel: Model<TicketTypeDocument>,
+    @InjectModel(TicketType.name)
+    private ticketTypeModel: Model<TicketTypeDocument>,
     private readonly cartService: CartService,
     private readonly ticketTypesService: TicketTypesService,
     private readonly stripeService: StripeService,
   ) {}
 
-  async create(createOrderDto: CreateOrderDto, userId?: string, sessionId?: string): Promise<Order> {
+  async create(
+    createOrderDto: CreateOrderDto,
+    userId?: string,
+    sessionId?: string,
+  ): Promise<Order> {
     // Validate cart if sessionId provided
     if (sessionId) {
       const validation = await this.cartService.validateCart(sessionId);
       if (!validation.isValid) {
-        throw new BadRequestException(`Cart validation failed: ${validation.errors.join(', ')}`);
+        throw new BadRequestException(
+          `Cart validation failed: ${validation.errors.join(', ')}`,
+        );
       }
     }
 
@@ -32,30 +43,43 @@ export class OrdersService {
     for (const item of createOrderDto.items) {
       // Check ticket quantity limit (max 5 tickets per purchase)
       if (item.qty > 5) {
-        throw new BadRequestException('Cannot purchase more than 5 tickets at a time');
+        throw new BadRequestException(
+          'Cannot purchase more than 5 tickets at a time',
+        );
       }
-      
+
       totalTickets += item.qty;
-      
+
       const ticketType = await this.ticketTypeModel.findById(item.ticketTypeId);
       if (!ticketType) {
-        throw new BadRequestException(`Ticket type ${item.ticketTypeId} not found`);
+        throw new BadRequestException(
+          `Ticket type ${item.ticketTypeId} not found`,
+        );
       }
 
-      const isOnSale = await this.ticketTypesService.isOnSale(item.ticketTypeId);
+      const isOnSale = await this.ticketTypesService.isOnSale(
+        item.ticketTypeId,
+      );
       if (!isOnSale) {
-        throw new BadRequestException(`Ticket type ${item.ticketTypeId} is not on sale`);
+        throw new BadRequestException(
+          `Ticket type ${item.ticketTypeId} is not on sale`,
+        );
       }
 
-      const availableCapacity = await this.ticketTypesService.getAvailableCapacity(item.ticketTypeId);
+      const availableCapacity =
+        await this.ticketTypesService.getAvailableCapacity(item.ticketTypeId);
       if (item.qty > availableCapacity) {
-        throw new BadRequestException(`Not enough tickets available for ${item.ticketTypeId}`);
+        throw new BadRequestException(
+          `Not enough tickets available for ${item.ticketTypeId}`,
+        );
       }
     }
 
     // Check total ticket limit (max 5 tickets per purchase)
     if (totalTickets > 5) {
-      throw new BadRequestException('Cannot purchase more than 5 tickets total per order');
+      throw new BadRequestException(
+        'Cannot purchase more than 5 tickets total per order',
+      );
     }
 
     // Calculate processing fees ($0.99 per ticket)
@@ -74,7 +98,10 @@ export class OrdersService {
 
     // Reserve tickets (increment sold count)
     for (const item of createOrderDto.items) {
-      await this.ticketTypesService.incrementSoldCount(item.ticketTypeId.toString(), item.qty);
+      await this.ticketTypesService.incrementSoldCount(
+        item.ticketTypeId.toString(),
+        item.qty,
+      );
     }
 
     // Clear cart if sessionId provided
@@ -85,12 +112,18 @@ export class OrdersService {
     return savedOrder;
   }
 
-  async createPaymentIntent(createOrderDto: CreateOrderDto, userId?: string, sessionId?: string) {
+  async createPaymentIntent(
+    createOrderDto: CreateOrderDto,
+    userId?: string,
+    sessionId?: string,
+  ) {
     // Validate cart if sessionId provided
     if (sessionId) {
       const validation = await this.cartService.validateCart(sessionId);
       if (!validation.isValid) {
-        throw new BadRequestException(`Cart validation failed: ${validation.errors.join(', ')}`);
+        throw new BadRequestException(
+          `Cart validation failed: ${validation.errors.join(', ')}`,
+        );
       }
     }
 
@@ -98,29 +131,42 @@ export class OrdersService {
     let totalTickets = 0;
     for (const item of createOrderDto.items) {
       if (item.qty > 5) {
-        throw new BadRequestException('Cannot purchase more than 5 tickets at a time');
+        throw new BadRequestException(
+          'Cannot purchase more than 5 tickets at a time',
+        );
       }
-      
+
       totalTickets += item.qty;
-      
+
       const ticketType = await this.ticketTypeModel.findById(item.ticketTypeId);
       if (!ticketType) {
-        throw new BadRequestException(`Ticket type ${item.ticketTypeId} not found`);
+        throw new BadRequestException(
+          `Ticket type ${item.ticketTypeId} not found`,
+        );
       }
 
-      const isOnSale = await this.ticketTypesService.isOnSale(item.ticketTypeId);
+      const isOnSale = await this.ticketTypesService.isOnSale(
+        item.ticketTypeId,
+      );
       if (!isOnSale) {
-        throw new BadRequestException(`Ticket type ${item.ticketTypeId} is not on sale`);
+        throw new BadRequestException(
+          `Ticket type ${item.ticketTypeId} is not on sale`,
+        );
       }
 
-      const availableCapacity = await this.ticketTypesService.getAvailableCapacity(item.ticketTypeId);
+      const availableCapacity =
+        await this.ticketTypesService.getAvailableCapacity(item.ticketTypeId);
       if (item.qty > availableCapacity) {
-        throw new BadRequestException(`Not enough tickets available for ${item.ticketTypeId}`);
+        throw new BadRequestException(
+          `Not enough tickets available for ${item.ticketTypeId}`,
+        );
       }
     }
 
     if (totalTickets > 5) {
-      throw new BadRequestException('Cannot purchase more than 5 tickets total per order');
+      throw new BadRequestException(
+        'Cannot purchase more than 5 tickets total per order',
+      );
     }
 
     // Calculate processing fees ($0.99 per ticket)
@@ -146,7 +192,7 @@ export class OrdersService {
         orderId: savedOrder._id.toString(),
         userId: userId || 'guest',
         email: createOrderDto.email,
-      }
+      },
     );
 
     // Update order with payment intent ID
@@ -166,8 +212,9 @@ export class OrdersService {
 
   async confirmPayment(paymentIntentId: string): Promise<Order> {
     // Verify payment with Stripe
-    const paymentIntent = await this.stripeService.retrievePaymentIntent(paymentIntentId);
-    
+    const paymentIntent =
+      await this.stripeService.retrievePaymentIntent(paymentIntentId);
+
     if (paymentIntent.status !== 'succeeded') {
       throw new BadRequestException('Payment not completed');
     }
@@ -188,7 +235,10 @@ export class OrdersService {
 
     // Reserve tickets (increment sold count)
     for (const item of order.items) {
-      await this.ticketTypesService.incrementSoldCount(item.ticketTypeId.toString(), item.qty);
+      await this.ticketTypesService.incrementSoldCount(
+        item.ticketTypeId.toString(),
+        item.qty,
+      );
     }
 
     return order;
@@ -209,7 +259,7 @@ export class OrdersService {
 
   async findByUserId(userId: string, page: number = 1, limit: number = 10) {
     const skip = (page - 1) * limit;
-    
+
     const [orders, total] = await Promise.all([
       this.orderModel
         .find({ userId })
@@ -218,7 +268,7 @@ export class OrdersService {
         .skip(skip)
         .limit(limit)
         .exec(),
-      this.orderModel.countDocuments({ userId })
+      this.orderModel.countDocuments({ userId }),
     ]);
 
     return {
@@ -227,14 +277,14 @@ export class OrdersService {
         page,
         limit,
         total,
-        pages: Math.ceil(total / limit)
-      }
+        pages: Math.ceil(total / limit),
+      },
     };
   }
 
   async findByEmail(email: string, page: number = 1, limit: number = 10) {
     const skip = (page - 1) * limit;
-    
+
     const [orders, total] = await Promise.all([
       this.orderModel
         .find({ email })
@@ -243,7 +293,7 @@ export class OrdersService {
         .skip(skip)
         .limit(limit)
         .exec(),
-      this.orderModel.countDocuments({ email })
+      this.orderModel.countDocuments({ email }),
     ]);
 
     return {
@@ -252,12 +302,16 @@ export class OrdersService {
         page,
         limit,
         total,
-        pages: Math.ceil(total / limit)
-      }
+        pages: Math.ceil(total / limit),
+      },
     };
   }
 
-  async updateStatus(id: string, status: OrderStatus, paymentIntentId?: string): Promise<Order> {
+  async updateStatus(
+    id: string,
+    status: OrderStatus,
+    paymentIntentId?: string,
+  ): Promise<Order> {
     const order = await this.orderModel.findById(id);
     if (!order) {
       throw new NotFoundException('Order not found');
@@ -288,7 +342,10 @@ export class OrdersService {
 
     // Release reserved tickets
     for (const item of order.items) {
-      await this.ticketTypesService.decrementSoldCount(item.ticketTypeId.toString(), item.qty);
+      await this.ticketTypesService.decrementSoldCount(
+        item.ticketTypeId.toString(),
+        item.qty,
+      );
     }
 
     order.status = OrderStatus.CANCELLED;
@@ -296,8 +353,14 @@ export class OrdersService {
   }
 
   async getOrderStats(eventId?: string) {
-    const filter = eventId ? { 'items.ticketTypeId': { $in: await this.getTicketTypesByEvent(eventId) } } : {};
-    
+    const filter = eventId
+      ? {
+          'items.ticketTypeId': {
+            $in: await this.getTicketTypesByEvent(eventId),
+          },
+        }
+      : {};
+
     const stats = await this.orderModel.aggregate([
       { $match: { ...filter, status: OrderStatus.PAID } },
       {
@@ -305,9 +368,9 @@ export class OrdersService {
           _id: null,
           totalOrders: { $sum: 1 },
           totalRevenue: { $sum: '$totalCents' },
-          totalTickets: { $sum: { $sum: '$items.qty' } }
-        }
-      }
+          totalTickets: { $sum: { $sum: '$items.qty' } },
+        },
+      },
     ]);
 
     return stats[0] || { totalOrders: 0, totalRevenue: 0, totalTickets: 0 };
@@ -322,7 +385,9 @@ export class OrdersService {
   }
 
   private async getTicketTypesByEvent(eventId: string): Promise<string[]> {
-    const ticketTypes = await this.ticketTypeModel.find({ eventId }).select('_id');
-    return ticketTypes.map(tt => tt._id.toString());
+    const ticketTypes = await this.ticketTypeModel
+      .find({ eventId })
+      .select('_id');
+    return ticketTypes.map((tt) => tt._id.toString());
   }
 }

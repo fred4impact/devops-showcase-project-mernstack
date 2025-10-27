@@ -1,9 +1,9 @@
-import React from 'react'
-import Link from 'next/link'
-import { Ticket, Mail, Phone, MapPin } from 'lucide-react'
+import React from 'react';
+import Link from 'next/link';
+import { Ticket, Mail, Phone, MapPin } from 'lucide-react';
 
 export function Footer() {
-  const currentYear = new Date().getFullYear()
+  const currentYear = new Date().getFullYear();
 
   const footerLinks = {
     company: [
@@ -24,7 +24,7 @@ export function Footer() {
       { name: 'API Documentation', href: '/api-docs' },
       { name: 'Developer Tools', href: '/developers' },
     ],
-  }
+  };
 
   return (
     <footer className="bg-secondary-900 text-white">
@@ -39,8 +39,8 @@ export function Footer() {
               <span className="text-xl font-bold">TicketNow</span>
             </div>
             <p className="text-secondary-300 text-sm">
-              The modern ticketing platform for events of all sizes. 
-              Create, manage, and sell tickets with ease.
+              The modern ticketing platform for events of all sizes. Create,
+              manage, and sell tickets with ease.
             </p>
             <div className="space-y-2">
               <div className="flex items-center space-x-2 text-sm text-secondary-300">
@@ -146,5 +146,5 @@ export function Footer() {
         </div>
       </div>
     </footer>
-  )
+  );
 }

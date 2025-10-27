@@ -1,31 +1,37 @@
-'use client'
+'use client';
 
-import React, { useState, useEffect } from 'react'
-import Link from 'next/link'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Badge } from '@/components/ui/Badge'
-import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
-import { 
-  Calendar, 
-  MapPin, 
-  Clock, 
-  Users, 
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/Card';
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import {
+  Calendar,
+  MapPin,
+  Clock,
+  Users,
   Search,
   Filter,
   Grid,
-  List
-} from 'lucide-react'
-import { eventsApi } from '@/lib/api'
-import { Event } from '@/types'
-import { formatDate, formatDateTime, formatPrice } from '@/lib/utils'
+  List,
+} from 'lucide-react';
+import { eventsApi } from '@/lib/api';
+import { Event } from '@/types';
+import { formatDate, formatDateTime, formatPrice } from '@/lib/utils';
 
 export default function EventsPage() {
-  const [events, setEvents] = useState<Event[]>([])
-  const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [category, setCategory] = useState('')
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [category, setCategory] = useState('');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   const categories = [
     'All',
@@ -38,41 +44,41 @@ export default function EventsPage() {
     'Festival',
     'Food & Drink',
     'Health & Fitness',
-    'Other'
-  ]
+    'Other',
+  ];
 
   useEffect(() => {
-    loadEvents()
-  }, [searchTerm, category])
+    loadEvents();
+  }, [searchTerm, category]);
 
   const loadEvents = async () => {
     try {
-      setLoading(true)
-      const params: any = {}
-      if (searchTerm) params.location = searchTerm
-      if (category && category !== 'All') params.category = category
-      
-      const response = await eventsApi.getEvents(params)
-      setEvents(response.data.events)
+      setLoading(true);
+      const params: any = {};
+      if (searchTerm) params.location = searchTerm;
+      if (category && category !== 'All') params.category = category;
+
+      const response = await eventsApi.getEvents(params);
+      setEvents(response.data.events);
     } catch (error) {
-      console.error('Failed to load events:', error)
+      console.error('Failed to load events:', error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const getEventStatusBadge = (status: string) => {
     switch (status) {
       case 'published':
-        return <Badge variant="success">Live</Badge>
+        return <Badge variant="success">Live</Badge>;
       case 'draft':
-        return <Badge variant="secondary">Draft</Badge>
+        return <Badge variant="secondary">Draft</Badge>;
       case 'cancelled':
-        return <Badge variant="error">Cancelled</Badge>
+        return <Badge variant="error">Cancelled</Badge>;
       default:
-        return <Badge variant="secondary">{status}</Badge>
+        return <Badge variant="secondary">{status}</Badge>;
     }
-  }
+  };
 
   const EventCard = ({ event }: { event: Event }) => (
     <Card className="hover:shadow-lg transition-all duration-300 group">
@@ -87,7 +93,7 @@ export default function EventsPage() {
           <Calendar className="w-16 h-16 text-primary-400" />
         )}
       </div>
-      
+
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="flex-1">
@@ -101,35 +107,33 @@ export default function EventsPage() {
           {getEventStatusBadge(event.status)}
         </div>
       </CardHeader>
-      
+
       <CardContent>
         <div className="space-y-3">
           <div className="flex items-center text-sm text-secondary-600">
             <Calendar className="w-4 h-4 mr-2" />
             {formatDateTime(event.startAt)}
           </div>
-          
+
           <div className="flex items-center text-sm text-secondary-600">
             <MapPin className="w-4 h-4 mr-2" />
             {event.venue.name}
           </div>
-          
+
           <div className="flex items-center text-sm text-secondary-600">
             <Users className="w-4 h-4 mr-2" />
             {event.venue.capacity.toLocaleString()} capacity
           </div>
-          
+
           <div className="pt-4">
             <Link href={`/events/${event.slug}`}>
-              <Button className="w-full">
-                View Details
-              </Button>
+              <Button className="w-full">View Details</Button>
             </Link>
           </div>
         </div>
       </CardContent>
     </Card>
-  )
+  );
 
   const EventListItem = ({ event }: { event: Event }) => (
     <Card className="hover:shadow-lg transition-all duration-300">
@@ -146,7 +150,7 @@ export default function EventsPage() {
               <Calendar className="w-8 h-8 text-primary-400" />
             )}
           </div>
-          
+
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between">
               <div>
@@ -159,7 +163,7 @@ export default function EventsPage() {
               </div>
               {getEventStatusBadge(event.status)}
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-secondary-600">
               <div className="flex items-center">
                 <Calendar className="w-4 h-4 mr-2" />
@@ -175,18 +179,16 @@ export default function EventsPage() {
               </div>
             </div>
           </div>
-          
+
           <div className="flex-shrink-0">
             <Link href={`/events/${event.slug}`}>
-              <Button>
-                View Details
-              </Button>
+              <Button>View Details</Button>
             </Link>
           </div>
         </div>
       </CardContent>
     </Card>
-  )
+  );
 
   if (loading) {
     return (
@@ -206,7 +208,7 @@ export default function EventsPage() {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -233,7 +235,7 @@ export default function EventsPage() {
                 className="w-full"
               />
             </div>
-            
+
             <div className="flex gap-4">
               <select
                 value={category}
@@ -246,7 +248,7 @@ export default function EventsPage() {
                   </option>
                 ))}
               </select>
-              
+
               <div className="flex border border-secondary-300 rounded-lg">
                 <button
                   onClick={() => setViewMode('grid')}
@@ -273,25 +275,28 @@ export default function EventsPage() {
               No events found
             </h3>
             <p className="text-secondary-600">
-              Try adjusting your search criteria or check back later for new events.
+              Try adjusting your search criteria or check back later for new
+              events.
             </p>
           </div>
         ) : (
-          <div className={
-            viewMode === 'grid' 
-              ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
-              : 'space-y-4'
-          }>
-            {events.map((event) => (
+          <div
+            className={
+              viewMode === 'grid'
+                ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
+                : 'space-y-4'
+            }
+          >
+            {events.map((event) =>
               viewMode === 'grid' ? (
                 <EventCard key={event._id} event={event} />
               ) : (
                 <EventListItem key={event._id} event={event} />
-              )
-            ))}
+              ),
+            )}
           </div>
         )}
       </div>
     </div>
-  )
+  );
 }

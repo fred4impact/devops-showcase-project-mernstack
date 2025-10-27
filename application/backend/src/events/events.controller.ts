@@ -1,20 +1,26 @@
-import { 
-  Controller, 
-  Get, 
-  Post, 
-  Put, 
-  Delete, 
-  Param, 
-  Body, 
-  Query, 
-  UseGuards, 
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Param,
+  Body,
+  Query,
+  UseGuards,
   Request,
   UseInterceptors,
   UploadedFile,
-  Res
+  Res,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { EventsService } from './events.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
@@ -31,7 +37,9 @@ export class EventsController {
   ) {}
 
   @Get()
-  @ApiOperation({ summary: 'Get all published events with filtering and pagination' })
+  @ApiOperation({
+    summary: 'Get all published events with filtering and pagination',
+  })
   @ApiQuery({ name: 'category', required: false, example: 'Music' })
   @ApiQuery({ name: 'startDate', required: false, example: '2024-07-01' })
   @ApiQuery({ name: 'endDate', required: false, example: '2024-12-31' })
@@ -47,7 +55,10 @@ export class EventsController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get organizer events' })
-  @ApiResponse({ status: 200, description: 'Organizer events retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Organizer events retrieved successfully',
+  })
   async getMyEvents(@Request() req, @Query() query: EventQueryDto) {
     return this.eventsService.getOrganizerEvents(req.user.id, query);
   }
@@ -88,7 +99,7 @@ export class EventsController {
   async updateEvent(
     @Param('id') id: string,
     @Body() updateEventDto: UpdateEventDto,
-    @Request() req
+    @Request() req,
   ) {
     return this.eventsService.update(id, updateEventDto, req.user.id);
   }
@@ -136,29 +147,33 @@ export class EventsController {
   async uploadEventImage(
     @Param('id') eventId: string,
     @UploadedFile() file: Express.Multer.File,
-    @Request() req
+    @Request() req,
   ) {
     try {
       console.log('Uploading image for event:', eventId);
       console.log('File details:', {
         originalname: file.originalname,
         mimetype: file.mimetype,
-        size: file.size
+        size: file.size,
       });
-      
+
       const imageUrl = await this.s3Service.uploadEventImage(
         file.buffer,
         eventId,
-        file.originalname
+        file.originalname,
       );
-      
+
       console.log('Image uploaded, URL:', imageUrl);
-      
+
       // Update event with image URL
-      await this.eventsService.update(eventId, { images: [imageUrl] }, req.user.id);
-      
+      await this.eventsService.update(
+        eventId,
+        { images: [imageUrl] },
+        req.user.id,
+      );
+
       console.log('Event updated with image URL');
-      
+
       return { imageUrl };
     } catch (error) {
       console.error('Error uploading image:', error);
@@ -173,29 +188,31 @@ export class EventsController {
     try {
       console.log('Fetching image with ID:', imageId);
       const image = await this.s3Service.getImage(imageId);
-      
+
       if (!image) {
         console.log('Image not found for ID:', imageId);
         return res.status(404).json({ message: 'Image not found' });
       }
-      
-      console.log('Image found:', { 
-        id: image._id, 
-        filename: image.filename, 
-        mimetype: image.mimetype, 
-        size: image.size 
+
+      console.log('Image found:', {
+        id: image._id,
+        filename: image.filename,
+        mimetype: image.mimetype,
+        size: image.size,
       });
-      
+
       res.set({
         'Content-Type': image.mimetype,
         'Content-Length': image.size,
         'Cache-Control': 'public, max-age=31536000', // Cache for 1 year
       });
-      
+
       res.send(image.data);
     } catch (error) {
       console.error('Error fetching image:', error);
-      return res.status(500).json({ message: 'Internal server error', error: error.message });
+      return res
+        .status(500)
+        .json({ message: 'Internal server error', error: error.message });
     }
   }
 }

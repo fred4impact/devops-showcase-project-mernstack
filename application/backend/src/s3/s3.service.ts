@@ -17,12 +17,14 @@ export class S3Service {
     // private celeryService: CeleryService
   ) {
     // Check if S3 credentials are configured
-    const hasS3Credentials = this.configService.get('S3_ACCESS_KEY') && 
-                            this.configService.get('S3_SECRET_KEY') && 
-                            this.configService.get('S3_BUCKET');
-    
-    this.useS3 = hasS3Credentials && this.configService.get('NODE_ENV') !== 'development';
-    
+    const hasS3Credentials =
+      this.configService.get('S3_ACCESS_KEY') &&
+      this.configService.get('S3_SECRET_KEY') &&
+      this.configService.get('S3_BUCKET');
+
+    this.useS3 =
+      hasS3Credentials && this.configService.get('NODE_ENV') !== 'development';
+
     if (this.useS3) {
       this.s3 = new AWS.S3({
         accessKeyId: this.configService.get('S3_ACCESS_KEY'),
@@ -40,7 +42,7 @@ export class S3Service {
   ): Promise<string> {
     if (this.useS3) {
       const bucketName = bucket || this.configService.get('S3_BUCKET');
-      
+
       const params = {
         Bucket: bucketName,
         Key: key,
@@ -56,7 +58,7 @@ export class S3Service {
       console.log('S3Service: Storing image in MongoDB');
       console.log('S3Service: Key:', key);
       console.log('S3Service: EventId from key:', key.split('/')[1]);
-      
+
       const image = new this.imageModel({
         filename: key,
         originalName: key.split('/').pop() || key,
@@ -65,10 +67,10 @@ export class S3Service {
         data: file,
         eventId: key.split('/')[1], // Extract eventId from key
       });
-      
+
       const savedImage = await image.save();
       console.log('S3Service: Image saved with ID:', savedImage._id);
-      
+
       // Return a URL that can be used to fetch the image
       const imageUrl = `${this.configService.get('BACKEND_BASE_URL', 'http://localhost:3001')}/events/images/${savedImage._id}`;
       console.log('S3Service: Generated image URL:', imageUrl);
@@ -76,10 +78,7 @@ export class S3Service {
     }
   }
 
-  async uploadTicketPDF(
-    pdfBuffer: Buffer,
-    ticketId: string,
-  ): Promise<string> {
+  async uploadTicketPDF(pdfBuffer: Buffer, ticketId: string): Promise<string> {
     const key = `tickets/${ticketId}.pdf`;
     return this.uploadFile(pdfBuffer, key, 'application/pdf');
   }
@@ -94,7 +93,7 @@ export class S3Service {
     console.log('S3Service: useS3 flag:', this.useS3);
     const result = await this.uploadFile(imageBuffer, key, 'image/jpeg');
     console.log('S3Service: Upload result:', result);
-    
+
     // Queue image processing task - DISABLED (Celery removed)
     // try {
     //   await this.celeryService.processImage(result, 'event');
@@ -102,23 +101,25 @@ export class S3Service {
     // } catch (error) {
     //   console.error('S3Service: Failed to queue image processing task:', error);
     // }
-    
+
     return result;
   }
 
   async deleteFile(key: string, bucket?: string): Promise<void> {
     if (this.useS3) {
       const bucketName = bucket || this.configService.get('S3_BUCKET');
-      
-      await this.s3.deleteObject({
-        Bucket: bucketName,
-        Key: key,
-      }).promise();
+
+      await this.s3
+        .deleteObject({
+          Bucket: bucketName,
+          Key: key,
+        })
+        .promise();
     } else {
       // For local development, mark as deleted in MongoDB
       await this.imageModel.findOneAndUpdate(
         { filename: key },
-        { isDeleted: true }
+        { isDeleted: true },
       );
     }
   }
@@ -127,7 +128,7 @@ export class S3Service {
   async getImage(imageId: string): Promise<ImageDocument | null> {
     console.log('S3Service: Getting image with ID:', imageId);
     console.log('S3Service: useS3 flag:', this.useS3);
-    
+
     if (!this.useS3) {
       try {
         const image = await this.imageModel.findById(imageId);
@@ -138,7 +139,7 @@ export class S3Service {
             filename: image.filename,
             mimetype: image.mimetype,
             size: image.size,
-            eventId: image.eventId
+            eventId: image.eventId,
           });
         }
         return image;

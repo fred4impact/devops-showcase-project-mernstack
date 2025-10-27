@@ -1,152 +1,152 @@
 export interface User {
-  id: string
-  name: string
-  email: string
-  phone?: string
-  role: 'attendee' | 'organizer' | 'admin'
-  marketingConsent: boolean
-  isActive: boolean
-  profilePicture?: string
-  createdAt: string
-  updatedAt: string
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  role: 'attendee' | 'organizer' | 'admin';
+  marketingConsent: boolean;
+  isActive: boolean;
+  profilePicture?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Event {
-  _id: string
+  _id: string;
   organizerId: {
-    _id: string
-    name: string
-    email: string
-  }
-  title: string
-  slug: string
-  description: string
-  category: string
+    _id: string;
+    name: string;
+    email: string;
+  };
+  title: string;
+  slug: string;
+  description: string;
+  category: string;
   venue: {
-    name: string
-    address: string
-    capacity: number
-    timezone: string
-  }
-  startAt: string
-  endAt: string
-  status: 'draft' | 'published' | 'cancelled'
-  images: string[]
+    name: string;
+    address: string;
+    capacity: number;
+    timezone: string;
+  };
+  startAt: string;
+  endAt: string;
+  status: 'draft' | 'published' | 'cancelled';
+  images: string[];
   seatmap?: {
-    type: 'reserved' | 'ga'
-    svg?: string
-    seats?: Seat[]
-    sections?: Section[]
-    width: number
-    height: number
-    stageLabel: string
-  }
-  createdAt: string
-  updatedAt: string
+    type: 'reserved' | 'ga';
+    svg?: string;
+    seats?: Seat[];
+    sections?: Section[];
+    width: number;
+    height: number;
+    stageLabel: string;
+  };
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Seat {
-  seatId: string
-  section: string
-  row: string
-  number: string
-  priceModifier: number
-  accessible: boolean
-  isBlocked?: boolean
-  blockedReason?: string
-  x: number
-  y: number
-  status?: 'available' | 'selected' | 'locked' | 'sold'
+  seatId: string;
+  section: string;
+  row: string;
+  number: string;
+  priceModifier: number;
+  accessible: boolean;
+  isBlocked?: boolean;
+  blockedReason?: string;
+  x: number;
+  y: number;
+  status?: 'available' | 'selected' | 'locked' | 'sold';
 }
 
 export interface Section {
-  name: string
-  color: string
-  x: number
-  y: number
-  width: number
-  height: number
+  name: string;
+  color: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
 }
 
 export interface TicketType {
-  _id: string
-  eventId: string
-  name: string
-  priceCents: number
-  currency: string
-  capacity: number
-  salesStart: string
-  salesEnd: string
-  refundable: boolean
-  soldCount: number
-  createdAt: string
-  updatedAt: string
+  _id: string;
+  eventId: string;
+  name: string;
+  priceCents: number;
+  currency: string;
+  capacity: number;
+  salesStart: string;
+  salesEnd: string;
+  refundable: boolean;
+  soldCount: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface CartItem {
-  ticketTypeId: string
-  quantity: number
-  priceCents: number
-  seatId?: string
-  addedAt: string
+  ticketTypeId: string;
+  quantity: number;
+  priceCents: number;
+  seatId?: string;
+  addedAt: string;
 }
 
 export interface Cart {
-  items: CartItem[]
-  totalCents: number
-  itemCount: number
-  sessionId: string
+  items: CartItem[];
+  totalCents: number;
+  itemCount: number;
+  sessionId: string;
 }
 
 export interface Order {
-  _id: string
-  userId?: string
-  email: string
-  items: OrderItem[]
-  totalCents: number
-  feesCents: number
-  taxCents: number
-  status: 'pending' | 'paid' | 'cancelled' | 'refunded'
-  paymentProvider: string
-  paymentIntentId?: string
-  createdAt: string
-  updatedAt: string
+  _id: string;
+  userId?: string;
+  email: string;
+  items: OrderItem[];
+  totalCents: number;
+  feesCents: number;
+  taxCents: number;
+  status: 'pending' | 'paid' | 'cancelled' | 'refunded';
+  paymentProvider: string;
+  paymentIntentId?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface OrderItem {
-  ticketTypeId: string
-  seatId?: string
-  priceCents: number
-  qty: number
+  ticketTypeId: string;
+  seatId?: string;
+  priceCents: number;
+  qty: number;
 }
 
 export interface Ticket {
-  _id: string
-  orderId: string
-  eventId: string
-  ticketTypeId: string
-  seatId?: string
-  ticketUUID: string
-  qrPayload: string
-  pdfUrl?: string
-  status: 'issued' | 'used' | 'refunded'
-  issuedAt: string
-  usedAt?: string
+  _id: string;
+  orderId: string;
+  eventId: string;
+  ticketTypeId: string;
+  seatId?: string;
+  ticketUUID: string;
+  qrPayload: string;
+  pdfUrl?: string;
+  status: 'issued' | 'used' | 'refunded';
+  issuedAt: string;
+  usedAt?: string;
 }
 
 export interface ApiResponse<T> {
-  data?: T
-  message?: string
-  error?: string
-  status: number
+  data?: T;
+  message?: string;
+  error?: string;
+  status: number;
 }
 
 export interface PaginationResponse<T> {
-  data: T[]
+  data: T[];
   pagination: {
-    page: number
-    limit: number
-    total: number
-    pages: number
-  }
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
 }

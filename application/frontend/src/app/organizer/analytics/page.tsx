@@ -53,7 +53,9 @@ interface AnalyticsData {
 export default function OrganizerAnalytics() {
   const { user, loading } = useAuth();
   const router = useRouter();
-  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(
+    null,
+  );
   const [loadingData, setLoadingData] = useState(true);
   const [timeRange, setTimeRange] = useState('6months');
 
@@ -76,10 +78,10 @@ export default function OrganizerAnalytics() {
   const fetchAnalyticsData = async () => {
     try {
       setLoadingData(true);
-      
+
       // For now, we'll create mock data since the analytics endpoint doesn't exist yet
       // In a real app, you'd call: const response = await api.get(`/analytics/organizer?timeRange=${timeRange}`);
-      
+
       const mockAnalyticsData: AnalyticsData = {
         totalEvents: 0,
         totalRevenue: 0,
@@ -88,9 +90,9 @@ export default function OrganizerAnalytics() {
         topPerformingEvents: [],
         recentEvents: [],
         revenueByMonth: [],
-        ticketSalesByCategory: []
+        ticketSalesByCategory: [],
       };
-      
+
       setAnalyticsData(mockAnalyticsData);
     } catch (error) {
       console.error('Error fetching analytics data:', error);
@@ -144,8 +146,12 @@ export default function OrganizerAnalytics() {
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Event Analytics</h1>
-              <p className="text-gray-600 mt-2">Track your event performance and insights</p>
+              <h1 className="text-3xl font-bold text-gray-900">
+                Event Analytics
+              </h1>
+              <p className="text-gray-600 mt-2">
+                Track your event performance and insights
+              </p>
             </div>
             <div className="flex items-center space-x-4">
               <select
@@ -176,14 +182,28 @@ export default function OrganizerAnalytics() {
               <div className="flex items-center">
                 <div className="flex-shrink-0">
                   <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    <svg
+                      className="w-5 h-5 text-blue-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
                     </svg>
                   </div>
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-500">Total Events</p>
-                  <p className="text-2xl font-semibold text-gray-900">{analyticsData.totalEvents}</p>
+                  <p className="text-sm font-medium text-gray-500">
+                    Total Events
+                  </p>
+                  <p className="text-2xl font-semibold text-gray-900">
+                    {analyticsData.totalEvents}
+                  </p>
                 </div>
               </div>
             </Card>
@@ -192,14 +212,28 @@ export default function OrganizerAnalytics() {
               <div className="flex items-center">
                 <div className="flex-shrink-0">
                   <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                    <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                    <svg
+                      className="w-5 h-5 text-green-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
+                      />
                     </svg>
                   </div>
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-500">Total Revenue</p>
-                  <p className="text-2xl font-semibold text-gray-900">${formatPrice(analyticsData.totalRevenue)}</p>
+                  <p className="text-sm font-medium text-gray-500">
+                    Total Revenue
+                  </p>
+                  <p className="text-2xl font-semibold text-gray-900">
+                    ${formatPrice(analyticsData.totalRevenue)}
+                  </p>
                 </div>
               </div>
             </Card>
@@ -208,14 +242,28 @@ export default function OrganizerAnalytics() {
               <div className="flex items-center">
                 <div className="flex-shrink-0">
                   <div className="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
-                    <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 6v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-6V7a2 2 0 00-2-2H5z" />
+                    <svg
+                      className="w-5 h-5 text-yellow-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 6v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-6V7a2 2 0 00-2-2H5z"
+                      />
                     </svg>
                   </div>
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-500">Tickets Sold</p>
-                  <p className="text-2xl font-semibold text-gray-900">{analyticsData.totalTicketsSold}</p>
+                  <p className="text-sm font-medium text-gray-500">
+                    Tickets Sold
+                  </p>
+                  <p className="text-2xl font-semibold text-gray-900">
+                    {analyticsData.totalTicketsSold}
+                  </p>
                 </div>
               </div>
             </Card>
@@ -224,14 +272,28 @@ export default function OrganizerAnalytics() {
               <div className="flex items-center">
                 <div className="flex-shrink-0">
                   <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    <svg
+                      className="w-5 h-5 text-purple-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                      />
                     </svg>
                   </div>
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-500">Avg. Ticket Price</p>
-                  <p className="text-2xl font-semibold text-gray-900">${formatPrice(analyticsData.averageTicketPrice)}</p>
+                  <p className="text-sm font-medium text-gray-500">
+                    Avg. Ticket Price
+                  </p>
+                  <p className="text-2xl font-semibold text-gray-900">
+                    ${formatPrice(analyticsData.averageTicketPrice)}
+                  </p>
                 </div>
               </div>
             </Card>
@@ -241,27 +303,48 @@ export default function OrganizerAnalytics() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Top Performing Events */}
           <Card className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">Top Performing Events</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-6">
+              Top Performing Events
+            </h2>
             <div className="space-y-4">
               {analyticsData?.topPerformingEvents.map((event, index) => {
-                const totalRevenue = event.ticketTypes.reduce((sum, type) => sum + (type.priceCents * type.soldCount), 0);
-                const totalTickets = event.ticketTypes.reduce((sum, type) => sum + type.soldCount, 0);
-                
+                const totalRevenue = event.ticketTypes.reduce(
+                  (sum, type) => sum + type.priceCents * type.soldCount,
+                  0,
+                );
+                const totalTickets = event.ticketTypes.reduce(
+                  (sum, type) => sum + type.soldCount,
+                  0,
+                );
+
                 return (
-                  <div key={event._id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                  <div
+                    key={event._id}
+                    className="flex items-center justify-between p-4 border border-gray-200 rounded-lg"
+                  >
                     <div className="flex-1">
                       <div className="flex items-center space-x-2 mb-1">
-                        <span className="text-sm font-medium text-gray-500">#{index + 1}</span>
-                        <h3 className="font-medium text-gray-900">{event.title}</h3>
+                        <span className="text-sm font-medium text-gray-500">
+                          #{index + 1}
+                        </span>
+                        <h3 className="font-medium text-gray-900">
+                          {event.title}
+                        </h3>
                         <Badge variant={getStatusColor(event.status)}>
                           {event.status}
                         </Badge>
                       </div>
-                      <p className="text-sm text-gray-600">{formatDate(event.startAt)}</p>
+                      <p className="text-sm text-gray-600">
+                        {formatDate(event.startAt)}
+                      </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-lg font-semibold text-gray-900">${formatPrice(totalRevenue)}</p>
-                      <p className="text-sm text-gray-500">{totalTickets} tickets</p>
+                      <p className="text-lg font-semibold text-gray-900">
+                        ${formatPrice(totalRevenue)}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {totalTickets} tickets
+                      </p>
                     </div>
                   </div>
                 );
@@ -271,17 +354,28 @@ export default function OrganizerAnalytics() {
 
           {/* Revenue by Category */}
           <Card className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">Revenue by Category</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-6">
+              Revenue by Category
+            </h2>
             <div className="space-y-4">
               {analyticsData?.ticketSalesByCategory.map((category, index) => (
-                <div key={category.category} className="flex items-center justify-between">
+                <div
+                  key={category.category}
+                  className="flex items-center justify-between"
+                >
                   <div className="flex items-center space-x-3">
                     <div className="w-3 h-3 rounded-full bg-primary-600"></div>
-                    <span className="text-sm font-medium text-gray-900">{category.category}</span>
+                    <span className="text-sm font-medium text-gray-900">
+                      {category.category}
+                    </span>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-semibold text-gray-900">${formatPrice(category.revenue)}</p>
-                    <p className="text-xs text-gray-500">{category.count} events</p>
+                    <p className="text-sm font-semibold text-gray-900">
+                      ${formatPrice(category.revenue)}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {category.count} events
+                    </p>
                   </div>
                 </div>
               ))}
@@ -292,7 +386,9 @@ export default function OrganizerAnalytics() {
         {/* Recent Events */}
         <Card className="p-6 mt-8">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">Recent Events</h2>
+            <h2 className="text-xl font-semibold text-gray-900">
+              Recent Events
+            </h2>
             <Button
               onClick={() => router.push('/organizer/events')}
               variant="outline"
@@ -302,21 +398,38 @@ export default function OrganizerAnalytics() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {analyticsData?.recentEvents.map((event) => {
-              const totalRevenue = event.ticketTypes.reduce((sum, type) => sum + (type.priceCents * type.soldCount), 0);
-              const totalTickets = event.ticketTypes.reduce((sum, type) => sum + type.soldCount, 0);
-              
+              const totalRevenue = event.ticketTypes.reduce(
+                (sum, type) => sum + type.priceCents * type.soldCount,
+                0,
+              );
+              const totalTickets = event.ticketTypes.reduce(
+                (sum, type) => sum + type.soldCount,
+                0,
+              );
+
               return (
-                <div key={event._id} className="border border-gray-200 rounded-lg p-4">
+                <div
+                  key={event._id}
+                  className="border border-gray-200 rounded-lg p-4"
+                >
                   <div className="flex items-start justify-between mb-3">
-                    <h3 className="font-medium text-gray-900 line-clamp-2">{event.title}</h3>
+                    <h3 className="font-medium text-gray-900 line-clamp-2">
+                      {event.title}
+                    </h3>
                     <Badge variant={getStatusColor(event.status)}>
                       {event.status}
                     </Badge>
                   </div>
-                  <p className="text-sm text-gray-600 mb-3">{formatDate(event.startAt)}</p>
+                  <p className="text-sm text-gray-600 mb-3">
+                    {formatDate(event.startAt)}
+                  </p>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-500">{totalTickets} tickets</span>
-                    <span className="font-semibold text-gray-900">${formatPrice(totalRevenue)}</span>
+                    <span className="text-gray-500">
+                      {totalTickets} tickets
+                    </span>
+                    <span className="font-semibold text-gray-900">
+                      ${formatPrice(totalRevenue)}
+                    </span>
                   </div>
                   <div className="mt-3 flex space-x-2">
                     <Button

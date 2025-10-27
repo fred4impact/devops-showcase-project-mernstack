@@ -1,55 +1,65 @@
-'use client'
+'use client';
 
-import React, { useState } from 'react'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/Button'
-import { Badge } from '@/components/ui/Badge'
-import { 
-  Menu, 
-  X, 
-  Search, 
-  ShoppingCart, 
-  User, 
+import React, { useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/Button';
+import { Badge } from '@/components/ui/Badge';
+import {
+  Menu,
+  X,
+  Search,
+  ShoppingCart,
+  User,
   Calendar,
   Ticket,
-  LogOut
-} from 'lucide-react'
-import { useAuth } from '@/hooks/useAuth'
-import { useCart } from '@/hooks/useCart'
+  LogOut,
+} from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { useCart } from '@/hooks/useCart';
 
 export function Header() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
-  const { user, logout } = useAuth()
-  const { cart } = useCart()
-  const router = useRouter()
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const { user, logout } = useAuth();
+  const { cart } = useCart();
+  const router = useRouter();
 
   const handleLogout = () => {
-    logout()
-    router.push('/')
-  }
+    logout();
+    router.push('/');
+  };
 
   const navigation = [
     { name: 'Events', href: '/events', icon: Calendar },
     { name: 'My Tickets', href: '/tickets/manage', icon: Ticket },
     { name: 'Create Event', href: '/events/create', icon: Calendar },
-  ]
+  ];
 
   const userNavigation = [
-    { name: 'Dashboard', href: user?.role === 'organizer' ? '/organizer/dashboard' : user?.role === 'admin' ? '/admin' : '/dashboard' },
+    {
+      name: 'Dashboard',
+      href:
+        user?.role === 'organizer'
+          ? '/organizer/dashboard'
+          : user?.role === 'admin'
+            ? '/admin'
+            : '/dashboard',
+    },
     { name: 'Profile', href: '/profile' },
     { name: 'My Tickets', href: '/tickets/manage' },
     { name: 'Create Event', href: '/events/create' },
-    ...(user?.role === 'organizer' ? [
-      { name: 'My Events', href: '/organizer/events' },
-      { name: 'Event Analytics', href: '/organizer/analytics' },
-    ] : []),
-    ...(user?.role === 'admin' ? [
-      { name: 'Admin Panel', href: '/admin' },
-    ] : []),
+    ...(user?.role === 'organizer'
+      ? [
+          { name: 'My Events', href: '/organizer/events' },
+          { name: 'Event Analytics', href: '/organizer/analytics' },
+        ]
+      : []),
+    ...(user?.role === 'admin'
+      ? [{ name: 'Admin Panel', href: '/admin' }]
+      : []),
     { name: 'Settings', href: '/settings' },
-  ]
+  ];
 
   return (
     <header className="bg-white shadow-sm border-b border-secondary-200">
@@ -171,7 +181,11 @@ export function Header() {
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="md:hidden p-2 text-secondary-600 hover:text-primary-600 transition-colors"
             >
-              {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              {isMenuOpen ? (
+                <X className="w-5 h-5" />
+              ) : (
+                <Menu className="w-5 h-5" />
+              )}
             </button>
           </div>
         </div>
@@ -196,5 +210,5 @@ export function Header() {
         )}
       </div>
     </header>
-  )
+  );
 }

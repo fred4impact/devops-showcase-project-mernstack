@@ -1,16 +1,19 @@
-import { 
-  Controller, 
-  Get, 
-  Post, 
-  Put, 
-  Delete, 
-  Param, 
-  Body, 
-  UseGuards, 
-  Request,
-  Query
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Param,
+  Body,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { SeatingPlanService } from './seating-plan.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
@@ -32,14 +35,14 @@ export class SeatingPlanController {
   async lockSeat(
     @Param('eventId') eventId: string,
     @Param('seatId') seatId: string,
-    @Body() body: { sessionId: string; userId?: string; duration?: number }
+    @Body() body: { sessionId: string; userId?: string; duration?: number },
   ) {
     return this.seatingPlanService.lockSeat(
-      eventId, 
-      seatId, 
-      body.sessionId, 
-      body.userId, 
-      body.duration
+      eventId,
+      seatId,
+      body.sessionId,
+      body.userId,
+      body.duration,
     );
   }
 
@@ -49,7 +52,7 @@ export class SeatingPlanController {
   async unlockSeat(
     @Param('eventId') eventId: string,
     @Param('seatId') seatId: string,
-    @Body() body: { sessionId: string }
+    @Body() body: { sessionId: string },
   ) {
     return this.seatingPlanService.unlockSeat(eventId, seatId, body.sessionId);
   }
@@ -59,14 +62,17 @@ export class SeatingPlanController {
   @ApiResponse({ status: 200, description: 'All seats unlocked successfully' })
   async unlockAllSeats(
     @Param('eventId') eventId: string,
-    @Param('sessionId') sessionId: string
+    @Param('sessionId') sessionId: string,
   ) {
     return this.seatingPlanService.unlockSeatsBySession(eventId, sessionId);
   }
 
   @Get('events/:eventId/availability')
   @ApiOperation({ summary: 'Get seat availability for an event' })
-  @ApiResponse({ status: 200, description: 'Availability retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Availability retrieved successfully',
+  })
   async getAvailability(@Param('eventId') eventId: string) {
     return this.seatingPlanService.getSeatAvailability(eventId);
   }
@@ -75,10 +81,13 @@ export class SeatingPlanController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create seating plan for an event' })
-  @ApiResponse({ status: 201, description: 'Seating plan created successfully' })
+  @ApiResponse({
+    status: 201,
+    description: 'Seating plan created successfully',
+  })
   async createSeatingPlan(
     @Param('eventId') eventId: string,
-    @Body() seatingPlanData: any
+    @Body() seatingPlanData: any,
   ) {
     return this.seatingPlanService.createSeatingPlan(eventId, seatingPlanData);
   }
@@ -87,10 +96,13 @@ export class SeatingPlanController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update seating plan for an event' })
-  @ApiResponse({ status: 200, description: 'Seating plan updated successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Seating plan updated successfully',
+  })
   async updateSeatingPlan(
     @Param('eventId') eventId: string,
-    @Body() updates: any
+    @Body() updates: any,
   ) {
     return this.seatingPlanService.updateSeatingPlan(eventId, updates);
   }
@@ -99,7 +111,10 @@ export class SeatingPlanController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete seating plan for an event' })
-  @ApiResponse({ status: 200, description: 'Seating plan deleted successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Seating plan deleted successfully',
+  })
   async deleteSeatingPlan(@Param('eventId') eventId: string) {
     return this.seatingPlanService.deleteSeatingPlan(eventId);
   }
@@ -108,7 +123,10 @@ export class SeatingPlanController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Cleanup expired seat locks' })
-  @ApiResponse({ status: 200, description: 'Expired locks cleaned up successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Expired locks cleaned up successfully',
+  })
   async cleanupExpiredLocks() {
     return this.seatingPlanService.cleanupExpiredLocks();
   }

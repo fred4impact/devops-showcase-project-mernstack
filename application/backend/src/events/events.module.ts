@@ -10,9 +10,9 @@ import { S3Module } from '../s3/s3.module';
   imports: [
     MongooseModule.forFeature([
       { name: Event.name, schema: EventSchema },
-      { name: TicketType.name, schema: TicketTypeSchema }
+      { name: TicketType.name, schema: TicketTypeSchema },
     ]),
-    S3Module
+    S3Module,
   ],
   controllers: [EventsController],
   providers: [EventsService],

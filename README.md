@@ -1,536 +1,404 @@
 # MERN Stack DevOps Showcase Project
 
-A comprehensive full-stack ticketing platform demonstrating modern DevOps practices with MERN stack, containerization, CI/CD, and cloud deployment strategies.
+A production-ready ticketing platform demonstrating modern DevOps practices with Kubernetes, GitOps, monitoring, and cloud deployment strategies.
 
-## 🎯 DevOps Engineer Quick Start
+## 🎯 Quick Start for DevOps Engineers
 
-This section is specifically designed for DevOps engineers who need to deploy, manage, and maintain this application.
-
-### 🚀 One-Command Deployment
+### 🚀 Deploy to Kubernetes (5 minutes)
 
 ```bash
-# Clone and deploy locally
-git clone https://gitlab.com/your-org/mernstack-devops-showcase-project.git
-cd mernstack-devops-showcase-project/application
-docker-compose up -d
+# 1. Clone and deploy
+git clone https://github.com/your-org/mernstack-devops-showcase-project.git
+cd mernstack-devops-showcase-project
 
-# Production deployment
-docker-compose -f docker-compose.prod.yml up -d
+# 2. Build and push images
+docker build -t your-registry/ticketnow-backend:latest ./application/backend
+docker build -t your-registry/ticketnow-frontend:latest ./application/frontend
+docker push your-registry/ticketnow-backend:latest
+docker push your-registry/ticketnow-frontend:latest
+
+# 3. Update image references
+sed -i 's|your-registry|your-actual-registry|g' kubernetes/*.yaml
+
+# 4. Deploy to Kubernetes
+kubectl apply -k kubernetes/
+
+# 5. Check deployment
+kubectl get pods -n ticketnow
+kubectl get services -n ticketnow
 ```
 
-### 📊 Application Health Check
+### 📊 Health Check
 
 ```bash
-# Check all services status
-docker-compose ps
+# Check application status
+kubectl get pods -n ticketnow
+kubectl logs -f deployment/backend -n ticketnow
 
-# View application logs
-docker-compose logs -f backend
-docker-compose logs -f frontend
-
-# Health endpoints
+# Test endpoints
+kubectl port-forward svc/backend-service -n ticketnow 3001:3001
 curl http://localhost:3001/health
-curl http://localhost:3000
 ```
 
 ## 🏗️ Infrastructure Overview
 
-### Architecture Components
+### System Architecture
 
+```mermaid
+graph TB
+    subgraph "Kubernetes Cluster"
+        subgraph "Application Layer"
+            FE[Frontend<br/>Next.js]
+            BE[Backend API<br/>NestJS]
+        end
+        
+        subgraph "Data Layer"
+            DB[(MongoDB)]
+            RD[(Redis)]
+        end
+        
+        subgraph "Monitoring"
+            PROM[Prometheus]
+            GRAF[Grafana]
+        end
+    end
+    
+    subgraph "External Services"
+        REG[Container Registry]
+        GIT[Git Repository]
+        S3[AWS S3]
+        STRIPE[Stripe API]
+    end
+    
+    FE --> BE
+    BE --> DB
+    BE --> RD
+    BE --> S3
+    BE --> STRIPE
+    GIT --> REG
+    REG --> FE
+    REG --> BE
+    BE --> PROM
+    PROM --> GRAF
 ```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Frontend      │    │   Backend API   │    │   Database      │
-│   (Next.js)     │◄──►│   (NestJS)      │◄──►│   (MongoDB)     │
-│   Port: 3000    │    │   Port: 3001    │    │   Port: 27017   │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-                                │
-                                ▼
-                       ┌─────────────────┐
-                       │   Cache Layer   │
-                       │   (Redis)       │
-                       │   Port: 6379    │
-                       └─────────────────┘
-```
 
-### Service Dependencies
+### Kubernetes Resources
 
-- **Frontend** → Backend API
-- **Backend** → MongoDB + Redis
-- **MongoDB** → Data persistence
-- **Redis** → Session storage + seat locking
+| Component | Type | Replicas | Purpose |
+|-----------|------|----------|---------|
+| **Frontend** | Deployment | 3 | Next.js web app |
+| **Backend** | Deployment | 3 | NestJS API |
+| **MongoDB** | StatefulSet | 1 | Primary database |
+| **Redis** | StatefulSet | 1 | Cache & sessions |
+| **Ingress** | Ingress | - | External access |
+| **Monitoring** | Deployment | 1 | Prometheus + Grafana |
 
-## 🐳 Container Management
+## 🚀 Deployment Options
 
-### Docker Services
-
-| Service | Container | Port | Purpose |
-|---------|-----------|------|---------|
-| Frontend | `ticketnow-frontend` | 3000 | Next.js web application |
-| Backend | `ticketnow-backend` | 3001 | NestJS API server |
-| MongoDB | `ticketnow-mongodb` | 27017 | Primary database |
-| Redis | `ticketnow-redis` | 6379 | Cache and session store |
-| Mongo Express | `ticketnow-mongo-express` | 8081 | Database admin UI |
-| Redis Commander | `ticketnow-redis-commander` | 8082 | Redis admin UI |
-
-### Container Operations
+### Option 1: Kubernetes (Recommended)
 
 ```bash
-# Start all services
-docker-compose up -d
+# Deploy to Kubernetes
+kubectl apply -k kubernetes/
 
-# Stop all services
-docker-compose down
-
-# Restart specific service
-docker-compose restart backend
-
-# View service logs
-docker-compose logs -f [service-name]
-
-# Execute commands in running container
-docker-compose exec backend bash
-docker-compose exec mongodb mongosh
-
-# Scale services (if needed)
-docker-compose up -d --scale backend=3
+# Check deployment status
+kubectl get pods -n ticketnow
+kubectl get services -n ticketnow
+kubectl get ingress -n ticketnow
 ```
 
-## 🔧 Environment Configuration
+### Option 2: ArgoCD GitOps (Advanced)
 
-### Required Environment Variables
-
-#### Backend Configuration
 ```bash
-# Database
-MONGO_URI=mongodb://admin:password123@localhost:27017/ticketnow
+# Install ArgoCD
+kubectl create namespace argocd
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 
-# Cache
-REDIS_URL=redis://:redis123@localhost:6379
+# Deploy via ArgoCD
+kubectl apply -f argocd/application.yaml
 
-# Security
-JWT_SECRET=your_jwt_secret_key_here
-
-# Payment Processing
-STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key
-STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
-
-# File Storage
-S3_BUCKET=ticketnow-assets
-S3_ACCESS_KEY=your_s3_access_key
-S3_SECRET_KEY=your_s3_secret_key
-
-# Email Service
-SENDGRID_API_KEY=your_sendgrid_api_key
-
-# Application URLs
-FRONTEND_BASE_URL=http://localhost:3000
+# Access ArgoCD UI
+kubectl port-forward svc/argocd-server -n argocd 8080:443
 ```
 
-#### Frontend Configuration
-```bash
-# API Endpoint
-NEXT_PUBLIC_API_URL=http://localhost:3001
-
-# Payment Integration
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_publishable_key
-
-# Application Settings
-NEXT_PUBLIC_APP_NAME=TicketNow
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-```
-
-### Environment Files Setup
+### Option 3: Docker Compose (Local)
 
 ```bash
-# Copy environment templates
-cp application/backend/env.example application/backend/.env
-cp application/frontend/env.example application/frontend/.env
-
-# Edit with your actual values
-nano application/backend/.env
-nano application/frontend/.env
-```
-
-## 🚀 Deployment Strategies
-
-### 1. Local Development Deployment
-
-```bash
-# Quick start for development
+# Quick local deployment
 cd application
 docker-compose up -d
 
-# Access points:
-# - Frontend: http://localhost:3000
-# - Backend API: http://localhost:3001
-# - API Docs: http://localhost:3001/api/docs
-# - MongoDB Admin: http://localhost:8081 (admin/admin123)
-# - Redis Admin: http://localhost:8082
+# Check status
+docker-compose ps
+docker-compose logs -f backend
 ```
 
-### 2. Production Deployment
+## 🔧 Configuration
+
+### Kubernetes Secrets
 
 ```bash
-# Production deployment with environment variables
-export MONGO_URI="mongodb://user:pass@your-mongo-cluster:27017/ticketnow"
-export REDIS_URL="redis://your-redis-cluster:6379"
-export JWT_SECRET="your-production-jwt-secret"
-# ... set all other production variables
-
-docker-compose -f docker-compose.prod.yml up -d
+# Create secrets for production
+kubectl create secret generic ticketnow-secrets \
+  --from-literal=JWT_SECRET="your_jwt_secret" \
+  --from-literal=STRIPE_SECRET_KEY="sk_live_your_stripe_key" \
+  --from-literal=S3_ACCESS_KEY="your_s3_access_key" \
+  --from-literal=S3_SECRET_KEY="your_s3_secret_key" \
+  --from-literal=SENDGRID_API_KEY="your_sendgrid_key" \
+  --from-literal=MONGO_URI="mongodb://user:pass@mongodb-service:27017/ticketnow" \
+  --from-literal=REDIS_URL="redis://redis-service:6379" \
+  --namespace=ticketnow
 ```
 
-### 3. Kubernetes Deployment
+### Environment Variables
 
-```yaml
-# Example Kubernetes deployment
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: ticketnow-backend
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: ticketnow-backend
-  template:
-    metadata:
-      labels:
-        app: ticketnow-backend
-    spec:
-      containers:
-      - name: backend
-        image: your-registry/ticketnow-backend:latest
-        ports:
-        - containerPort: 3001
-        env:
-        - name: MONGO_URI
-          valueFrom:
-            secretKeyRef:
-              name: ticketnow-secrets
-              key: mongo-uri
+| Variable | Purpose | Example |
+|----------|---------|---------|
+| `JWT_SECRET` | Authentication | `your_jwt_secret` |
+| `STRIPE_SECRET_KEY` | Payments | `sk_live_...` |
+| `S3_ACCESS_KEY` | File storage | `AKIA...` |
+| `SENDGRID_API_KEY` | Email service | `SG...` |
+| `MONGO_URI` | Database connection | `mongodb://...` |
+| `REDIS_URL` | Cache connection | `redis://...` |
+
+## 🔄 CI/CD Pipeline
+
+### GitOps Workflow
+
+```mermaid
+graph LR
+    DEV[Developer] --> GIT[Git Push]
+    GIT --> CI[CI Pipeline]
+    CI --> REG[Container Registry]
+    REG --> ARGO[ArgoCD]
+    ARGO --> K8S[Kubernetes]
+    K8S --> MON[Monitoring]
 ```
 
-## 🔄 CI/CD Pipeline Management
+### Pipeline Stages
 
-### GitLab CI/CD Pipeline
+1. **Security Scan** - Vulnerability scanning
+2. **Build** - Compile and test applications
+3. **Docker Build** - Create container images
+4. **Deploy** - Push to registry and deploy
 
-The project includes a comprehensive GitLab CI/CD pipeline with the following stages:
-
-#### Pipeline Stages
-1. **Security** - Dependency vulnerability scanning
-2. **Build** - Application compilation and testing
-3. **Test** - Unit, integration, and E2E tests
-4. **Docker Build** - Container image creation
-5. **Docker Security** - Container security scanning
-6. **Deploy** - Multi-environment deployment
-
-#### Pipeline Commands
+### Quick Commands
 
 ```bash
-# Trigger pipeline manually
-gitlab-ci-multi-runner exec docker security_scan
-gitlab-ci-multi-runner exec docker backend_build_test
-gitlab-ci-multi-runner exec docker frontend_build_test
+# Trigger pipeline
+git push origin main
 
-# View pipeline status
+# Check pipeline status
 curl -H "PRIVATE-TOKEN: your-token" \
   "https://gitlab.com/api/v4/projects/your-project-id/pipelines"
+
+# Manual deployment
+kubectl apply -k kubernetes/
 ```
 
-#### Pipeline Configuration
+## 📊 Monitoring & Observability
 
-```yaml
-# .gitlab-ci.yml structure
-stages:
-  - security
-  - build
-  - test
-  - docker-build
-  - docker-security
-  - deploy
+### Quick Setup
 
-# Key jobs:
-# - security_scan: npm audit for all components
-# - backend_build_test: NestJS build and test
-# - frontend_build_test: Next.js build and test
-# - integration_tests: Full application testing
+```bash
+# Install Prometheus & Grafana
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm install monitoring prometheus-community/kube-prometheus-stack \
+  --namespace monitoring \
+  --create-namespace \
+  --set grafana.adminPassword=admin123
+
+# Access Grafana
+kubectl port-forward svc/monitoring-grafana -n monitoring 3000:80
+# URL: http://localhost:3000
+# Username: admin
+# Password: admin123
 ```
-
-## 📊 Monitoring and Observability
 
 ### Health Checks
 
 ```bash
-# Application health endpoints
-curl http://localhost:3001/health
-curl http://localhost:3001/api/health
+# Application health
+kubectl get pods -n ticketnow
+kubectl logs -f deployment/backend -n ticketnow
 
-# Database connectivity
-curl http://localhost:3001/api/health/database
+# Database health
+kubectl exec -it deployment/mongodb -n ticketnow -- mongosh --eval "db.adminCommand('ping')"
+kubectl exec -it deployment/redis -n ticketnow -- redis-cli ping
 
-# Redis connectivity
-curl http://localhost:3001/api/health/redis
+# Resource usage
+kubectl top pods -n ticketnow
+kubectl top nodes
 ```
 
-### Log Management
+### Monitoring Stack
+
+| Component | Purpose | Access |
+|-----------|---------|--------|
+| **Prometheus** | Metrics collection | Port 9090 |
+| **Grafana** | Dashboards | Port 3000 |
+| **AlertManager** | Alerting | Port 9093 |
+| **Mongo Express** | DB Admin | Port 8081 |
+| **Redis Commander** | Cache Admin | Port 8082 |
+
+## 🔒 Security
+
+### Basic Security Setup
 
 ```bash
-# View application logs
-docker-compose logs -f backend
-docker-compose logs -f frontend
+# Create network policies
+kubectl apply -f - <<EOF
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ticketnow-network-policy
+  namespace: ticketnow
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+  egress:
+  - to: []
+EOF
 
-# Filter logs by level
-docker-compose logs backend | grep ERROR
-docker-compose logs frontend | grep WARN
-
-# Export logs for analysis
-docker-compose logs backend > backend.log
-docker-compose logs frontend > frontend.log
-```
-
-### Performance Monitoring
-
-```bash
-# Container resource usage
-docker stats
-
-# Database performance
-docker-compose exec mongodb mongosh --eval "db.stats()"
-
-# Redis performance
-docker-compose exec redis redis-cli info stats
-```
-
-## 🔒 Security Management
-
-### Security Scanning
-
-```bash
-# Run security audits
-cd application/backend && npm audit
-cd application/frontend && npm audit
-cd tests && npm audit
-
-# Fix vulnerabilities
-npm audit fix
-npm audit fix --force
-```
-
-### Container Security
-
-```bash
-# Scan container images
-docker scan ticketnow-backend:latest
-docker scan ticketnow-frontend:latest
-
-# Check for vulnerabilities
+# Security scanning
 docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
   aquasec/trivy image ticketnow-backend:latest
 ```
 
-### Secrets Management
+### Security Best Practices
+
+- ✅ **Secrets Management** - Use Kubernetes secrets
+- ✅ **Network Policies** - Restrict pod communication
+- ✅ **Image Scanning** - Scan container images
+- ✅ **RBAC** - Role-based access control
+- ✅ **Pod Security** - Non-root containers
+
+## 📈 Scaling & Performance
+
+### Auto-scaling
 
 ```bash
-# Use Docker secrets for production
-echo "your-secret-value" | docker secret create jwt_secret -
-echo "mongodb://user:pass@host:27017/db" | docker secret create mongo_uri -
+# Horizontal Pod Autoscaler
+kubectl autoscale deployment backend --cpu-percent=70 --min=2 --max=10 -n ticketnow
+kubectl autoscale deployment frontend --cpu-percent=70 --min=2 --max=8 -n ticketnow
 
-# Update docker-compose.prod.yml to use secrets
-services:
-  backend:
-    secrets:
-      - jwt_secret
-      - mongo_uri
-```
-
-## 🗄️ Database Management
-
-### MongoDB Operations
-
-```bash
-# Connect to MongoDB
-docker-compose exec mongodb mongosh
-
-# Database backup
-docker-compose exec mongodb mongodump --out /backup
-
-# Database restore
-docker-compose exec mongodb mongorestore /backup
-
-# Database stats
-docker-compose exec mongodb mongosh --eval "db.stats()"
-```
-
-### Redis Operations
-
-```bash
-# Connect to Redis
-docker-compose exec redis redis-cli
-
-# Redis backup
-docker-compose exec redis redis-cli BGSAVE
-
-# Redis monitoring
-docker-compose exec redis redis-cli monitor
-```
-
-## 🚨 Troubleshooting
-
-### Common Issues and Solutions
-
-#### 1. Application Won't Start
-
-```bash
-# Check container status
-docker-compose ps
-
-# Check logs for errors
-docker-compose logs backend
-docker-compose logs frontend
-
-# Restart services
-docker-compose restart
-```
-
-#### 2. Database Connection Issues
-
-```bash
-# Test MongoDB connection
-docker-compose exec backend node -e "
-const mongoose = require('mongoose');
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('MongoDB connected'))
-  .catch(err => console.error('MongoDB connection failed:', err));
-"
-
-# Test Redis connection
-docker-compose exec backend node -e "
-const redis = require('redis');
-const client = redis.createClient(process.env.REDIS_URL);
-client.ping().then(() => console.log('Redis connected'));
-"
-```
-
-#### 3. Port Conflicts
-
-```bash
-# Check port usage
-netstat -tulpn | grep :3000
-netstat -tulpn | grep :3001
-
-# Kill processes using ports
-sudo kill -9 $(lsof -t -i:3000)
-sudo kill -9 $(lsof -t -i:3001)
-```
-
-#### 4. Memory Issues
-
-```bash
-# Check memory usage
-docker stats
-
-# Increase Docker memory limit
-# Edit Docker Desktop settings or docker-compose.yml
-```
-
-### Debug Commands
-
-```bash
-# Debug backend container
-docker-compose exec backend bash
-docker-compose exec backend node --inspect=0.0.0.0:9229
-
-# Debug frontend container
-docker-compose exec frontend bash
-docker-compose exec frontend npm run dev
-
-# Database debugging
-docker-compose exec mongodb mongosh --eval "db.adminCommand('listCollections')"
-docker-compose exec redis redis-cli keys "*"
-```
-
-## 📈 Scaling and Performance
-
-### Horizontal Scaling
-
-```bash
-# Scale backend services
-docker-compose up -d --scale backend=3
-
-# Load balancer configuration (nginx example)
-upstream backend {
-    server backend:3001;
-    server backend:3001;
-    server backend:3001;
-}
+# Check scaling status
+kubectl get hpa -n ticketnow
+kubectl top pods -n ticketnow
 ```
 
 ### Performance Optimization
 
 ```bash
-# Enable Redis clustering
-docker-compose exec redis redis-cli --cluster create \
-  redis:6379 redis:6380 redis:6381
+# Resource limits
+kubectl describe pod <pod-name> -n ticketnow | grep -A 5 "Limits\|Requests"
 
-# MongoDB replica set
-docker-compose exec mongodb mongosh --eval "
-rs.initiate({
-  _id: 'rs0',
-  members: [
-    { _id: 0, host: 'mongodb:27017' }
-  ]
-})
+# Database optimization
+kubectl exec -it deployment/mongodb -n ticketnow -- mongosh --eval "
+db.events.createIndex({ 'slug': 1 }, { unique: true });
+db.orders.createIndex({ 'userId': 1, 'createdAt': -1 });
 "
 ```
 
-## 🔄 Backup and Recovery
+## 🚨 Troubleshooting
+
+### Common Issues
+
+```bash
+# Pod not starting
+kubectl describe pod <pod-name> -n ticketnow
+kubectl logs <pod-name> -n ticketnow
+
+# Service not accessible
+kubectl get svc -n ticketnow
+kubectl describe svc <service-name> -n ticketnow
+
+# Database connection issues
+kubectl exec -it deployment/backend -n ticketnow -- node -e "
+const mongoose = require('mongoose');
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log('MongoDB connected'))
+  .catch(err => console.error('MongoDB connection failed:', err));
+"
+```
+
+### Debug Commands
+
+```bash
+# General debugging
+kubectl get all -n ticketnow
+kubectl describe pod <pod-name> -n ticketnow
+kubectl logs -f <pod-name> -n ticketnow
+
+# Network debugging
+kubectl exec -it deployment/backend -n ticketnow -- nslookup mongodb-service
+kubectl exec -it deployment/backend -n ticketnow -- ping mongodb-service
+
+# Resource debugging
+kubectl top pods -n ticketnow
+kubectl top nodes
+```
+
+### Common Error Messages
+
+| Error | Cause | Solution |
+|-------|-------|----------|
+| `ImagePullBackOff` | Cannot pull image | Check image name and registry |
+| `CrashLoopBackOff` | Container crashing | Check logs and environment variables |
+| `Pending` | Pod not scheduled | Check resource requests and node capacity |
+| `FailedMount` | Cannot mount volume | Check PVC status and storage class |
+
+## 🔄 Backup & Recovery
 
 ### Database Backup
 
 ```bash
 # MongoDB backup
-docker-compose exec mongodb mongodump --out /backup/$(date +%Y%m%d)
+kubectl exec -it deployment/mongodb -n ticketnow -- mongodump --out /backup
 
 # Redis backup
-docker-compose exec redis redis-cli BGSAVE
-docker cp ticketnow-redis:/data/dump.rdb ./backup/
+kubectl exec -it deployment/redis -n ticketnow -- redis-cli BGSAVE
 ```
 
 ### Application Backup
 
 ```bash
-# Backup application data
-docker-compose exec backend tar -czf /backup/app-data.tar.gz /app/data
+# Backup Kubernetes resources
+kubectl get all -n ticketnow -o yaml > ticketnow-backup.yaml
 
-# Backup configuration
-cp -r application/ ./backup/application-$(date +%Y%m%d)
+# Backup persistent volumes
+kubectl get pvc -n ticketnow -o yaml > pvc-backup.yaml
 ```
 
 ## 📚 Additional Resources
 
 ### Documentation Links
 
-- [API Documentation](http://localhost:3001/api/docs) - Swagger/OpenAPI docs
-- [GitLab CI Pipeline](docs/gitlab_ci_pipeline-flow.md) - Pipeline documentation
-- [Commit Guide](docs/git-commit-guide.md) - Development guidelines
-- [Test Documentation](tests/README.md) - Testing procedures
+- [Kubernetes Documentation](https://kubernetes.io/docs/)
+- [ArgoCD Documentation](https://argo-cd.readthedocs.io/)
+- [Prometheus Documentation](https://prometheus.io/docs/)
+- [Grafana Documentation](https://grafana.com/docs/)
 
-### Useful Commands Reference
+### Useful Commands
 
 ```bash
 # Quick status check
-docker-compose ps && curl -s http://localhost:3001/health
+kubectl get pods -n ticketnow && kubectl get svc -n ticketnow
 
 # Full system restart
-docker-compose down && docker-compose up -d
+kubectl delete namespace ticketnow
+kubectl apply -k kubernetes/
 
 # Clean up everything
-docker-compose down -v --remove-orphans
-docker system prune -a
-
-# Update and restart
-git pull && docker-compose pull && docker-compose up -d
+kubectl delete namespace ticketnow
+kubectl delete namespace monitoring
 ```
 
 ---
@@ -539,22 +407,17 @@ git pull && docker-compose pull && docker-compose up -d
 
 This application demonstrates modern DevOps practices including:
 
-- ✅ **Containerization** with Docker and Docker Compose
-- ✅ **CI/CD Pipeline** with GitLab CI/CD
-- ✅ **Infrastructure as Code** with Terraform (planned)
-- ✅ **Monitoring** with health checks and logging
-- ✅ **Security** with vulnerability scanning
-- ✅ **Scalability** with horizontal scaling support
-- ✅ **Backup/Recovery** procedures
-- ✅ **Environment Management** for dev/staging/prod
+- ✅ **Containerization** with Docker and Kubernetes
+- ✅ **GitOps** with ArgoCD
+- ✅ **Monitoring** with Prometheus and Grafana
+- ✅ **Security** with network policies and image scanning
+- ✅ **Scaling** with horizontal pod autoscaling
+- ✅ **CI/CD** with automated pipelines
 
-**Quick Start for DevOps Engineers:**
+**Quick Start:**
 1. Clone the repository
-2. Run `docker-compose up -d` in the application directory
-3. Access the application at http://localhost:3000
-4. Monitor with `docker-compose logs -f`
-5. Scale with `docker-compose up -d --scale backend=3`
-
----
+2. Run `kubectl apply -k kubernetes/`
+3. Check status with `kubectl get pods -n ticketnow`
+4. Access application via ingress
 
 *This project serves as a comprehensive DevOps showcase, demonstrating modern deployment, monitoring, and management practices for a full-stack application.*

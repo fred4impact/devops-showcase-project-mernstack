@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  namespace: ticketnow
+data:
+  mongo-uri: "mongodb://admin:password123@mongodb-service:27017/ticketnow?authSource=admin"
+  redis-url: "redis://:redis123@redis-service:6379"
+  s3-bucket: "ticketnow-assets-prod"
+  s3-region: "us-east-1"
+  sendgrid-from-email: "noreply@ticketnow.app"
+  frontend-base-url: "http://ticketnow-frontend-service:3000"

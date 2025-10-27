@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
@@ -26,13 +25,12 @@ interface SeatMapProps {
   sessionId: string;
 }
 
-export function SeatMap({ 
-  eventId, 
-  ticketTypeId, 
-  onSeatSelect, 
-  onSeatDeselect, 
-  selectedSeats, 
-  sessionId 
+export function SeatMap({
+  eventId,
+  onSeatSelect,
+  onSeatDeselect,
+  selectedSeats,
+  sessionId,
 }: SeatMapProps) {
   const [seats, setSeats] = useState<Seat[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,24 +60,29 @@ export function SeatMap({
     }
 
     const isSelected = selectedSeats.includes(seat.seatId);
-    
+
     if (isSelected) {
       onSeatDeselect(seat.seatId);
     } else {
       // Lock the seat temporarily
       try {
-        await api.post(`/seating-plan/events/${eventId}/seats/${seat.seatId}/lock`, {
-          sessionId,
-          duration: 300, // 5 minutes
-        });
-        
+        await api.post(
+          `/seating-plan/events/${eventId}/seats/${seat.seatId}/lock`,
+          {
+            sessionId,
+            duration: 300, // 5 minutes
+          },
+        );
+
         const totalPrice = basePrice + seat.priceModifier;
         onSeatSelect(seat.seatId, totalPrice);
-        
+
         // Update seat status
-        setSeats(prev => prev.map(s => 
-          s.seatId === seat.seatId ? { ...s, status: 'selected' } : s
-        ));
+        setSeats((prev) =>
+          prev.map((s) =>
+            s.seatId === seat.seatId ? { ...s, status: 'selected' } : s,
+          ),
+        );
       } catch (error) {
         toast.error('Seat is no longer available');
       }
@@ -132,26 +135,35 @@ export function SeatMap({
   if (seats.length === 0) {
     return (
       <Card className="p-6 text-center">
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">No Reserved Seating</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+          No Reserved Seating
+        </h3>
         <p className="text-gray-600">This event uses general admission</p>
       </Card>
     );
   }
 
   // Group seats by section and row
-  const sections = seats.reduce((acc, seat) => {
-    if (!acc[seat.section]) {
-      acc[seat.section] = [];
-    }
-    acc[seat.section].push(seat);
-    return acc;
-  }, {} as Record<string, Seat[]>);
+  const sections = seats.reduce(
+    (acc, seat) => {
+      if (!acc[seat.section]) {
+        acc[seat.section] = [];
+      }
+      acc[seat.section].push(seat);
+      return acc;
+    },
+    {} as Record<string, Seat[]>,
+  );
 
   return (
     <Card className="p-6">
       <div className="mb-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Select Your Seats</h3>
-        <p className="text-sm text-gray-600">Click on available seats to select them</p>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+          Select Your Seats
+        </h3>
+        <p className="text-sm text-gray-600">
+          Click on available seats to select them
+        </p>
       </div>
 
       {/* Legend */}
@@ -179,12 +191,12 @@ export function SeatMap({
         {Object.entries(sections).map(([sectionName, sectionSeats]) => (
           <div key={sectionName} className="space-y-2">
             <h4 className="text-md font-medium text-gray-900">{sectionName}</h4>
-            
+
             {/* Stage/Performance Area */}
             <div className="bg-gray-100 rounded-lg p-4 text-center mb-4">
               <span className="text-sm font-medium text-gray-600">Stage</span>
             </div>
-            
+
             {/* Seats Grid */}
             <div className="grid grid-cols-12 gap-1">
               {sectionSeats.map((seat) => (
@@ -210,16 +222,21 @@ export function SeatMap({
       {/* Selected Seats Summary */}
       {selectedSeats.length > 0 && (
         <div className="mt-6 p-4 bg-primary-50 rounded-lg">
-          <h4 className="text-sm font-medium text-primary-900 mb-2">Selected Seats</h4>
+          <h4 className="text-sm font-medium text-primary-900 mb-2">
+            Selected Seats
+          </h4>
           <div className="flex flex-wrap gap-2">
-            {selectedSeats.map(seatId => {
-              const seat = seats.find(s => s.seatId === seatId);
+            {selectedSeats.map((seatId) => {
+              const seat = seats.find((s) => s.seatId === seatId);
               if (!seat) return null;
-              
+
               return (
                 <Badge key={seatId} variant="default">
-                  {seat.section}{seat.row}-{seat.number} 
-                  <span className="ml-1">${basePrice + seat.priceModifier}</span>
+                  {seat.section}
+                  {seat.row}-{seat.number}
+                  <span className="ml-1">
+                    ${basePrice + seat.priceModifier}
+                  </span>
                 </Badge>
               );
             })}

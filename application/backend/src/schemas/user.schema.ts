@@ -23,10 +23,10 @@ export class User {
   @Prop({ required: true })
   passwordHash: string;
 
-  @Prop({ 
-    type: String, 
-    enum: Object.values(UserRole), 
-    default: UserRole.ATTENDEE 
+  @Prop({
+    type: String,
+    enum: Object.values(UserRole),
+    default: UserRole.ATTENDEE,
   })
   role: UserRole;
 

@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Event, EventDocument, EventStatus } from '../schemas/event.schema';
@@ -11,12 +16,18 @@ import { EventQueryDto } from './dto/event-query.dto';
 export class EventsService {
   constructor(
     @InjectModel(Event.name) private eventModel: Model<EventDocument>,
-    @InjectModel(TicketType.name) private ticketTypeModel: Model<TicketTypeDocument>,
+    @InjectModel(TicketType.name)
+    private ticketTypeModel: Model<TicketTypeDocument>,
   ) {}
 
-  async create(createEventDto: CreateEventDto, organizerId: string): Promise<Event> {
+  async create(
+    createEventDto: CreateEventDto,
+    organizerId: string,
+  ): Promise<Event> {
     // Check if slug already exists
-    const existingEvent = await this.eventModel.findOne({ slug: createEventDto.slug });
+    const existingEvent = await this.eventModel.findOne({
+      slug: createEventDto.slug,
+    });
     if (existingEvent) {
       throw new BadRequestException('Event with this slug already exists');
     }
@@ -24,7 +35,7 @@ export class EventsService {
     // Validate dates
     const startAt = new Date(createEventDto.startAt);
     const endAt = new Date(createEventDto.endAt);
-    
+
     if (startAt >= endAt) {
       throw new BadRequestException('End date must be after start date');
     }
@@ -52,7 +63,7 @@ export class EventsService {
       location,
       status = EventStatus.PUBLISHED,
       page = '1',
-      limit = '10'
+      limit = '10',
     } = query;
 
     const filter: any = { status };
@@ -72,7 +83,7 @@ export class EventsService {
     }
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
-    
+
     const [events, total] = await Promise.all([
       this.eventModel
         .find(filter)
@@ -81,7 +92,7 @@ export class EventsService {
         .skip(skip)
         .limit(parseInt(limit))
         .exec(),
-      this.eventModel.countDocuments(filter)
+      this.eventModel.countDocuments(filter),
     ]);
 
     return {
@@ -90,8 +101,8 @@ export class EventsService {
         page: parseInt(page),
         limit: parseInt(limit),
         total,
-        pages: Math.ceil(total / parseInt(limit))
-      }
+        pages: Math.ceil(total / parseInt(limit)),
+      },
     };
   }
 
@@ -121,9 +132,13 @@ export class EventsService {
     return event;
   }
 
-  async update(id: string, updateEventDto: UpdateEventDto, userId: string): Promise<Event> {
+  async update(
+    id: string,
+    updateEventDto: UpdateEventDto,
+    userId: string,
+  ): Promise<Event> {
     const event = await this.eventModel.findById(id);
-    
+
     if (!event) {
       throw new NotFoundException('Event not found');
     }
@@ -135,9 +150,13 @@ export class EventsService {
 
     // Validate dates if provided
     if (updateEventDto.startAt || updateEventDto.endAt) {
-      const startAt = updateEventDto.startAt ? new Date(updateEventDto.startAt) : event.startAt;
-      const endAt = updateEventDto.endAt ? new Date(updateEventDto.endAt) : event.endAt;
-      
+      const startAt = updateEventDto.startAt
+        ? new Date(updateEventDto.startAt)
+        : event.startAt;
+      const endAt = updateEventDto.endAt
+        ? new Date(updateEventDto.endAt)
+        : event.endAt;
+
       if (startAt >= endAt) {
         throw new BadRequestException('End date must be after start date');
       }
@@ -145,9 +164,9 @@ export class EventsService {
 
     // Check slug uniqueness if changing slug
     if (updateEventDto.slug && updateEventDto.slug !== event.slug) {
-      const existingEvent = await this.eventModel.findOne({ 
+      const existingEvent = await this.eventModel.findOne({
         slug: updateEventDto.slug,
-        _id: { $ne: id }
+        _id: { $ne: id },
       });
       if (existingEvent) {
         throw new BadRequestException('Event with this slug already exists');
@@ -160,7 +179,7 @@ export class EventsService {
 
   async remove(id: string, userId: string): Promise<void> {
     const event = await this.eventModel.findById(id);
-    
+
     if (!event) {
       throw new NotFoundException('Event not found');
     }
@@ -175,7 +194,7 @@ export class EventsService {
 
   async publish(id: string, userId: string): Promise<Event> {
     const event = await this.eventModel.findById(id);
-    
+
     if (!event) {
       throw new NotFoundException('Event not found');
     }
@@ -201,18 +220,20 @@ export class EventsService {
         .skip(skip)
         .limit(parseInt(limit))
         .exec(),
-      this.eventModel.countDocuments(filter)
+      this.eventModel.countDocuments(filter),
     ]);
 
     // Populate ticket types for each event
     const eventsWithTicketTypes = await Promise.all(
       events.map(async (event) => {
-        const ticketTypes = await this.ticketTypeModel.find({ eventId: event._id });
+        const ticketTypes = await this.ticketTypeModel.find({
+          eventId: event._id,
+        });
         return {
           ...event.toObject(),
-          ticketTypes
+          ticketTypes,
         };
-      })
+      }),
     );
 
     return {
@@ -221,8 +242,8 @@ export class EventsService {
         page: parseInt(page),
         limit: parseInt(limit),
         total,
-        pages: Math.ceil(total / parseInt(limit))
-      }
+        pages: Math.ceil(total / parseInt(limit)),
+      },
     };
   }
 
@@ -244,7 +265,9 @@ export class EventsService {
       slug: `${originalEvent.slug}-copy-${Date.now()}`,
       status: EventStatus.DRAFT,
       startAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
-      endAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000), // 2 hours later
+      endAt: new Date(
+        Date.now() + 7 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000,
+      ), // 2 hours later
       createdAt: new Date(),
       updatedAt: new Date(),
     });

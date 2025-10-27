@@ -14,7 +14,7 @@ export default function SeatingPlanManagement() {
   const params = useParams();
   const router = useRouter();
   const eventId = params.id as string;
-  
+
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -51,7 +51,11 @@ export default function SeatingPlanManagement() {
   };
 
   const handleDeleteSeatingPlan = async () => {
-    if (!confirm('Are you sure you want to delete the seating plan? This action cannot be undone.')) {
+    if (
+      !confirm(
+        'Are you sure you want to delete the seating plan? This action cannot be undone.',
+      )
+    ) {
       return;
     }
 
@@ -87,8 +91,12 @@ export default function SeatingPlanManagement() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <Card className="p-6">
             <div className="text-center">
-              <h1 className="text-2xl font-bold text-gray-900 mb-4">Event Not Found</h1>
-              <p className="text-gray-600 mb-6">The event you're looking for doesn't exist.</p>
+              <h1 className="text-2xl font-bold text-gray-900 mb-4">
+                Event Not Found
+              </h1>
+              <p className="text-gray-600 mb-6">
+                The event you&apos;re looking for doesn&apos;t exist.
+              </p>
               <Button onClick={() => router.push('/organizer/events')}>
                 Back to Events
               </Button>
@@ -106,7 +114,9 @@ export default function SeatingPlanManagement() {
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Seating Plan Management</h1>
+              <h1 className="text-3xl font-bold text-gray-900">
+                Seating Plan Management
+              </h1>
               <p className="mt-2 text-gray-600">{event.title}</p>
             </div>
             <div className="flex items-center space-x-4">
@@ -126,8 +136,14 @@ export default function SeatingPlanManagement() {
           {event.seatmap ? (
             <div className="space-y-4">
               <div className="flex items-center space-x-4">
-                <Badge variant={event.seatmap.type === 'reserved' ? 'default' : 'secondary'}>
-                  {event.seatmap.type === 'reserved' ? 'Reserved Seating' : 'General Admission'}
+                <Badge
+                  variant={
+                    event.seatmap.type === 'reserved' ? 'default' : 'secondary'
+                  }
+                >
+                  {event.seatmap.type === 'reserved'
+                    ? 'Reserved Seating'
+                    : 'General Admission'}
                 </Badge>
                 <span className="text-sm text-gray-600">
                   {event.seatmap.seats?.length || 0} seats
@@ -136,15 +152,17 @@ export default function SeatingPlanManagement() {
                   {event.seatmap.sections?.length || 0} sections
                 </span>
               </div>
-              
+
               {event.seatmap.sections && event.seatmap.sections.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-medium text-gray-700 mb-2">Sections:</h3>
+                  <h3 className="text-sm font-medium text-gray-700 mb-2">
+                    Sections:
+                  </h3>
                   <div className="flex flex-wrap gap-2">
                     {event.seatmap.sections.map((section, index) => (
                       <div key={index} className="flex items-center space-x-2">
-                        <div 
-                          className="w-4 h-4 rounded" 
+                        <div
+                          className="w-4 h-4 rounded"
                           style={{ backgroundColor: section.color }}
                         />
                         <span className="text-sm">{section.name}</span>
@@ -166,7 +184,9 @@ export default function SeatingPlanManagement() {
             </div>
           ) : (
             <div className="text-center py-8">
-              <p className="text-gray-600 mb-4">No seating plan configured for this event.</p>
+              <p className="text-gray-600 mb-4">
+                No seating plan configured for this event.
+              </p>
               <p className="text-sm text-gray-500">
                 Create a seating plan to enable reserved seating for your event.
               </p>
@@ -183,22 +203,29 @@ export default function SeatingPlanManagement() {
 
         {/* Help Section */}
         <Card className="p-6 mt-6">
-          <h2 className="text-lg font-semibold mb-4">How to Use the Seating Plan Builder</h2>
+          <h2 className="text-lg font-semibold mb-4">
+            How to Use the Seating Plan Builder
+          </h2>
           <div className="space-y-3 text-sm text-gray-600">
             <div>
-              <strong>1. Choose Seating Type:</strong> Select between Reserved Seating or General Admission.
+              <strong>1. Choose Seating Type:</strong> Select between Reserved
+              Seating or General Admission.
             </div>
             <div>
-              <strong>2. Create Sections:</strong> Add sections to organize your seating areas (e.g., Orchestra, Balcony).
+              <strong>2. Create Sections:</strong> Add sections to organize your
+              seating areas (e.g., Orchestra, Balcony).
             </div>
             <div>
-              <strong>3. Add Seats:</strong> Click on the canvas to place seats in your selected section.
+              <strong>3. Add Seats:</strong> Click on the canvas to place seats
+              in your selected section.
             </div>
             <div>
-              <strong>4. Configure Seats:</strong> Set price modifiers and accessibility options for individual seats.
+              <strong>4. Configure Seats:</strong> Set price modifiers and
+              accessibility options for individual seats.
             </div>
             <div>
-              <strong>5. Save:</strong> Click "Generate Plan" to save your seating configuration.
+              <strong>5. Save:</strong> Click &ldquo;Generate Plan&rdquo; to save your
+              seating configuration.
             </div>
           </div>
         </Card>

@@ -9,23 +9,19 @@ import { Badge } from '@/components/ui/Badge';
 import { Input } from '@/components/ui/Input';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
-import { 
-  Search, 
-  Filter, 
-  Download, 
-  Share2, 
-  RefreshCw, 
-  QrCode,
+import {
+  Search,
+  Download,
+  Share2,
+  RefreshCw,
   Calendar,
   MapPin,
   User,
-  DollarSign,
-  Clock,
   Plus,
   Palette,
   Settings,
   Eye,
-  Printer
+  Printer,
 } from 'lucide-react';
 import { TicketTransferModal } from '@/components/modals/TicketTransferModal';
 import { TicketRefundModal } from '@/components/modals/TicketRefundModal';
@@ -84,7 +80,7 @@ export default function TicketManagement() {
     qrCode: true,
     barcode: false,
     borderStyle: 'solid',
-    borderColor: '#e5e7eb'
+    borderColor: '#e5e7eb',
   });
 
   useEffect(() => {
@@ -103,8 +99,10 @@ export default function TicketManagement() {
       setLoadingTickets(true);
       const params = new URLSearchParams();
       if (statusFilter !== 'all') params.append('status', statusFilter);
-      
-      const response = await api.get(`/tickets/my-tickets?${params.toString()}`);
+
+      const response = await api.get(
+        `/tickets/my-tickets?${params.toString()}`,
+      );
       setTickets(response.data.tickets);
     } catch (error) {
       console.error('Error fetching tickets:', error);
@@ -165,9 +163,9 @@ export default function TicketManagement() {
   const generateTicket = async (ticket: Ticket) => {
     try {
       const response = await api.post(`/tickets/${ticket._id}/generate`, {
-        template: ticketTemplate
+        template: ticketTemplate,
       });
-      
+
       if (response.data.pdfUrl) {
         window.open(response.data.pdfUrl, '_blank');
         toast.success('Ticket generated successfully');
@@ -271,10 +269,12 @@ export default function TicketManagement() {
     }
   };
 
-  const filteredTickets = tickets.filter(ticket => {
-    const matchesSearch = ticket.eventId.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         ticket.ticketTypeId.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || ticket.status === statusFilter;
+  const filteredTickets = tickets.filter((ticket) => {
+    const matchesSearch =
+      ticket.eventId.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      ticket.ticketTypeId.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus =
+      statusFilter === 'all' || ticket.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
@@ -363,12 +363,13 @@ export default function TicketManagement() {
             <div className="text-gray-500 mb-4">
               <Calendar className="mx-auto h-12 w-12 text-gray-400" />
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No tickets found</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              No tickets found
+            </h3>
             <p className="text-gray-500 mb-6">
-              {searchTerm || statusFilter !== 'all' 
-                ? 'Try adjusting your search or filters' 
-                : 'You haven\'t purchased any tickets yet'
-              }
+              {searchTerm || statusFilter !== 'all'
+                ? 'Try adjusting your search or filters'
+                : "You haven't purchased any tickets yet"}
             </p>
             {!searchTerm && statusFilter === 'all' && (
               <Button
@@ -390,19 +391,21 @@ export default function TicketManagement() {
                         <h3 className="text-xl font-semibold text-gray-900 mb-2">
                           {ticket.eventId.title}
                         </h3>
-                        <p className="text-gray-600 mb-2">{ticket.ticketTypeId.name}</p>
-                        
+                        <p className="text-gray-600 mb-2">
+                          {ticket.ticketTypeId.name}
+                        </p>
+
                         <div className="flex items-center text-sm text-gray-500 mb-2">
                           <Calendar className="w-4 h-4 mr-2" />
                           {formatDate(ticket.eventId.startAt)}
                         </div>
-                        
+
                         <div className="flex items-center text-sm text-gray-500">
                           <MapPin className="w-4 h-4 mr-2" />
                           {ticket.eventId.venue.name}
                         </div>
                       </div>
-                      
+
                       <div className="flex flex-col items-end space-y-2">
                         <Badge variant={getStatusColor(ticket.status)}>
                           {ticket.status}
@@ -412,25 +415,37 @@ export default function TicketManagement() {
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-gray-200">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700">Order ID</label>
-                        <p className="text-gray-900">{ticket.orderId._id.slice(-8)}</p>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Order ID
+                        </label>
+                        <p className="text-gray-900">
+                          {ticket.orderId._id.slice(-8)}
+                        </p>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700">Issued</label>
-                        <p className="text-gray-900">{formatDate(ticket.issuedAt)}</p>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Issued
+                        </label>
+                        <p className="text-gray-900">
+                          {formatDate(ticket.issuedAt)}
+                        </p>
                       </div>
                       {ticket.usedAt && (
                         <div>
-                          <label className="block text-sm font-medium text-gray-700">Used</label>
-                          <p className="text-gray-900">{formatDate(ticket.usedAt)}</p>
+                          <label className="block text-sm font-medium text-gray-700">
+                            Used
+                          </label>
+                          <p className="text-gray-900">
+                            {formatDate(ticket.usedAt)}
+                          </p>
                         </div>
                       )}
                     </div>
                   </div>
-                  
+
                   <div className="mt-6 lg:mt-0 lg:ml-6 flex flex-col space-y-2">
                     <div className="flex flex-wrap gap-2">
                       <Button
@@ -442,7 +457,7 @@ export default function TicketManagement() {
                         <Download className="w-4 h-4 mr-1" />
                         PDF
                       </Button>
-                      
+
                       <Button
                         onClick={() => previewTicket(ticket)}
                         variant="outline"
@@ -452,7 +467,7 @@ export default function TicketManagement() {
                         <Eye className="w-4 h-4 mr-1" />
                         Preview
                       </Button>
-                      
+
                       <Button
                         onClick={() => generateTicket(ticket)}
                         variant="outline"
@@ -462,7 +477,7 @@ export default function TicketManagement() {
                         <Printer className="w-4 h-4 mr-1" />
                         Generate
                       </Button>
-                      
+
                       <Button
                         onClick={() => shareTicket(ticket)}
                         variant="outline"
@@ -472,7 +487,7 @@ export default function TicketManagement() {
                         <Share2 className="w-4 h-4 mr-1" />
                         Share
                       </Button>
-                      
+
                       {ticket.status === 'issued' && (
                         <>
                           <Button
@@ -484,7 +499,7 @@ export default function TicketManagement() {
                             <User className="w-4 h-4 mr-1" />
                             Transfer
                           </Button>
-                          
+
                           <Button
                             onClick={() => handleRefundTicket(ticket)}
                             variant="outline"
@@ -524,7 +539,9 @@ export default function TicketManagement() {
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">Ticket Designer</h2>
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Ticket Designer
+                </h2>
                 <Button
                   onClick={() => setShowTicketDesigner(false)}
                   variant="outline"
@@ -533,7 +550,7 @@ export default function TicketManagement() {
                   Close
                 </Button>
               </div>
-              
+
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Design Controls */}
                 <div className="space-y-6">
@@ -544,11 +561,16 @@ export default function TicketManagement() {
                     <input
                       type="color"
                       value={ticketTemplate.backgroundColor}
-                      onChange={(e) => setTicketTemplate(prev => ({ ...prev, backgroundColor: e.target.value }))}
+                      onChange={(e) =>
+                        setTicketTemplate((prev) => ({
+                          ...prev,
+                          backgroundColor: e.target.value,
+                        }))
+                      }
                       className="w-full h-10 border border-gray-300 rounded-lg"
                     />
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Primary Color
@@ -556,11 +578,16 @@ export default function TicketManagement() {
                     <input
                       type="color"
                       value={ticketTemplate.primaryColor}
-                      onChange={(e) => setTicketTemplate(prev => ({ ...prev, primaryColor: e.target.value }))}
+                      onChange={(e) =>
+                        setTicketTemplate((prev) => ({
+                          ...prev,
+                          primaryColor: e.target.value,
+                        }))
+                      }
                       className="w-full h-10 border border-gray-300 rounded-lg"
                     />
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Secondary Color
@@ -568,18 +595,28 @@ export default function TicketManagement() {
                     <input
                       type="color"
                       value={ticketTemplate.secondaryColor}
-                      onChange={(e) => setTicketTemplate(prev => ({ ...prev, secondaryColor: e.target.value }))}
+                      onChange={(e) =>
+                        setTicketTemplate((prev) => ({
+                          ...prev,
+                          secondaryColor: e.target.value,
+                        }))
+                      }
                       className="w-full h-10 border border-gray-300 rounded-lg"
                     />
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Border Style
                     </label>
                     <select
                       value={ticketTemplate.borderStyle}
-                      onChange={(e) => setTicketTemplate(prev => ({ ...prev, borderStyle: e.target.value }))}
+                      onChange={(e) =>
+                        setTicketTemplate((prev) => ({
+                          ...prev,
+                          borderStyle: e.target.value,
+                        }))
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                     >
                       <option value="solid">Solid</option>
@@ -588,7 +625,7 @@ export default function TicketManagement() {
                       <option value="none">None</option>
                     </select>
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Border Color
@@ -596,65 +633,86 @@ export default function TicketManagement() {
                     <input
                       type="color"
                       value={ticketTemplate.borderColor}
-                      onChange={(e) => setTicketTemplate(prev => ({ ...prev, borderColor: e.target.value }))}
+                      onChange={(e) =>
+                        setTicketTemplate((prev) => ({
+                          ...prev,
+                          borderColor: e.target.value,
+                        }))
+                      }
                       className="w-full h-10 border border-gray-300 rounded-lg"
                     />
                   </div>
-                  
+
                   <div className="space-y-3">
                     <label className="flex items-center">
                       <input
                         type="checkbox"
                         checked={ticketTemplate.qrCode}
-                        onChange={(e) => setTicketTemplate(prev => ({ ...prev, qrCode: e.target.checked }))}
+                        onChange={(e) =>
+                          setTicketTemplate((prev) => ({
+                            ...prev,
+                            qrCode: e.target.checked,
+                          }))
+                        }
                         className="mr-2"
                       />
-                      <span className="text-sm text-gray-700">Include QR Code</span>
+                      <span className="text-sm text-gray-700">
+                        Include QR Code
+                      </span>
                     </label>
-                    
+
                     <label className="flex items-center">
                       <input
                         type="checkbox"
                         checked={ticketTemplate.barcode}
-                        onChange={(e) => setTicketTemplate(prev => ({ ...prev, barcode: e.target.checked }))}
+                        onChange={(e) =>
+                          setTicketTemplate((prev) => ({
+                            ...prev,
+                            barcode: e.target.checked,
+                          }))
+                        }
                         className="mr-2"
                       />
-                      <span className="text-sm text-gray-700">Include Barcode</span>
+                      <span className="text-sm text-gray-700">
+                        Include Barcode
+                      </span>
                     </label>
                   </div>
                 </div>
-                
+
                 {/* Preview */}
                 <div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">Preview</h3>
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">
+                    Preview
+                  </h3>
                   <div className="border border-gray-300 rounded-lg p-4 bg-gray-50">
-                    <div 
+                    <div
                       className="w-full h-48 border-2 rounded-lg p-4 relative"
                       style={{
                         backgroundColor: ticketTemplate.backgroundColor,
                         borderStyle: ticketTemplate.borderStyle,
-                        borderColor: ticketTemplate.borderColor
+                        borderColor: ticketTemplate.borderColor,
                       }}
                     >
-                      <div 
+                      <div
                         className="text-lg font-bold mb-2"
                         style={{ color: ticketTemplate.primaryColor }}
                       >
                         Sample Event
                       </div>
-                      <div 
+                      <div
                         className="text-sm mb-1"
                         style={{ color: ticketTemplate.secondaryColor }}
                       >
                         General Admission
                       </div>
-                      <div 
+                      <div
                         className="text-sm mb-1"
                         style={{ color: ticketTemplate.secondaryColor }}
                       >
                         Venue Name
                       </div>
-                      <div 
+                      <div
                         className="text-sm mb-1"
                         style={{ color: ticketTemplate.secondaryColor }}
                       >
@@ -669,7 +727,7 @@ export default function TicketManagement() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="flex justify-end space-x-3 mt-6">
                 <Button
                   onClick={() => setShowTicketDesigner(false)}
@@ -696,7 +754,9 @@ export default function TicketManagement() {
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-full max-w-2xl">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">Generate Tickets</h2>
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Generate Tickets
+                </h2>
                 <Button
                   onClick={() => setShowTicketGenerator(false)}
                   variant="outline"
@@ -705,12 +765,13 @@ export default function TicketManagement() {
                   Close
                 </Button>
               </div>
-              
+
               <div className="space-y-4">
                 <p className="text-gray-600">
-                  Generate custom tickets for all your events using your saved template.
+                  Generate custom tickets for all your events using your saved
+                  template.
                 </p>
-                
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Button
                     onClick={() => {
@@ -722,13 +783,17 @@ export default function TicketManagement() {
                     <div className="text-center">
                       <Printer className="w-8 h-8 mx-auto mb-2 text-gray-400" />
                       <div className="font-medium">All Events</div>
-                      <div className="text-sm text-gray-500">Generate for all your events</div>
+                      <div className="text-sm text-gray-500">
+                        Generate for all your events
+                      </div>
                     </div>
                   </Button>
-                  
+
                   <Button
                     onClick={() => {
-                      toast.success('Generating tickets for selected events...');
+                      toast.success(
+                        'Generating tickets for selected events...',
+                      );
                       setShowTicketGenerator(false);
                     }}
                     className="flex items-center justify-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-primary-500"
@@ -736,7 +801,9 @@ export default function TicketManagement() {
                     <div className="text-center">
                       <Settings className="w-8 h-8 mx-auto mb-2 text-gray-400" />
                       <div className="font-medium">Selected Events</div>
-                      <div className="text-sm text-gray-500">Choose specific events</div>
+                      <div className="text-sm text-gray-500">
+                        Choose specific events
+                      </div>
                     </div>
                   </Button>
                 </div>

@@ -1,15 +1,20 @@
-import { 
-  Controller, 
-  Get, 
-  Post, 
-  Put, 
-  Delete, 
-  Param, 
-  Body, 
-  UseGuards, 
-  Request 
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Param,
+  Body,
+  UseGuards,
+  Request,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { TicketTypesService } from './ticket-types.service';
 import { CreateTicketTypeDto } from './dto/create-ticket-type.dto';
 import { UpdateTicketTypeDto } from './dto/update-ticket-type.dto';
@@ -30,21 +35,31 @@ export class TicketTypesController {
   async createTicketType(
     @Param('eventId') eventId: string,
     @Body() createTicketTypeDto: CreateTicketTypeDto,
-    @Request() req
+    @Request() req,
   ) {
-    return this.ticketTypesService.create(createTicketTypeDto, eventId, req.user.id);
+    return this.ticketTypesService.create(
+      createTicketTypeDto,
+      eventId,
+      req.user.id,
+    );
   }
 
   @Get('event/:eventId')
   @ApiOperation({ summary: 'Get ticket types for an event' })
-  @ApiResponse({ status: 200, description: 'Ticket types retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Ticket types retrieved successfully',
+  })
   async getTicketTypesByEvent(@Param('eventId') eventId: string) {
     return this.ticketTypesService.findByEventId(eventId);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get ticket type by ID' })
-  @ApiResponse({ status: 200, description: 'Ticket type retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Ticket type retrieved successfully',
+  })
   @ApiResponse({ status: 404, description: 'Ticket type not found' })
   async getTicketType(@Param('id') id: string) {
     return this.ticketTypesService.findOne(id);
@@ -52,7 +67,10 @@ export class TicketTypesController {
 
   @Get(':id/availability')
   @ApiOperation({ summary: 'Get available capacity for ticket type' })
-  @ApiResponse({ status: 200, description: 'Availability retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Availability retrieved successfully',
+  })
   async getAvailability(@Param('id') id: string) {
     const capacity = await this.ticketTypesService.getAvailableCapacity(id);
     return { availableCapacity: capacity };
@@ -60,7 +78,10 @@ export class TicketTypesController {
 
   @Get(':id/on-sale')
   @ApiOperation({ summary: 'Check if ticket type is on sale' })
-  @ApiResponse({ status: 200, description: 'Sale status retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Sale status retrieved successfully',
+  })
   async getOnSaleStatus(@Param('id') id: string) {
     const isOnSale = await this.ticketTypesService.isOnSale(id);
     return { isOnSale };
@@ -76,7 +97,7 @@ export class TicketTypesController {
   async updateTicketType(
     @Param('id') id: string,
     @Body() updateTicketTypeDto: UpdateTicketTypeDto,
-    @Request() req
+    @Request() req,
   ) {
     return this.ticketTypesService.update(id, updateTicketTypeDto, req.user.id);
   }

@@ -1,0 +1,136 @@
+name: "TicketNow CodeQL Configuration"
+
+# This configuration file defines custom CodeQL queries and settings
+# for the TicketNow MERN stack application.
+
+queries:
+  # Use the standard security and quality query suite
+  - uses: security-and-quality
+  
+  # Use extended security queries for more comprehensive analysis
+  - uses: security-extended
+  
+  # Custom queries for MERN stack specific issues
+  - name: custom-mern-queries
+    uses: ./custom-queries
+
+# Paths to exclude from analysis
+paths-ignore:
+  # Exclude test files from security analysis
+  - "**/*.test.js"
+  - "**/*.test.ts"
+  - "**/*.spec.js"
+  - "**/*.spec.ts"
+  - "**/tests/**"
+  - "**/test/**"
+  
+  # Exclude node_modules and build artifacts
+  - "**/node_modules/**"
+  - "**/dist/**"
+  - "**/build/**"
+  - "**/.next/**"
+  
+  # Exclude configuration files that don't need security analysis
+  - "**/package-lock.json"
+  - "**/yarn.lock"
+  - "**/pnpm-lock.yaml"
+  
+  # Exclude documentation and non-source files
+  - "**/*.md"
+  - "**/*.txt"
+  - "**/*.yml"
+  - "**/*.yaml"
+  - "**/Dockerfile*"
+  
+  # Exclude generated files
+  - "**/coverage/**"
+  - "**/.nyc_output/**"
+  - "**/coverage/**"
+
+# Languages to analyze
+languages:
+  - javascript
+  - typescript
+
+# Custom query packs for MERN stack
+packs:
+  - javascript/security-and-quality
+  - javascript/security-extended
+  - javascript/security-experimental
+
+# Analysis settings
+analysis:
+  # Enable experimental features
+  experimental:
+    # Enable new security rules as they become available
+    new_security_rules: true
+    
+  # Custom severity levels
+  severity:
+    # Treat these as high severity
+    high:
+      - "js/hardcoded-credentials"
+      - "js/sql-injection"
+      - "js/xss"
+      - "js/path-injection"
+    
+    # Treat these as medium severity  
+    medium:
+      - "js/insecure-randomness"
+      - "js/weak-cryptographic-algorithm"
+      - "js/unsafe-jquery-plugin"
+
+# Custom query configuration
+custom:
+  # Enable specific security rules for MERN stack
+  security_rules:
+    # Authentication and authorization
+    - "js/hardcoded-credentials"
+    - "js/weak-authentication"
+    - "js/insufficient-authorization"
+    
+    # Input validation and injection
+    - "js/sql-injection"
+    - "js/xss"
+    - "js/path-injection"
+    - "js/command-injection"
+    
+    # Cryptographic issues
+    - "js/weak-cryptographic-algorithm"
+    - "js/insecure-randomness"
+    - "js/hardcoded-encryption-key"
+    
+    # Data exposure
+    - "js/sensitive-data-exposure"
+    - "js/insecure-deserialization"
+    - "js/unsafe-eval"
+    
+    # Dependencies and packages
+    - "js/unsafe-jquery-plugin"
+    - "js/prototype-pollution"
+    - "js/unsafe-regex"
+
+# Exclude specific patterns from analysis
+exclude:
+  # Exclude specific file patterns
+  - "**/vendor/**"
+  - "**/third-party/**"
+  - "**/generated/**"
+  
+  # Exclude specific code patterns (using regex)
+  - ".*\\.min\\.js$"
+  - ".*\\.bundle\\.js$"
+  - ".*\\.chunk\\.js$"
+
+# Performance settings
+performance:
+  # Limit analysis to recent changes for faster runs
+  incremental: true
+  
+  # Maximum analysis time (in minutes)
+  timeout: 30
+  
+  # Memory limits
+  memory:
+    max_heap_size: "4g"
+    max_stack_size: "1g"

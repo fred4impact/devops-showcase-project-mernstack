@@ -85,10 +85,10 @@ export class Section {
 
 @Schema({ _id: false })
 export class Seatmap {
-  @Prop({ 
-    type: String, 
-    enum: Object.values(SeatmapType), 
-    default: SeatmapType.GA 
+  @Prop({
+    type: String,
+    enum: Object.values(SeatmapType),
+    default: SeatmapType.GA,
   })
   type: SeatmapType;
 
@@ -137,10 +137,10 @@ export class Event {
   @Prop({ required: true })
   endAt: Date;
 
-  @Prop({ 
-    type: String, 
-    enum: Object.values(EventStatus), 
-    default: EventStatus.DRAFT 
+  @Prop({
+    type: String,
+    enum: Object.values(EventStatus),
+    default: EventStatus.DRAFT,
   })
   status: EventStatus;
 

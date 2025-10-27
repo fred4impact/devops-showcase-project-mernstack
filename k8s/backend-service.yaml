@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ticketnow-backend-service
+  namespace: ticketnow
+  labels:
+    app: ticketnow-backend
+spec:
+  selector:
+    app: ticketnow-backend
+  ports:
+  - name: http
+    port: 3001
+    targetPort: 3001
+    protocol: TCP
+  type: ClusterIP

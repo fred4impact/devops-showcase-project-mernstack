@@ -20,12 +20,11 @@ interface InteractiveSeatingPlanProps {
 
 export function InteractiveSeatingPlan({
   eventId,
-  ticketTypeId,
   onSeatSelect,
   onSeatDeselect,
   selectedSeats,
   sessionId,
-  basePrice
+  basePrice,
 }: InteractiveSeatingPlanProps) {
   const [seats, setSeats] = useState<Seat[]>([]);
   const [sections, setSections] = useState<Section[]>([]);
@@ -48,19 +47,22 @@ export function InteractiveSeatingPlan({
         const container = containerRef.current;
         const containerWidth = container.clientWidth;
         const containerHeight = Math.min(600, window.innerHeight * 0.5);
-        
+
         // Calculate aspect ratio (4:3)
         const aspectRatio = 4 / 3;
         let newWidth = containerWidth - 20; // Account for padding
         let newHeight = newWidth / aspectRatio;
-        
+
         // If height is too large, constrain by height
         if (newHeight > containerHeight) {
           newHeight = containerHeight;
           newWidth = newHeight * aspectRatio;
         }
-        
-        setCanvasSize({ width: Math.floor(newWidth), height: Math.floor(newHeight) });
+
+        setCanvasSize({
+          width: Math.floor(newWidth),
+          height: Math.floor(newHeight),
+        });
       }
     };
 
@@ -74,7 +76,7 @@ export function InteractiveSeatingPlan({
       setLoading(true);
       const response = await api.get(`/seating-plan/events/${eventId}/seatmap`);
       const seatmap = response.data;
-      
+
       setSeats(seatmap.seats || []);
       setSections(seatmap.sections || []);
       setSeatmapType(seatmap.type || 'reserved');
@@ -93,24 +95,29 @@ export function InteractiveSeatingPlan({
     }
 
     const isSelected = selectedSeats.includes(seat.seatId);
-    
+
     if (isSelected) {
       onSeatDeselect(seat.seatId);
     } else {
       try {
         // Lock the seat temporarily
-        await api.post(`/seating-plan/events/${eventId}/seats/${seat.seatId}/lock`, {
-          sessionId,
-          duration: 300, // 5 minutes
-        });
-        
+        await api.post(
+          `/seating-plan/events/${eventId}/seats/${seat.seatId}/lock`,
+          {
+            sessionId,
+            duration: 300, // 5 minutes
+          },
+        );
+
         const totalPrice = basePrice + seat.priceModifier;
         onSeatSelect(seat.seatId, totalPrice);
-        
+
         // Update seat status locally
-        setSeats(prev => prev.map(s => 
-          s.seatId === seat.seatId ? { ...s, status: 'selected' } : s
-        ));
+        setSeats((prev) =>
+          prev.map((s) =>
+            s.seatId === seat.seatId ? { ...s, status: 'selected' } : s,
+          ),
+        );
       } catch (error) {
         toast.error('Seat is no longer available');
         // Refresh seatmap to get updated status
@@ -119,20 +126,6 @@ export function InteractiveSeatingPlan({
     }
   };
 
-  const getSeatColor = (seat: Seat) => {
-    if (seat.status === 'sold') return 'bg-red-500';
-    if (seat.status === 'locked') return 'bg-yellow-500';
-    if (selectedSeats.includes(seat.seatId)) return 'bg-blue-500';
-    if (seat.accessible) return 'bg-green-400';
-    return 'bg-gray-300';
-  };
-
-  const getSeatIcon = (seat: Seat) => {
-    if (seat.status === 'sold') return '✕';
-    if (seat.status === 'locked') return '🔒';
-    if (seat.accessible) return '♿';
-    return seat.number;
-  };
 
   const drawCanvas = () => {
     const canvas = canvasRef.current;
@@ -149,7 +142,7 @@ export function InteractiveSeatingPlan({
     const stageX = (canvas.width - stageWidth) / 2;
     const stageY = 50;
     const stageHeight = 60;
-    
+
     ctx.fillStyle = '#e5e7eb';
     ctx.fillRect(stageX, stageY, stageWidth, stageHeight);
     ctx.fillStyle = '#374151';
@@ -158,41 +151,45 @@ export function InteractiveSeatingPlan({
     ctx.fillText(stageLabel, canvas.width / 2, stageY + 40);
 
     // Draw sections
-    sections.forEach(section => {
+    sections.forEach((section) => {
       ctx.fillStyle = section.color + '20';
       ctx.fillRect(section.x, section.y, section.width, section.height);
       ctx.strokeStyle = section.color;
       ctx.lineWidth = 2;
       ctx.strokeRect(section.x, section.y, section.width, section.height);
-      
+
       ctx.fillStyle = '#374151';
       ctx.font = '14px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText(section.name, section.x + section.width/2, section.y + section.height/2);
+      ctx.fillText(
+        section.name,
+        section.x + section.width / 2,
+        section.y + section.height / 2,
+      );
     });
 
     // Draw seats
-    seats.forEach(seat => {
+    seats.forEach((seat) => {
       const isHovered = hoveredSeat === seat.seatId;
       const isSelected = selectedSeats.includes(seat.seatId);
-      
+
       // Seat color based on status
       let seatColor = '#6b7280'; // default gray
       if (seat.status === 'sold') seatColor = '#ef4444';
       else if (seat.status === 'locked') seatColor = '#f59e0b';
       else if (isSelected) seatColor = '#3b82f6';
       else if (seat.accessible) seatColor = '#10b981';
-      
+
       ctx.fillStyle = seatColor;
       ctx.fillRect(seat.x - 8, seat.y - 8, 16, 16);
-      
+
       // Highlight on hover
       if (isHovered) {
         ctx.strokeStyle = '#000';
         ctx.lineWidth = 2;
         ctx.strokeRect(seat.x - 8, seat.y - 8, 16, 16);
       }
-      
+
       // Seat number
       ctx.fillStyle = '#fff';
       ctx.font = '10px Arial';
@@ -201,7 +198,9 @@ export function InteractiveSeatingPlan({
     });
   };
 
-  const handleCanvasMouseMove = (event: React.MouseEvent<HTMLCanvasElement>) => {
+  const handleCanvasMouseMove = (
+    event: React.MouseEvent<HTMLCanvasElement>,
+  ) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -210,8 +209,8 @@ export function InteractiveSeatingPlan({
     const y = event.clientY - rect.top;
 
     // Find seat under mouse
-    const seatUnderMouse = seats.find(seat => 
-      Math.abs(seat.x - x) < 8 && Math.abs(seat.y - y) < 8
+    const seatUnderMouse = seats.find(
+      (seat) => Math.abs(seat.x - x) < 8 && Math.abs(seat.y - y) < 8,
     );
 
     setHoveredSeat(seatUnderMouse?.seatId || null);
@@ -225,8 +224,8 @@ export function InteractiveSeatingPlan({
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
 
-    const clickedSeat = seats.find(seat => 
-      Math.abs(seat.x - x) < 8 && Math.abs(seat.y - y) < 8
+    const clickedSeat = seats.find(
+      (seat) => Math.abs(seat.x - x) < 8 && Math.abs(seat.y - y) < 8,
     );
 
     if (clickedSeat) {
@@ -254,7 +253,9 @@ export function InteractiveSeatingPlan({
       <Card className="p-6">
         <div className="text-center">
           <h3 className="text-lg font-semibold mb-4">General Admission</h3>
-          <p className="text-gray-600">This event uses general admission seating</p>
+          <p className="text-gray-600">
+            This event uses general admission seating
+          </p>
         </div>
       </Card>
     );
@@ -297,11 +298,11 @@ export function InteractiveSeatingPlan({
               onClick={handleCanvasClick}
             />
           </div>
-          
+
           {hoveredSeat && (
             <div className="absolute top-2 right-2 bg-black bg-opacity-75 text-white p-2 rounded text-sm">
               {(() => {
-                const seat = seats.find(s => s.seatId === hoveredSeat);
+                const seat = seats.find((s) => s.seatId === hoveredSeat);
                 if (!seat) return '';
                 const price = basePrice + seat.priceModifier;
                 return `${seat.seatId} - $${(price / 100).toFixed(2)}`;
@@ -316,18 +317,25 @@ export function InteractiveSeatingPlan({
         <Card className="p-6">
           <h3 className="text-lg font-semibold mb-4">Selected Seats</h3>
           <div className="space-y-2">
-            {selectedSeats.map(seatId => {
-              const seat = seats.find(s => s.seatId === seatId);
+            {selectedSeats.map((seatId) => {
+              const seat = seats.find((s) => s.seatId === seatId);
               if (!seat) return null;
               const price = basePrice + seat.priceModifier;
               return (
-                <div key={seatId} className="flex items-center justify-between p-3 bg-blue-50 rounded">
+                <div
+                  key={seatId}
+                  className="flex items-center justify-between p-3 bg-blue-50 rounded"
+                >
                   <div className="flex items-center space-x-2">
                     <Badge variant="outline">{seat.seatId}</Badge>
-                    {seat.accessible && <Badge variant="secondary">Accessible</Badge>}
+                    {seat.accessible && (
+                      <Badge variant="secondary">Accessible</Badge>
+                    )}
                   </div>
                   <div className="flex items-center space-x-2">
-                    <span className="font-medium">${(price / 100).toFixed(2)}</span>
+                    <span className="font-medium">
+                      ${(price / 100).toFixed(2)}
+                    </span>
                     <Button
                       size="sm"
                       variant="outline"
