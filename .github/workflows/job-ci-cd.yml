@@ -82,11 +82,19 @@ jobs:
         with:
           node-version: "18"
           cache: "npm"
-          cache-dependency-path: application/${{ matrix.service }}/package-lock.json
+          cache-dependency-path: application/${{ matrix.service }}/package.json
 
       - name: Install dependencies
         working-directory: application/${{ matrix.service }}
-        run: npm ci
+        run: |
+          # Check if package-lock.json is in sync, if not regenerate it
+          if ! npm ci --dry-run; then
+            echo "Package-lock.json is out of sync, regenerating..."
+            rm -f package-lock.json
+            npm install
+          else
+            npm ci
+          fi
 
       - name: Run linting
         working-directory: application/${{ matrix.service }}
@@ -147,19 +155,43 @@ jobs:
         with:
           node-version: "18"
           cache: "npm"
-          cache-dependency-path: tests/package-lock.json
+          cache-dependency-path: tests/package.json
 
       - name: Install test dependencies
         working-directory: tests
-        run: npm ci
+        run: |
+          # Check if package-lock.json is in sync, if not regenerate it
+          if ! npm ci --dry-run; then
+            echo "Package-lock.json is out of sync, regenerating..."
+            rm -f package-lock.json
+            npm install
+          else
+            npm ci
+          fi
 
       - name: Install backend dependencies
         working-directory: application/backend
-        run: npm ci
+        run: |
+          # Check if package-lock.json is in sync, if not regenerate it
+          if ! npm ci --dry-run; then
+            echo "Package-lock.json is out of sync, regenerating..."
+            rm -f package-lock.json
+            npm install
+          else
+            npm ci
+          fi
 
       - name: Install frontend dependencies
         working-directory: application/frontend
-        run: npm ci
+        run: |
+          # Check if package-lock.json is in sync, if not regenerate it
+          if ! npm ci --dry-run; then
+            echo "Package-lock.json is out of sync, regenerating..."
+            rm -f package-lock.json
+            npm install
+          else
+            npm ci
+          fi
 
       - name: Build backend
         working-directory: application/backend
