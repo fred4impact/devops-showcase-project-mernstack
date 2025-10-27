@@ -2,9 +2,6 @@ module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
   testMatch: [
-    '**/backend/**/*.test.ts',
-    '**/frontend/**/*.test.tsx',
-    '**/integration/**/*.test.ts',
     '**/*.test.ts',
     '**/*.spec.ts'
   ],
@@ -29,5 +26,12 @@ module.exports = {
   testTimeout: 30000,
   verbose: true,
   forceExit: true,
-  detectOpenHandles: true
+  detectOpenHandles: true,
+  transform: {
+    '^.+\\.(ts|tsx)$': ['ts-jest', {
+      tsconfig: {
+        jsx: 'react-jsx'
+      }
+    }]
+  }
 };

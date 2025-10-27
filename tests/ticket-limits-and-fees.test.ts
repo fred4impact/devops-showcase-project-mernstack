@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// Test configuration
-const API_BASE_URL = 'http://localhost:3001';
+// Test configuration - use environment variables for CI/CD compatibility
+const API_BASE_URL = process.env.BACKEND_URL || 'http://localhost:3001';
 
 describe('Ticket Limits and Processing Fees Tests', () => {
   let authToken: string;
@@ -73,7 +73,7 @@ describe('Ticket Limits and Processing Fees Tests', () => {
         });
         // If we get here, the test should fail
         expect(true).toBe(false);
-      } catch (error) {
+      } catch (error: any) {
         expect(error.response.status).toBe(400);
         expect(error.response.data.message[0]).toContain('must not be greater than 5');
         console.log('✅ Ticket limit validation working correctly');
@@ -93,7 +93,7 @@ describe('Ticket Limits and Processing Fees Tests', () => {
         });
         expect(response.status).toBe(201);
         console.log('✅ 5-ticket purchase allowed correctly');
-      } catch (error) {
+      } catch (error: any) {
         console.log('⚠️ 5-ticket purchase failed (may be due to missing ticket types):', error.response?.data || error.message);
       }
     });
@@ -118,7 +118,7 @@ describe('Ticket Limits and Processing Fees Tests', () => {
         
         // If we get here, the test should fail
         expect(true).toBe(false);
-      } catch (error) {
+      } catch (error: any) {
         if (error.response?.status === 400) {
           expect(error.response.data.message[0]).toContain('must not be greater than 5');
           console.log('✅ Cart update limit validation working correctly');
@@ -149,7 +149,7 @@ describe('Ticket Limits and Processing Fees Tests', () => {
         } else {
           console.log('⚠️ Processing fees not yet implemented in cart response');
         }
-      } catch (error) {
+      } catch (error: any) {
         console.log('⚠️ Cart test failed (may be due to missing ticket types):', error.response?.data || error.message);
       }
     });
@@ -177,7 +177,7 @@ describe('Ticket Limits and Processing Fees Tests', () => {
         } else {
           console.log('⚠️ Processing fees not yet implemented in order creation');
         }
-      } catch (error) {
+      } catch (error: any) {
         console.log('⚠️ Order test failed (may be due to missing ticket types):', error.response?.data || error.message);
       }
     });
@@ -190,7 +190,7 @@ describe('Ticket Limits and Processing Fees Tests', () => {
         expect(response.status).toBe(200);
         console.log('✅ API documentation accessible');
         console.log('📚 Check /api/docs for updated validation limits and processing fees');
-      } catch (error) {
+      } catch (error: any) {
         console.log('⚠️ API docs not accessible:', error.message);
       }
     });

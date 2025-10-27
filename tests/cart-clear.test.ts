@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// Test configuration
-const API_BASE_URL = 'http://localhost:3001';
+// Test configuration - use environment variables for CI/CD compatibility
+const API_BASE_URL = process.env.BACKEND_URL || 'http://localhost:3001';
 
 describe('Cart Clear Functionality Tests', () => {
   let authToken: string;
@@ -75,7 +75,7 @@ describe('Cart Clear Functionality Tests', () => {
         expect(response.data).toHaveProperty('items');
         expect(response.data.items.length).toBeGreaterThan(0);
         console.log('✅ Items added to cart successfully');
-      } catch (error) {
+      } catch (error: any) {
         console.log('⚠️ Cart add failed (may be due to missing ticket types):', error.response?.data || error.message);
       }
     });
@@ -91,7 +91,7 @@ describe('Cart Clear Functionality Tests', () => {
         expect(response.data).toHaveProperty('items');
         expect(Array.isArray(response.data.items)).toBe(true);
         console.log('✅ Cart contents retrieved successfully');
-      } catch (error) {
+      } catch (error: any) {
         console.log('⚠️ Cart retrieval failed:', error.response?.data || error.message);
       }
     });
@@ -126,7 +126,7 @@ describe('Cart Clear Functionality Tests', () => {
         expect(getResponse.data.totalCents).toBe(0);
         expect(getResponse.data.processingFeesCents).toBe(0);
         console.log('✅ Cart is empty after clearing');
-      } catch (error) {
+      } catch (error: any) {
         console.log('⚠️ Cart clear test failed:', error.response?.data || error.message);
       }
     });
@@ -150,7 +150,7 @@ describe('Cart Clear Functionality Tests', () => {
         } else {
           console.log('⚠️ Processing fees not implemented in cart response');
         }
-      } catch (error) {
+      } catch (error: any) {
         console.log('⚠️ Cart fees test failed:', error.response?.data || error.message);
       }
     });
@@ -166,7 +166,7 @@ describe('Cart Clear Functionality Tests', () => {
         });
         expect(response.status).toBe(200);
         console.log('✅ Non-existent cart clear handled gracefully');
-      } catch (error) {
+      } catch (error: any) {
         console.log('⚠️ Non-existent cart clear failed:', error.response?.data || error.message);
       }
     });

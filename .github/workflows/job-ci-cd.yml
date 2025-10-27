@@ -65,9 +65,9 @@ jobs:
         with:
           category: "/language:${{matrix.language}}"
 
-  # Stage 3: Build & Test
-  build-test:
-    name: Build and Test
+  # Stage 3: Build Applications
+  build-apps:
+    name: Build Applications
     runs-on: ubuntu-latest
     needs: checkout
     strategy:
@@ -101,15 +101,6 @@ jobs:
             npx tsc --noEmit
           fi
 
-      - name: Run unit tests
-        working-directory: application/${{ matrix.service }}
-        run: |
-          if [ "${{ matrix.service }}" = "backend" ]; then
-            npm test -- --coverage --watchAll=false
-          else
-            echo "Frontend tests would run here (if configured)"
-          fi
-
       - name: Build application
         working-directory: application/${{ matrix.service }}
         run: npm run build
@@ -121,11 +112,133 @@ jobs:
           path: application/${{ matrix.service }}/dist
           retention-days: 1
 
-  # Stage 4: Build Docker Images
+  # Stage 4: Integration Tests
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: [checkout, build-apps]
+    services:
+      mongodb:
+        image: mongo:7.0
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.runCommand({ping: 1})'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7.2-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "npm"
+          cache-dependency-path: tests/package-lock.json
+
+      - name: Install test dependencies
+        working-directory: tests
+        run: npm ci
+
+      - name: Install backend dependencies
+        working-directory: application/backend
+        run: npm ci
+
+      - name: Install frontend dependencies
+        working-directory: application/frontend
+        run: npm ci
+
+      - name: Build backend
+        working-directory: application/backend
+        run: npm run build
+
+      - name: Build frontend
+        working-directory: application/frontend
+        run: npm run build
+
+      - name: Start backend service
+        working-directory: application/backend
+        run: |
+          npm run start:prod &
+          echo $! > backend.pid
+        env:
+          MONGO_URI: mongodb://localhost:27017/ticketnow-test
+          REDIS_URL: redis://localhost:6379
+          JWT_SECRET: test-secret-key-for-ci
+          NODE_ENV: test
+          PORT: 3001
+
+      - name: Start frontend service
+        working-directory: application/frontend
+        run: |
+          npm run start &
+          echo $! > frontend.pid
+        env:
+          NODE_ENV: test
+          NEXT_PUBLIC_API_URL: http://localhost:3001
+
+      - name: Wait for services to be ready
+        run: |
+          echo "Waiting for backend to be ready..."
+          timeout 60 bash -c 'until curl -f http://localhost:3001/health; do sleep 2; done'
+          echo "Waiting for frontend to be ready..."
+          timeout 60 bash -c 'until curl -f http://localhost:3000; do sleep 2; done'
+          echo "All services are ready!"
+
+      - name: Run API integration tests
+        working-directory: tests
+        run: npm test
+        env:
+          BACKEND_URL: http://localhost:3001
+          FRONTEND_URL: http://localhost:3000
+          MONGO_URI: mongodb://localhost:27017/ticketnow-test
+          REDIS_URL: redis://localhost:6379
+          JWT_SECRET: test-secret-key-for-ci
+          NODE_ENV: test
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: tests/coverage/
+          retention-days: 7
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v3
+        with:
+          file: tests/coverage/lcov.info
+          flags: integration-tests
+          name: integration-coverage
+
+      - name: Cleanup services
+        if: always()
+        run: |
+          if [ -f application/backend/backend.pid ]; then
+            kill $(cat application/backend/backend.pid) || true
+          fi
+          if [ -f application/frontend/frontend.pid ]; then
+            kill $(cat application/frontend/frontend.pid) || true
+          fi
+
+  # Stage 5: Build Docker Images
   build-docker:
     name: Build Docker Images
     runs-on: ubuntu-latest
-    needs: [checkout, build-test]
+    needs: [checkout, build-apps, integration-tests]
     strategy:
       matrix:
         service: [backend, frontend]
@@ -165,7 +278,7 @@ jobs:
           cache-to: type=gha,mode=max
           platforms: linux/amd64,linux/arm64
 
-  # Stage 5: Security Scan of Images
+  # Stage 6: Security Scan of Images
   security-scan:
     name: Container Security Scan
     runs-on: ubuntu-latest
@@ -198,10 +311,10 @@ jobs:
           severity: "HIGH,CRITICAL"
           exit-code: "1"
 
-  # Stage 6: Push to DockerHub (already done in build-docker stage)
+  # Stage 7: Push to DockerHub (already done in build-docker stage)
   # This stage is for documentation and potential additional registry pushes
 
-  # Stage 7: Cleanup
+  # Stage 8: Cleanup
   cleanup:
     name: Cleanup
     runs-on: ubuntu-latest
