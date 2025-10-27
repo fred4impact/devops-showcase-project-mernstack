@@ -1,15 +1,21 @@
-import { 
-  Controller, 
-  Get, 
-  Post, 
-  Put, 
-  Param, 
-  Body, 
-  Query, 
-  UseGuards, 
-  Request 
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Param,
+  Body,
+  Query,
+  UseGuards,
+  Request,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -26,7 +32,7 @@ export class OrdersController {
   async createOrder(
     @Body() createOrderDto: CreateOrderDto,
     @Query('sessionId') sessionId?: string,
-    @Request() req?: any
+    @Request() req?: any,
   ) {
     const userId = req?.user?.id;
     return this.ordersService.create(createOrderDto, userId, sessionId);
@@ -34,15 +40,22 @@ export class OrdersController {
 
   @Post('payment-intent')
   @ApiOperation({ summary: 'Create payment intent for order' })
-  @ApiResponse({ status: 201, description: 'Payment intent created successfully' })
+  @ApiResponse({
+    status: 201,
+    description: 'Payment intent created successfully',
+  })
   @ApiResponse({ status: 400, description: 'Bad request' })
   async createPaymentIntent(
     @Body() createOrderDto: CreateOrderDto,
     @Query('sessionId') sessionId?: string,
-    @Request() req?: any
+    @Request() req?: any,
   ) {
     const userId = req?.user?.id;
-    return this.ordersService.createPaymentIntent(createOrderDto, userId, sessionId);
+    return this.ordersService.createPaymentIntent(
+      createOrderDto,
+      userId,
+      sessionId,
+    );
   }
 
   @Post('confirm-payment')
@@ -59,16 +72,19 @@ export class OrdersController {
   @ApiOperation({ summary: 'Get current user orders' })
   @ApiQuery({ name: 'page', required: false, example: '1' })
   @ApiQuery({ name: 'limit', required: false, example: '10' })
-  @ApiResponse({ status: 200, description: 'User orders retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'User orders retrieved successfully',
+  })
   async getMyOrders(
     @Request() req,
     @Query('page') page?: string,
-    @Query('limit') limit?: string
+    @Query('limit') limit?: string,
   ) {
     return this.ordersService.findByUserId(
-      req.user.id, 
-      parseInt(page) || 1, 
-      parseInt(limit) || 10
+      req.user.id,
+      parseInt(page) || 1,
+      parseInt(limit) || 10,
     );
   }
 
@@ -81,12 +97,12 @@ export class OrdersController {
   async getOrdersByEmail(
     @Query('email') email: string,
     @Query('page') page?: string,
-    @Query('limit') limit?: string
+    @Query('limit') limit?: string,
   ) {
     return this.ordersService.findByEmail(
-      email, 
-      parseInt(page) || 1, 
-      parseInt(limit) || 10
+      email,
+      parseInt(page) || 1,
+      parseInt(limit) || 10,
     );
   }
 
@@ -111,14 +127,20 @@ export class OrdersController {
 
   @Get('stats/event/:eventId')
   @ApiOperation({ summary: 'Get order statistics for an event' })
-  @ApiResponse({ status: 200, description: 'Statistics retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Statistics retrieved successfully',
+  })
   async getEventStats(@Param('eventId') eventId: string) {
     return this.ordersService.getOrderStats(eventId);
   }
 
   @Get('stats/overview')
   @ApiOperation({ summary: 'Get overall order statistics' })
-  @ApiResponse({ status: 200, description: 'Statistics retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Statistics retrieved successfully',
+  })
   async getOverallStats() {
     return this.ordersService.getOrderStats();
   }

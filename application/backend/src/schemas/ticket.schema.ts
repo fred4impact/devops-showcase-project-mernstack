@@ -32,10 +32,10 @@ export class Ticket {
   @Prop()
   pdfUrl?: string;
 
-  @Prop({ 
-    type: String, 
-    enum: Object.values(TicketStatus), 
-    default: TicketStatus.ISSUED 
+  @Prop({
+    type: String,
+    enum: Object.values(TicketStatus),
+    default: TicketStatus.ISSUED,
   })
   status: TicketStatus;
 

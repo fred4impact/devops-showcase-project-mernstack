@@ -6,7 +6,7 @@ export enum RefundReason {
   PERSONAL_REASONS = 'personal_reasons',
   DUPLICATE_PURCHASE = 'duplicate_purchase',
   TECHNICAL_ISSUE = 'technical_issue',
-  OTHER = 'other'
+  OTHER = 'other',
 }
 
 export class RefundTicketDto {
@@ -14,7 +14,10 @@ export class RefundTicketDto {
   @IsEnum(RefundReason)
   reason: RefundReason;
 
-  @ApiProperty({ example: 'Unable to attend due to work conflict', required: false })
+  @ApiProperty({
+    example: 'Unable to attend due to work conflict',
+    required: false,
+  })
   @IsOptional()
   @IsString()
   description?: string;

@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { TicketType, TicketTypeDocument } from '../schemas/ticket-type.schema';
@@ -9,11 +14,16 @@ import { UpdateTicketTypeDto } from './dto/update-ticket-type.dto';
 @Injectable()
 export class TicketTypesService {
   constructor(
-    @InjectModel(TicketType.name) private ticketTypeModel: Model<TicketTypeDocument>,
+    @InjectModel(TicketType.name)
+    private ticketTypeModel: Model<TicketTypeDocument>,
     @InjectModel(Event.name) private eventModel: Model<EventDocument>,
   ) {}
 
-  async create(createTicketTypeDto: CreateTicketTypeDto, eventId: string, userId: string): Promise<TicketType> {
+  async create(
+    createTicketTypeDto: CreateTicketTypeDto,
+    eventId: string,
+    userId: string,
+  ): Promise<TicketType> {
     // Verify event exists and user is the organizer
     const event = await this.eventModel.findById(eventId);
     if (!event) {
@@ -21,7 +31,9 @@ export class TicketTypesService {
     }
 
     if (event.organizerId.toString() !== userId.toString()) {
-      throw new ForbiddenException('You can only create ticket types for your own events');
+      throw new ForbiddenException(
+        'You can only create ticket types for your own events',
+      );
     }
 
     // Validate sales dates
@@ -30,11 +42,15 @@ export class TicketTypesService {
     const eventStart = new Date(event.startAt);
 
     if (salesStart >= salesEnd) {
-      throw new BadRequestException('Sales end date must be after sales start date');
+      throw new BadRequestException(
+        'Sales end date must be after sales start date',
+      );
     }
 
     if (salesEnd > eventStart) {
-      throw new BadRequestException('Sales end date cannot be after event start date');
+      throw new BadRequestException(
+        'Sales end date cannot be after event start date',
+      );
     }
 
     if (salesStart < new Date()) {
@@ -66,7 +82,11 @@ export class TicketTypesService {
     return ticketType;
   }
 
-  async update(id: string, updateTicketTypeDto: UpdateTicketTypeDto, userId: string): Promise<TicketType> {
+  async update(
+    id: string,
+    updateTicketTypeDto: UpdateTicketTypeDto,
+    userId: string,
+  ): Promise<TicketType> {
     const ticketType = await this.ticketTypeModel.findById(id);
     if (!ticketType) {
       throw new NotFoundException('Ticket type not found');
@@ -75,21 +95,31 @@ export class TicketTypesService {
     // Verify user is the event organizer
     const event = await this.eventModel.findById(ticketType.eventId);
     if (!event || event.organizerId.toString() !== userId.toString()) {
-      throw new ForbiddenException('You can only update ticket types for your own events');
+      throw new ForbiddenException(
+        'You can only update ticket types for your own events',
+      );
     }
 
     // Validate sales dates if provided
     if (updateTicketTypeDto.salesStart || updateTicketTypeDto.salesEnd) {
-      const salesStart = updateTicketTypeDto.salesStart ? new Date(updateTicketTypeDto.salesStart) : ticketType.salesStart;
-      const salesEnd = updateTicketTypeDto.salesEnd ? new Date(updateTicketTypeDto.salesEnd) : ticketType.salesEnd;
+      const salesStart = updateTicketTypeDto.salesStart
+        ? new Date(updateTicketTypeDto.salesStart)
+        : ticketType.salesStart;
+      const salesEnd = updateTicketTypeDto.salesEnd
+        ? new Date(updateTicketTypeDto.salesEnd)
+        : ticketType.salesEnd;
       const eventStart = new Date(event.startAt);
 
       if (salesStart >= salesEnd) {
-        throw new BadRequestException('Sales end date must be after sales start date');
+        throw new BadRequestException(
+          'Sales end date must be after sales start date',
+        );
       }
 
       if (salesEnd > eventStart) {
-        throw new BadRequestException('Sales end date cannot be after event start date');
+        throw new BadRequestException(
+          'Sales end date cannot be after event start date',
+        );
       }
     }
 
@@ -106,12 +136,16 @@ export class TicketTypesService {
     // Verify user is the event organizer
     const event = await this.eventModel.findById(ticketType.eventId);
     if (!event || event.organizerId.toString() !== userId.toString()) {
-      throw new ForbiddenException('You can only delete ticket types for your own events');
+      throw new ForbiddenException(
+        'You can only delete ticket types for your own events',
+      );
     }
 
     // Check if tickets have been sold
     if (ticketType.soldCount > 0) {
-      throw new BadRequestException('Cannot delete ticket type with sold tickets');
+      throw new BadRequestException(
+        'Cannot delete ticket type with sold tickets',
+      );
     }
 
     await this.ticketTypeModel.findByIdAndDelete(id);

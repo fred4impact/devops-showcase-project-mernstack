@@ -39,7 +39,11 @@ interface Cart {
 export default function Cart() {
   const router = useRouter();
   const { sessionId } = useCart();
-  const [cart, setCart] = useState<Cart>({ items: [], totalCents: 0, itemCount: 0 });
+  const [cart, setCart] = useState<Cart>({
+    items: [],
+    totalCents: 0,
+    itemCount: 0,
+  });
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null);
 
@@ -62,7 +66,11 @@ export default function Cart() {
     }
   };
 
-  const updateQuantity = async (ticketTypeId: string, seatId: string | undefined, quantity: number) => {
+  const updateQuantity = async (
+    ticketTypeId: string,
+    seatId: string | undefined,
+    quantity: number,
+  ) => {
     if (quantity < 1) {
       await removeItem(ticketTypeId, seatId);
       return;
@@ -70,9 +78,12 @@ export default function Cart() {
 
     try {
       setUpdating(`${ticketTypeId}-${seatId || 'general'}`);
-      await api.put(`/cart/item/${ticketTypeId}?sessionId=${sessionId}&seatId=${seatId || ''}`, {
-        quantity,
-      });
+      await api.put(
+        `/cart/item/${ticketTypeId}?sessionId=${sessionId}&seatId=${seatId || ''}`,
+        {
+          quantity,
+        },
+      );
       await fetchCart();
       toast.success('Cart updated');
     } catch (error) {
@@ -83,10 +94,15 @@ export default function Cart() {
     }
   };
 
-  const removeItem = async (ticketTypeId: string, seatId: string | undefined) => {
+  const removeItem = async (
+    ticketTypeId: string,
+    seatId: string | undefined,
+  ) => {
     try {
       setUpdating(`${ticketTypeId}-${seatId || 'general'}`);
-      await api.delete(`/cart/item/${ticketTypeId}?sessionId=${sessionId}&seatId=${seatId || ''}`);
+      await api.delete(
+        `/cart/item/${ticketTypeId}?sessionId=${sessionId}&seatId=${seatId || ''}`,
+      );
       await fetchCart();
       toast.success('Item removed from cart');
     } catch (error) {
@@ -145,12 +161,26 @@ export default function Cart() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center">
             <div className="text-gray-500 mb-4">
-              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01" />
+              <svg
+                className="mx-auto h-12 w-12 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"
+                />
               </svg>
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Your cart is empty</h1>
-            <p className="text-gray-600 mb-6">Add some events to get started!</p>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              Your cart is empty
+            </h1>
+            <p className="text-gray-600 mb-6">
+              Add some events to get started!
+            </p>
             <Button
               onClick={() => router.push('/events')}
               className="bg-primary-600 hover:bg-primary-700"
@@ -170,7 +200,10 @@ export default function Cart() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Shopping Cart</h1>
-            <p className="text-gray-600 mt-2">{cart.itemCount} item{cart.itemCount !== 1 ? 's' : ''} in your cart</p>
+            <p className="text-gray-600 mt-2">
+              {cart.itemCount} item{cart.itemCount !== 1 ? 's' : ''} in your
+              cart
+            </p>
           </div>
           <Button
             onClick={clearCart}
@@ -185,7 +218,10 @@ export default function Cart() {
           {/* Cart Items */}
           <div className="lg:col-span-2 space-y-4">
             {cart.items.map((item, index) => (
-              <Card key={`${item.ticketTypeId}-${item.seatId || 'general'}`} className="p-6">
+              <Card
+                key={`${item.ticketTypeId}-${item.seatId || 'general'}`}
+                className="p-6"
+              >
                 <div className="flex items-start space-x-4">
                   {/* Event Image */}
                   <div className="flex-shrink-0">
@@ -197,8 +233,18 @@ export default function Cart() {
                       />
                     ) : (
                       <div className="w-20 h-20 bg-gray-200 rounded-lg flex items-center justify-center">
-                        <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        <svg
+                          className="w-8 h-8 text-gray-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          />
                         </svg>
                       </div>
                     )}
@@ -245,8 +291,17 @@ export default function Cart() {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => updateQuantity(item.ticketTypeId, item.seatId, item.quantity - 1)}
-                        disabled={updating === `${item.ticketTypeId}-${item.seatId || 'general'}`}
+                        onClick={() =>
+                          updateQuantity(
+                            item.ticketTypeId,
+                            item.seatId,
+                            item.quantity - 1,
+                          )
+                        }
+                        disabled={
+                          updating ===
+                          `${item.ticketTypeId}-${item.seatId || 'general'}`
+                        }
                       >
                         -
                       </Button>
@@ -256,8 +311,17 @@ export default function Cart() {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => updateQuantity(item.ticketTypeId, item.seatId, item.quantity + 1)}
-                        disabled={updating === `${item.ticketTypeId}-${item.seatId || 'general'}`}
+                        onClick={() =>
+                          updateQuantity(
+                            item.ticketTypeId,
+                            item.seatId,
+                            item.quantity + 1,
+                          )
+                        }
+                        disabled={
+                          updating ===
+                          `${item.ticketTypeId}-${item.seatId || 'general'}`
+                        }
                       >
                         +
                       </Button>
@@ -268,7 +332,10 @@ export default function Cart() {
                       size="sm"
                       variant="outline"
                       onClick={() => removeItem(item.ticketTypeId, item.seatId)}
-                      disabled={updating === `${item.ticketTypeId}-${item.seatId || 'general'}`}
+                      disabled={
+                        updating ===
+                        `${item.ticketTypeId}-${item.seatId || 'general'}`
+                      }
                       className="text-red-600 hover:text-red-700 hover:bg-red-50"
                     >
                       Remove
@@ -282,12 +349,16 @@ export default function Cart() {
           {/* Order Summary */}
           <div className="lg:col-span-1">
             <Card className="p-6 sticky top-4">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Order Summary</h2>
-              
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                Order Summary
+              </h2>
+
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Subtotal</span>
-                  <span className="text-gray-900">${formatPrice(cart.totalCents)}</span>
+                  <span className="text-gray-900">
+                    ${formatPrice(cart.totalCents)}
+                  </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Processing Fee</span>
@@ -300,7 +371,9 @@ export default function Cart() {
                 <hr className="border-gray-200" />
                 <div className="flex justify-between text-lg font-semibold">
                   <span className="text-gray-900">Total</span>
-                  <span className="text-gray-900">${formatPrice(cart.totalCents)}</span>
+                  <span className="text-gray-900">
+                    ${formatPrice(cart.totalCents)}
+                  </span>
                 </div>
               </div>
 

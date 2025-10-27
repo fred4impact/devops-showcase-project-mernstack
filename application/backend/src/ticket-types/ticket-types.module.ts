@@ -9,8 +9,8 @@ import { Event, EventSchema } from '../schemas/event.schema';
   imports: [
     MongooseModule.forFeature([
       { name: TicketType.name, schema: TicketTypeSchema },
-      { name: Event.name, schema: EventSchema }
-    ])
+      { name: Event.name, schema: EventSchema },
+    ]),
   ],
   controllers: [TicketTypesController],
   providers: [TicketTypesService],

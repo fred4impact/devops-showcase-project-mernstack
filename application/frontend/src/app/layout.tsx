@@ -1,23 +1,24 @@
-import './globals.css'
-import { Inter } from 'next/font/google'
-import { AuthProvider } from '@/hooks/useAuth'
-import { CartProvider } from '@/hooks/useCart'
-import { Header } from '@/components/layout/Header'
-import { Footer } from '@/components/layout/Footer'
-import { Toaster } from 'react-hot-toast'
+import './globals.css';
+import { Inter } from 'next/font/google';
+import { AuthProvider } from '@/hooks/useAuth';
+import { CartProvider } from '@/hooks/useCart';
+import { Header } from '@/components/layout/Header';
+import { Footer } from '@/components/layout/Footer';
+import { Toaster } from 'react-hot-toast';
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({ subsets: ['latin'] });
 
 export const metadata = {
   title: 'TicketNow - Modern Event Ticketing Platform',
-  description: 'Create, manage, and sell tickets for your events with ease. The modern ticketing platform for events of all sizes.',
+  description:
+    'Create, manage, and sell tickets for your events with ease. The modern ticketing platform for events of all sizes.',
   keywords: 'ticketing, events, tickets, event management, online tickets',
-}
+};
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
     <html lang="en">
@@ -26,9 +27,7 @@ export default function RootLayout({
           <CartProvider>
             <div className="min-h-screen flex flex-col">
               <Header />
-              <main className="flex-1">
-                {children}
-              </main>
+              <main className="flex-1">{children}</main>
               <Footer />
             </div>
             <Toaster
@@ -59,5 +58,5 @@ export default function RootLayout({
         </AuthProvider>
       </body>
     </html>
-  )
+  );
 }

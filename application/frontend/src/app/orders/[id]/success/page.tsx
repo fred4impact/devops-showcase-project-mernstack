@@ -2,21 +2,27 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import api from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
 import toast from 'react-hot-toast';
-import { 
-  CheckCircle, 
-  Download, 
-  Mail, 
-  Calendar, 
-  MapPin, 
+import {
+  CheckCircle,
+  Download,
+  Mail,
+  Calendar,
+  MapPin,
   Ticket,
   ArrowRight,
-  QrCode
+  QrCode,
 } from 'lucide-react';
 
 interface Order {
@@ -69,7 +75,7 @@ export default function OrderSuccess() {
   const fetchOrderDetails = async () => {
     try {
       setLoading(true);
-      
+
       // Fetch order details
       const orderResponse = await api.get(`/orders/${params.id}`);
       setOrder(orderResponse.data);
@@ -125,7 +131,9 @@ export default function OrderSuccess() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Order Not Found</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">
+            Order Not Found
+          </h1>
           <Button onClick={() => router.push('/')}>Go Home</Button>
         </div>
       </div>
@@ -164,10 +172,17 @@ export default function OrderSuccess() {
               <CardContent>
                 <div className="space-y-4">
                   {order.items.map((item, index) => (
-                    <div key={index} className="flex justify-between items-center py-3 border-b border-gray-200 last:border-b-0">
+                    <div
+                      key={index}
+                      className="flex justify-between items-center py-3 border-b border-gray-200 last:border-b-0"
+                    >
                       <div>
-                        <h3 className="font-medium text-gray-900">{item.ticketTypeId.name}</h3>
-                        <p className="text-sm text-gray-600">{item.ticketTypeId.event.title}</p>
+                        <h3 className="font-medium text-gray-900">
+                          {item.ticketTypeId.name}
+                        </h3>
+                        <p className="text-sm text-gray-600">
+                          {item.ticketTypeId.event.title}
+                        </p>
                         <div className="flex items-center text-sm text-gray-500 mt-1">
                           <Calendar className="h-4 w-4 mr-1" />
                           {formatDate(item.ticketTypeId.event.startAt)}
@@ -178,12 +193,14 @@ export default function OrderSuccess() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-medium">${formatPrice(item.priceCents)}</p>
+                        <p className="font-medium">
+                          ${formatPrice(item.priceCents)}
+                        </p>
                         <p className="text-sm text-gray-500">Qty: {item.qty}</p>
                       </div>
                     </div>
                   ))}
-                  
+
                   <div className="pt-4 border-t border-gray-200">
                     <div className="flex justify-between text-sm text-gray-600 mb-2">
                       <span>Processing Fee</span>
@@ -191,7 +208,9 @@ export default function OrderSuccess() {
                     </div>
                     <div className="flex justify-between text-lg font-semibold">
                       <span>Total</span>
-                      <span>${formatPrice(order.totalCents + order.feesCents)}</span>
+                      <span>
+                        ${formatPrice(order.totalCents + order.feesCents)}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -213,7 +232,10 @@ export default function OrderSuccess() {
                 <CardContent>
                   <div className="space-y-4">
                     {tickets.map((ticket) => (
-                      <div key={ticket._id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                      <div
+                        key={ticket._id}
+                        className="flex items-center justify-between p-4 border border-gray-200 rounded-lg"
+                      >
                         <div className="flex items-center">
                           <div className="flex-shrink-0">
                             <div className="h-10 w-10 bg-primary-100 rounded-full flex items-center justify-center">
@@ -222,10 +244,18 @@ export default function OrderSuccess() {
                           </div>
                           <div className="ml-4">
                             <p className="text-sm font-medium text-gray-900">
-                              Ticket #{ticket.ticketUUID.slice(-8).toUpperCase()}
+                              Ticket #
+                              {ticket.ticketUUID.slice(-8).toUpperCase()}
                             </p>
                             <p className="text-sm text-gray-500">
-                              Status: <Badge variant={ticket.status === 'issued' ? 'success' : 'secondary'}>
+                              Status:{' '}
+                              <Badge
+                                variant={
+                                  ticket.status === 'issued'
+                                    ? 'success'
+                                    : 'secondary'
+                                }
+                              >
                                 {ticket.status}
                               </Badge>
                             </p>
@@ -276,51 +306,69 @@ export default function OrderSuccess() {
                 <div className="flex items-start">
                   <div className="flex-shrink-0">
                     <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
-                      <span className="text-sm font-medium text-blue-600">1</span>
+                      <span className="text-sm font-medium text-blue-600">
+                        1
+                      </span>
                     </div>
                   </div>
                   <div className="ml-3">
-                    <p className="text-sm font-medium text-gray-900">Check your email</p>
-                    <p className="text-sm text-gray-500">We've sent your tickets to your email address</p>
+                    <p className="text-sm font-medium text-gray-900">
+                      Check your email
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      We've sent your tickets to your email address
+                    </p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start">
                   <div className="flex-shrink-0">
                     <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
-                      <span className="text-sm font-medium text-blue-600">2</span>
+                      <span className="text-sm font-medium text-blue-600">
+                        2
+                      </span>
                     </div>
                   </div>
                   <div className="ml-3">
-                    <p className="text-sm font-medium text-gray-900">Download tickets</p>
-                    <p className="text-sm text-gray-500">Save your tickets to your phone or print them</p>
+                    <p className="text-sm font-medium text-gray-900">
+                      Download tickets
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      Save your tickets to your phone or print them
+                    </p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start">
                   <div className="flex-shrink-0">
                     <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
-                      <span className="text-sm font-medium text-blue-600">3</span>
+                      <span className="text-sm font-medium text-blue-600">
+                        3
+                      </span>
                     </div>
                   </div>
                   <div className="ml-3">
-                    <p className="text-sm font-medium text-gray-900">Arrive at the event</p>
-                    <p className="text-sm text-gray-500">Show your QR code or printed ticket at the entrance</p>
+                    <p className="text-sm font-medium text-gray-900">
+                      Arrive at the event
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      Show your QR code or printed ticket at the entrance
+                    </p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
             <div className="space-y-3">
-              <Button 
+              <Button
                 onClick={() => router.push('/tickets/manage')}
                 className="w-full"
               >
                 <Ticket className="h-4 w-4 mr-2" />
                 Manage My Tickets
               </Button>
-              
-              <Button 
+
+              <Button
                 variant="outline"
                 onClick={() => router.push('/events')}
                 className="w-full"

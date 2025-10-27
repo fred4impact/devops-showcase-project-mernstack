@@ -1,6 +1,10 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { Model } from 'mongoose';
 import { Event, EventDocument } from '../schemas/event.schema';
 import { SeatLock, SeatLockDocument } from '../schemas/seat-lock.schema';
 import { Ticket, TicketDocument } from '../schemas/ticket.schema';
@@ -27,12 +31,12 @@ export class SeatingPlanService {
 
     // Get all locked seats
     const lockedSeats = await this.getLockedSeats(eventId);
-    
+
     // Get all sold seats
     const soldSeats = await this.getSoldSeats(eventId);
 
     // Enhance seats with status information
-    const enhancedSeats = event.seatmap.seats.map(seat => ({
+    const enhancedSeats = event.seatmap.seats.map((seat) => ({
       ...seat,
       status: this.getSeatStatus(seat.seatId, lockedSeats, soldSeats),
     }));
@@ -43,7 +47,13 @@ export class SeatingPlanService {
     };
   }
 
-  async lockSeat(eventId: string, seatId: string, sessionId: string, userId?: string, duration: number = 300) {
+  async lockSeat(
+    eventId: string,
+    seatId: string,
+    sessionId: string,
+    userId?: string,
+    duration: number = 300,
+  ) {
     // Check if seat is already locked or sold
     const isAvailable = await this.isSeatAvailable(eventId, seatId);
     if (!isAvailable) {
@@ -130,27 +140,31 @@ export class SeatingPlanService {
 
   private async getLockedSeats(eventId: string): Promise<string[]> {
     const locks = await this.seatLockModel.find({ eventId });
-    return locks.map(lock => lock.seatId);
+    return locks.map((lock) => lock.seatId);
   }
 
   private async getSoldSeats(eventId: string): Promise<string[]> {
-    const tickets = await this.ticketModel.find({ 
-      eventId, 
+    const tickets = await this.ticketModel.find({
+      eventId,
       status: { $in: ['issued', 'used'] },
-      seatId: { $exists: true, $ne: null }
+      seatId: { $exists: true, $ne: null },
     });
-    return tickets.map(ticket => ticket.seatId).filter(Boolean);
+    return tickets.map((ticket) => ticket.seatId).filter(Boolean);
   }
 
-  private getSeatStatus(seatId: string, lockedSeats: string[], soldSeats: string[]): string {
+  private getSeatStatus(
+    seatId: string,
+    lockedSeats: string[],
+    soldSeats: string[],
+  ): string {
     if (soldSeats.includes(seatId)) return 'sold';
     if (lockedSeats.includes(seatId)) return 'locked';
     return 'available';
   }
 
   async cleanupExpiredLocks() {
-    return this.seatLockModel.deleteMany({ 
-      expiresAt: { $lt: new Date() } 
+    return this.seatLockModel.deleteMany({
+      expiresAt: { $lt: new Date() },
     });
   }
 }

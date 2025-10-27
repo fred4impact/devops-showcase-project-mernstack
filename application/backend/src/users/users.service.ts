@@ -1,4 +1,8 @@
-import { Injectable, BadRequestException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User, UserDocument, UserRole } from '../schemas/user.schema';
@@ -13,7 +17,10 @@ export class UsersService {
   ) {}
 
   async getUserOrders(userId: string) {
-    return this.orderModel.find({ userId }).populate('items.ticketTypeId').exec();
+    return this.orderModel
+      .find({ userId })
+      .populate('items.ticketTypeId')
+      .exec();
   }
 
   async upgradeToOrganizer(userId: string) {
@@ -40,7 +47,11 @@ export class UsersService {
     };
   }
 
-  async createAdminUser(data: { name: string; email: string; password: string }) {
+  async createAdminUser(data: {
+    name: string;
+    email: string;
+    password: string;
+  }) {
     const { name, email, password } = data;
 
     // Check if admin already exists

@@ -1,16 +1,21 @@
-import { 
-  Controller, 
-  Get, 
-  Post, 
-  Put, 
-  Delete, 
-  Param, 
-  Body, 
-  Query, 
-  UseGuards, 
-  Request 
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Param,
+  Body,
+  Query,
+  UseGuards,
+  Request,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { TicketsService } from './tickets.service';
 import { TransferTicketDto } from './dto/transfer-ticket.dto';
 import { RefundTicketDto } from './dto/refund-ticket.dto';
@@ -28,18 +33,21 @@ export class TicketsController {
   @ApiQuery({ name: 'page', required: false, example: '1' })
   @ApiQuery({ name: 'limit', required: false, example: '10' })
   @ApiQuery({ name: 'status', required: false, example: 'active' })
-  @ApiResponse({ status: 200, description: 'User tickets retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'User tickets retrieved successfully',
+  })
   async getMyTickets(
     @Request() req,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
-    @Query('status') status?: string
+    @Query('status') status?: string,
   ) {
     return this.ticketsService.findByUserId(
-      req.user.id, 
-      parseInt(page) || 1, 
+      req.user.id,
+      parseInt(page) || 1,
       parseInt(limit) || 10,
-      status
+      status,
     );
   }
 
@@ -63,22 +71,29 @@ export class TicketsController {
   async transferTicket(
     @Param('id') id: string,
     @Body() transferTicketDto: TransferTicketDto,
-    @Request() req
+    @Request() req,
   ) {
-    return this.ticketsService.transferTicket(id, transferTicketDto, req.user.id);
+    return this.ticketsService.transferTicket(
+      id,
+      transferTicketDto,
+      req.user.id,
+    );
   }
 
   @Put(':id/status')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update ticket status' })
-  @ApiResponse({ status: 200, description: 'Ticket status updated successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Ticket status updated successfully',
+  })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 404, description: 'Ticket not found' })
   async updateTicketStatus(
     @Param('id') id: string,
     @Body() body: { status: string },
-    @Request() req
+    @Request() req,
   ) {
     return this.ticketsService.updateStatus(id, body.status, req.user.id);
   }
@@ -93,7 +108,7 @@ export class TicketsController {
   async requestRefund(
     @Param('id') id: string,
     @Body() refundTicketDto: RefundTicketDto,
-    @Request() req
+    @Request() req,
   ) {
     return this.ticketsService.requestRefund(id, refundTicketDto, req.user.id);
   }

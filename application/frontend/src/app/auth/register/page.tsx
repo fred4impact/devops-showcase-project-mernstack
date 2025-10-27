@@ -1,13 +1,28 @@
-'use client'
+'use client';
 
-import React, { useState } from 'react'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
-import { useAuth } from '@/hooks/useAuth'
-import { Ticket, Mail, Lock, User, Phone, Eye, EyeOff, Check } from 'lucide-react'
+import React, { useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/Card';
+import { useAuth } from '@/hooks/useAuth';
+import {
+  Ticket,
+  Mail,
+  Lock,
+  User,
+  Phone,
+  Eye,
+  EyeOff,
+  Check,
+} from 'lucide-react';
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -18,36 +33,36 @@ export default function RegisterPage() {
     phone: '',
     marketingConsent: false,
     role: 'attendee' as 'attendee' | 'organizer',
-  })
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const { register } = useAuth()
-  const router = useRouter()
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const { register } = useAuth();
+  const router = useRouter();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target
-    setFormData(prev => ({
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }))
-  }
+      [name]: type === 'checkbox' ? checked : value,
+    }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
+    e.preventDefault();
+
     if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match')
-      return
+      alert('Passwords do not match');
+      return;
     }
 
     if (formData.password.length < 6) {
-      alert('Password must be at least 6 characters')
-      return
+      alert('Password must be at least 6 characters');
+      return;
     }
 
     try {
-      setLoading(true)
+      setLoading(true);
       await register({
         name: formData.name,
         email: formData.email,
@@ -55,15 +70,19 @@ export default function RegisterPage() {
         phone: formData.phone || undefined,
         marketingConsent: formData.marketingConsent,
         role: formData.role,
-      })
+      });
     } catch (error) {
       // Error is handled by the auth hook
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  const isFormValid = formData.name && formData.email && formData.password && formData.confirmPassword
+  const isFormValid =
+    formData.name &&
+    formData.email &&
+    formData.password &&
+    formData.confirmPassword;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 to-secondary-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -143,9 +162,14 @@ export default function RegisterPage() {
                       onChange={handleChange}
                       className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-secondary-300"
                     />
-                    <label htmlFor="role-attendee" className="ml-3 block text-sm text-secondary-700">
+                    <label
+                      htmlFor="role-attendee"
+                      className="ml-3 block text-sm text-secondary-700"
+                    >
                       <span className="font-medium">Attendee</span>
-                      <span className="text-secondary-500 block">Browse and purchase event tickets</span>
+                      <span className="text-secondary-500 block">
+                        Browse and purchase event tickets
+                      </span>
                     </label>
                   </div>
                   <div className="flex items-center">
@@ -158,9 +182,14 @@ export default function RegisterPage() {
                       onChange={handleChange}
                       className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-secondary-300"
                     />
-                    <label htmlFor="role-organizer" className="ml-3 block text-sm text-secondary-700">
+                    <label
+                      htmlFor="role-organizer"
+                      className="ml-3 block text-sm text-secondary-700"
+                    >
                       <span className="font-medium">Organizer</span>
-                      <span className="text-secondary-500 block">Create and manage events</span>
+                      <span className="text-secondary-500 block">
+                        Create and manage events
+                      </span>
                     </label>
                   </div>
                 </div>
@@ -182,7 +211,11 @@ export default function RegisterPage() {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-8 text-secondary-400 hover:text-secondary-600"
                   >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    {showPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
                   </button>
                 </div>
               </div>
@@ -203,7 +236,11 @@ export default function RegisterPage() {
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     className="absolute right-3 top-8 text-secondary-400 hover:text-secondary-600"
                   >
-                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    {showConfirmPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
                   </button>
                 </div>
               </div>
@@ -217,7 +254,10 @@ export default function RegisterPage() {
                   onChange={handleChange}
                   className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-secondary-300 rounded"
                 />
-                <label htmlFor="marketing-consent" className="ml-2 block text-sm text-secondary-600">
+                <label
+                  htmlFor="marketing-consent"
+                  className="ml-2 block text-sm text-secondary-600"
+                >
                   I agree to receive marketing communications from TicketNow
                 </label>
               </div>
@@ -254,7 +294,9 @@ export default function RegisterPage() {
                   <div className="w-full border-t border-secondary-300" />
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-secondary-500">Or continue with</span>
+                  <span className="px-2 bg-white text-secondary-500">
+                    Or continue with
+                  </span>
                 </div>
               </div>
 
@@ -282,8 +324,12 @@ export default function RegisterPage() {
                 </Button>
 
                 <Button variant="outline" className="w-full">
-                  <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/>
+                  <svg
+                    className="w-4 h-4 mr-2"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z" />
                   </svg>
                   Twitter
                 </Button>
@@ -305,5 +351,5 @@ export default function RegisterPage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }

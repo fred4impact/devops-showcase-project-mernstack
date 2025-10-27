@@ -27,7 +27,8 @@ export default function Profile() {
   });
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [isUpgradingRole, setIsUpgradingRole] = useState(false);
-  const [isUploadingProfilePicture, setIsUploadingProfilePicture] = useState(false);
+  const [isUploadingProfilePicture, setIsUploadingProfilePicture] =
+    useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -47,15 +48,17 @@ export default function Profile() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
   };
 
-  const handlePasswordInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePasswordInputChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const { name, value } = e.target;
-    setPasswordData(prev => ({
+    setPasswordData((prev) => ({
       ...prev,
       [name]: value,
     }));
@@ -75,7 +78,7 @@ export default function Profile() {
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       toast.error('New passwords do not match');
       return;
@@ -107,11 +110,16 @@ export default function Profile() {
     try {
       setIsUpgradingRole(true);
       console.log('Attempting to upgrade role...');
-      console.log('API base URL:', process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001');
+      console.log(
+        'API base URL:',
+        process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001',
+      );
       const response = await authApi.upgradeToOrganizer();
       console.log('Upgrade response:', response.data);
       updateUser(response.data.user);
-      toast.success('Successfully upgraded to organizer! You can now create events.');
+      toast.success(
+        'Successfully upgraded to organizer! You can now create events.',
+      );
       router.push('/organizer/dashboard');
     } catch (error: any) {
       console.error('Role upgrade error:', error);
@@ -119,7 +127,7 @@ export default function Profile() {
         message: error.message,
         response: error.response?.data,
         status: error.response?.status,
-        config: error.config
+        config: error.config,
       });
       toast.error(error.response?.data?.message || 'Failed to upgrade role');
     } finally {
@@ -127,7 +135,9 @@ export default function Profile() {
     }
   };
 
-  const handleProfilePictureUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleProfilePictureUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -147,12 +157,12 @@ export default function Profile() {
       setIsUploadingProfilePicture(true);
       const formData = new FormData();
       formData.append('image', file);
-      
+
       const response = await authApi.uploadProfilePicture(formData);
       if (user) {
-        updateUser({ 
-          ...user, 
-          id: user.id || '', 
+        updateUser({
+          ...user,
+          id: user.id || '',
           name: user.name || '',
           email: user.email || '',
           role: user.role || 'attendee',
@@ -160,12 +170,14 @@ export default function Profile() {
           isActive: user.isActive || true,
           createdAt: user.createdAt || new Date().toISOString(),
           updatedAt: user.updatedAt || new Date().toISOString(),
-          profilePicture: response.data.profilePicture 
+          profilePicture: response.data.profilePicture,
         });
       }
       toast.success('Profile picture updated successfully');
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to upload profile picture');
+      toast.error(
+        error.response?.data?.message || 'Failed to upload profile picture',
+      );
     } finally {
       setIsUploadingProfilePicture(false);
     }
@@ -199,12 +211,11 @@ export default function Profile() {
           <div className="lg:col-span-2">
             <Card className="p-6">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900">Profile Information</h2>
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Profile Information
+                </h2>
                 {!isEditing && (
-                  <Button
-                    onClick={() => setIsEditing(true)}
-                    variant="outline"
-                  >
+                  <Button onClick={() => setIsEditing(true)} variant="outline">
                     Edit Profile
                   </Button>
                 )}
@@ -214,7 +225,10 @@ export default function Profile() {
                 <form onSubmit={handleProfileUpdate} className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                      <label
+                        htmlFor="name"
+                        className="block text-sm font-medium text-gray-700 mb-2"
+                      >
                         Full Name
                       </label>
                       <Input
@@ -227,7 +241,10 @@ export default function Profile() {
                       />
                     </div>
                     <div>
-                      <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                      <label
+                        htmlFor="email"
+                        className="block text-sm font-medium text-gray-700 mb-2"
+                      >
                         Email Address
                       </label>
                       <Input
@@ -240,7 +257,10 @@ export default function Profile() {
                       />
                     </div>
                     <div>
-                      <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+                      <label
+                        htmlFor="phone"
+                        className="block text-sm font-medium text-gray-700 mb-2"
+                      >
                         Phone Number
                       </label>
                       <Input
@@ -252,7 +272,10 @@ export default function Profile() {
                       />
                     </div>
                     <div>
-                      <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-2">
+                      <label
+                        htmlFor="address"
+                        className="block text-sm font-medium text-gray-700 mb-2"
+                      >
                         Address
                       </label>
                       <Input
@@ -265,9 +288,7 @@ export default function Profile() {
                     </div>
                   </div>
                   <div className="flex items-center space-x-4">
-                    <Button type="submit">
-                      Save Changes
-                    </Button>
+                    <Button type="submit">Save Changes</Button>
                     <Button
                       type="button"
                       variant="outline"
@@ -313,29 +334,52 @@ export default function Profile() {
                         {isUploadingProfilePicture ? (
                           <div className="w-4 h-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
                         ) : (
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                            />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                            />
                           </svg>
                         )}
                       </label>
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900">{user.name}</h3>
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        {user.name}
+                      </h3>
                       <p className="text-gray-600">{user.email}</p>
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
                         {user.role}
                       </span>
                     </div>
                   </div>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Phone</label>
-                      <p className="text-gray-900">{user.phone || 'Not provided'}</p>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Phone
+                      </label>
+                      <p className="text-gray-900">
+                        {user.phone || 'Not provided'}
+                      </p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Address</label>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Address
+                      </label>
                       <p className="text-gray-900">Not provided</p>
                     </div>
                   </div>
@@ -348,8 +392,10 @@ export default function Profile() {
           <div className="space-y-6">
             {/* Change Password */}
             <Card className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Change Password</h3>
-              
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Change Password
+              </h3>
+
               {!isChangingPassword ? (
                 <Button
                   onClick={() => setIsChangingPassword(true)}
@@ -361,20 +407,26 @@ export default function Profile() {
               ) : (
                 <form onSubmit={handlePasswordChange} className="space-y-4">
                   <div>
-                    <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label
+                      htmlFor="currentPassword"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
                       Current Password
                     </label>
-                      <Input
-                        id="currentPassword"
-                        name="currentPassword"
-                        type="password"
-                        value={passwordData.currentPassword}
-                        onChange={handlePasswordInputChange}
-                        required
-                      />
+                    <Input
+                      id="currentPassword"
+                      name="currentPassword"
+                      type="password"
+                      value={passwordData.currentPassword}
+                      onChange={handlePasswordInputChange}
+                      required
+                    />
                   </div>
                   <div>
-                    <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label
+                      htmlFor="newPassword"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
                       New Password
                     </label>
                     <Input
@@ -387,7 +439,10 @@ export default function Profile() {
                     />
                   </div>
                   <div>
-                    <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label
+                      htmlFor="confirmPassword"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
                       Confirm New Password
                     </label>
                     <Input
@@ -425,18 +480,30 @@ export default function Profile() {
 
             {/* Account Info */}
             <Card className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Account Information</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Account Information
+              </h3>
               <div className="space-y-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Member Since</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Member Since
+                  </label>
                   <p className="text-gray-900">
-                    {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
+                    {user.createdAt
+                      ? new Date(user.createdAt).toLocaleDateString()
+                      : 'N/A'}
                   </p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Role</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Role
+                  </label>
                   <div className="flex items-center space-x-2">
-                    <Badge variant={user.role === 'organizer' ? 'success' : 'secondary'}>
+                    <Badge
+                      variant={
+                        user.role === 'organizer' ? 'success' : 'secondary'
+                      }
+                    >
                       {user.role}
                     </Badge>
                   </div>
@@ -447,10 +514,13 @@ export default function Profile() {
             {/* Role Upgrade */}
             {user.role !== 'organizer' && (
               <Card className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Become an Organizer</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  Become an Organizer
+                </h3>
                 <div className="space-y-4">
                   <p className="text-gray-600 text-sm">
-                    Upgrade to organizer to create and manage your own events. As an organizer, you'll have access to:
+                    Upgrade to organizer to create and manage your own events.
+                    As an organizer, you'll have access to:
                   </p>
                   <ul className="text-sm text-gray-600 space-y-1">
                     <li>• Create and manage events</li>

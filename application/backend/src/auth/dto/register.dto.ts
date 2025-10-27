@@ -1,4 +1,11 @@
-import { IsEmail, IsString, MinLength, IsOptional, IsBoolean, IsEnum } from 'class-validator';
+import {
+  IsEmail,
+  IsString,
+  MinLength,
+  IsOptional,
+  IsBoolean,
+  IsEnum,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { UserRole } from '../../schemas/user.schema';
 
@@ -27,11 +34,11 @@ export class RegisterDto {
   @IsBoolean()
   marketingConsent?: boolean;
 
-  @ApiProperty({ 
-    example: UserRole.ATTENDEE, 
+  @ApiProperty({
+    example: UserRole.ATTENDEE,
     required: false,
     enum: UserRole,
-    description: 'User role - attendee or organizer'
+    description: 'User role - attendee or organizer',
   })
   @IsOptional()
   @IsEnum(UserRole)

@@ -77,11 +77,11 @@ export default function EventDetails() {
   const fetchEventDetails = async () => {
     try {
       setLoading(true);
-      
+
       // Try to fetch by ID first, then by slug if ID fails
       let eventResponse;
       let eventId;
-      
+
       try {
         // First try as ID
         eventResponse = await api.get(`/events/${params.id}`);
@@ -95,13 +95,15 @@ export default function EventDetails() {
           throw new Error('Event not found');
         }
       }
-      
+
       // Fetch ticket types using the event ID
-      const ticketTypesResponse = await api.get(`/ticket-types/event/${eventId}`);
-      
+      const ticketTypesResponse = await api.get(
+        `/ticket-types/event/${eventId}`,
+      );
+
       setEvent(eventResponse.data);
       setTicketTypes(ticketTypesResponse.data);
-      
+
       if (ticketTypesResponse.data.length > 0) {
         setSelectedTicketType(ticketTypesResponse.data[0]._id);
       }
@@ -118,11 +120,11 @@ export default function EventDetails() {
   };
 
   const handleSeatSelect = (seatId: string, price: number) => {
-    setSelectedSeats(prev => [...prev, seatId]);
+    setSelectedSeats((prev) => [...prev, seatId]);
   };
 
   const handleSeatDeselect = (seatId: string) => {
-    setSelectedSeats(prev => prev.filter(id => id !== seatId));
+    setSelectedSeats((prev) => prev.filter((id) => id !== seatId));
   };
 
   const addToCart = async () => {
@@ -138,8 +140,10 @@ export default function EventDetails() {
 
     try {
       setAddingToCart(true);
-      
-      const ticketType = ticketTypes.find(tt => tt._id === selectedTicketType);
+
+      const ticketType = ticketTypes.find(
+        (tt) => tt._id === selectedTicketType,
+      );
       if (!ticketType) return;
 
       if (event?.seatmap?.type === 'reserved') {
@@ -208,11 +212,13 @@ export default function EventDetails() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Event not found</h1>
-          <p className="text-gray-600 mb-4">The event you're looking for doesn't exist.</p>
-          <Button onClick={() => router.push('/events')}>
-            Browse Events
-          </Button>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            Event not found
+          </h1>
+          <p className="text-gray-600 mb-4">
+            The event you're looking for doesn't exist.
+          </p>
+          <Button onClick={() => router.push('/events')}>Browse Events</Button>
         </div>
       </div>
     );
@@ -225,24 +231,53 @@ export default function EventDetails() {
         <div className="mb-8">
           <div className="flex items-center space-x-2 mb-4">
             <Badge variant="secondary">{event.category}</Badge>
-            <Badge variant={event.status === 'published' ? 'success' : 'warning'}>
+            <Badge
+              variant={event.status === 'published' ? 'success' : 'warning'}
+            >
               {event.status}
             </Badge>
           </div>
-          
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">{event.title}</h1>
-          
+
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            {event.title}
+          </h1>
+
           <div className="flex items-center space-x-6 text-gray-600">
             <div className="flex items-center space-x-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
               </svg>
               <span>{formatDate(event.startAt)}</span>
             </div>
             <div className="flex items-center space-x-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                />
               </svg>
               <span>{event.venue.name}</span>
             </div>
@@ -271,23 +306,33 @@ export default function EventDetails() {
           <div className="space-y-6">
             {/* Description */}
             <Card className="p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">About this event</h2>
-              <p className="text-gray-700 whitespace-pre-line">{event.description}</p>
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                About this event
+              </h2>
+              <p className="text-gray-700 whitespace-pre-line">
+                {event.description}
+              </p>
             </Card>
 
             {/* Venue Information */}
             <Card className="p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Venue Information</h2>
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                Venue Information
+              </h2>
               <div className="space-y-2">
                 <p className="font-medium text-gray-900">{event.venue.name}</p>
                 <p className="text-gray-600">{event.venue.address}</p>
-                <p className="text-sm text-gray-500">Capacity: {event.venue.capacity.toLocaleString()}</p>
+                <p className="text-sm text-gray-500">
+                  Capacity: {event.venue.capacity.toLocaleString()}
+                </p>
               </div>
             </Card>
 
             {/* Organizer */}
             <Card className="p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Organizer</h2>
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                Organizer
+              </h2>
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
                   <span className="text-sm font-medium text-primary-600">
@@ -295,8 +340,12 @@ export default function EventDetails() {
                   </span>
                 </div>
                 <div>
-                  <p className="font-medium text-gray-900">{event.organizerId.name}</p>
-                  <p className="text-sm text-gray-500">{event.organizerId.email}</p>
+                  <p className="font-medium text-gray-900">
+                    {event.organizerId.name}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    {event.organizerId.email}
+                  </p>
                 </div>
               </div>
             </Card>
@@ -306,25 +355,33 @@ export default function EventDetails() {
           <div className="space-y-6">
             {/* Ticket Types */}
             <Card className="p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Select Tickets</h2>
-              
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                Select Tickets
+              </h2>
+
               <div className="space-y-4">
                 {ticketTypes.map((ticketType) => {
                   const available = getAvailableQuantity(ticketType);
                   const isSelected = selectedTicketType === ticketType._id;
-                  
+
                   return (
                     <div
                       key={ticketType._id}
                       className={`border rounded-lg p-4 cursor-pointer transition-colors ${
-                        isSelected ? 'border-primary-500 bg-primary-50' : 'border-gray-200 hover:border-gray-300'
+                        isSelected
+                          ? 'border-primary-500 bg-primary-50'
+                          : 'border-gray-200 hover:border-gray-300'
                       }`}
                       onClick={() => setSelectedTicketType(ticketType._id)}
                     >
                       <div className="flex items-center justify-between">
                         <div>
-                          <h3 className="font-medium text-gray-900">{ticketType.name}</h3>
-                          <p className="text-sm text-gray-600">{ticketType.description}</p>
+                          <h3 className="font-medium text-gray-900">
+                            {ticketType.name}
+                          </h3>
+                          <p className="text-sm text-gray-600">
+                            {ticketType.description}
+                          </p>
                           <p className="text-sm text-gray-500 mt-1">
                             {available} of {ticketType.capacity} available
                           </p>
@@ -360,9 +417,15 @@ export default function EventDetails() {
                     <Input
                       type="number"
                       min="1"
-                      max={getAvailableQuantity(ticketTypes.find(tt => tt._id === selectedTicketType)!)}
+                      max={getAvailableQuantity(
+                        ticketTypes.find(
+                          (tt) => tt._id === selectedTicketType,
+                        )!,
+                      )}
                       value={quantity}
-                      onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
+                      onChange={(e) =>
+                        setQuantity(parseInt(e.target.value) || 1)
+                      }
                       className="w-20 text-center"
                     />
                     <Button
@@ -393,18 +456,29 @@ export default function EventDetails() {
             <Card className="p-6">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-lg font-medium text-gray-900">Total</span>
+                  <span className="text-lg font-medium text-gray-900">
+                    Total
+                  </span>
                   <span className="text-2xl font-bold text-gray-900">
-                    ${formatPrice(
-                      (ticketTypes.find(tt => tt._id === selectedTicketType)?.priceCents || 0) *
-                      (event.seatmap?.type === 'reserved' ? selectedSeats.length : quantity)
+                    $
+                    {formatPrice(
+                      (ticketTypes.find((tt) => tt._id === selectedTicketType)
+                        ?.priceCents || 0) *
+                        (event.seatmap?.type === 'reserved'
+                          ? selectedSeats.length
+                          : quantity),
                     )}
                   </span>
                 </div>
-                
+
                 <Button
                   onClick={addToCart}
-                  disabled={addingToCart || !selectedTicketType || (event.seatmap?.type === 'reserved' && selectedSeats.length === 0)}
+                  disabled={
+                    addingToCart ||
+                    !selectedTicketType ||
+                    (event.seatmap?.type === 'reserved' &&
+                      selectedSeats.length === 0)
+                  }
                   className="w-full bg-primary-600 hover:bg-primary-700"
                   size="lg"
                 >

@@ -15,14 +15,17 @@ export class EmailService {
   ): Promise<void> {
     const msg = {
       to: email,
-      from: this.configService.get('SENDGRID_FROM_EMAIL', 'noreply@ticketnow.app'),
+      from: this.configService.get(
+        'SENDGRID_FROM_EMAIL',
+        'noreply@ticketnow.app',
+      ),
       subject: 'Your TicketNow Tickets',
       html: `
         <h2>Thank you for your purchase!</h2>
         <p>Your order #${orderId} has been confirmed.</p>
         <p>Your tickets are attached below:</p>
         <ul>
-          ${ticketUrls.map(url => `<li><a href="${url}">Download Ticket</a></li>`).join('')}
+          ${ticketUrls.map((url) => `<li><a href="${url}">Download Ticket</a></li>`).join('')}
         </ul>
         <p>Please bring your tickets to the event.</p>
       `,
@@ -38,7 +41,10 @@ export class EmailService {
   ): Promise<void> {
     const msg = {
       to: email,
-      from: this.configService.get('SENDGRID_FROM_EMAIL', 'noreply@ticketnow.app'),
+      from: this.configService.get(
+        'SENDGRID_FROM_EMAIL',
+        'noreply@ticketnow.app',
+      ),
       subject: 'TicketNow Refund Confirmation',
       html: `
         <h2>Refund Processed</h2>
@@ -58,8 +64,11 @@ export class EmailService {
   ): Promise<void> {
     const msg = {
       to: recipientEmail,
-      from: this.configService.get('SENDGRID_FROM_EMAIL', 'noreply@ticketnow.app'),
-      subject: 'You\'ve Received a Ticket Transfer',
+      from: this.configService.get(
+        'SENDGRID_FROM_EMAIL',
+        'noreply@ticketnow.app',
+      ),
+      subject: "You've Received a Ticket Transfer",
       html: `
         <h2>Ticket Transfer</h2>
         <p>You've received a ticket transfer!</p>
@@ -80,7 +89,10 @@ export class EmailService {
   ): Promise<void> {
     const msg = {
       to: organizerEmail,
-      from: this.configService.get('SENDGRID_FROM_EMAIL', 'noreply@ticketnow.app'),
+      from: this.configService.get(
+        'SENDGRID_FROM_EMAIL',
+        'noreply@ticketnow.app',
+      ),
       subject: 'New Refund Request',
       html: `
         <h2>New Refund Request</h2>

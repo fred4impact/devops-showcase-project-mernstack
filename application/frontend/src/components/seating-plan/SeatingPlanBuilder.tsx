@@ -15,7 +15,11 @@ interface SeatingPlanBuilderProps {
   initialSeatmap?: any;
 }
 
-export function SeatingPlanBuilder({ eventId, onSave, initialSeatmap }: SeatingPlanBuilderProps) {
+export function SeatingPlanBuilder({
+  eventId,
+  onSave,
+  initialSeatmap,
+}: SeatingPlanBuilderProps) {
   const [seats, setSeats] = useState<Seat[]>([]);
   const [sections, setSections] = useState<Section[]>([]);
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
@@ -43,19 +47,22 @@ export function SeatingPlanBuilder({ eventId, onSave, initialSeatmap }: SeatingP
         const container = containerRef.current;
         const containerWidth = container.clientWidth;
         const containerHeight = Math.min(600, window.innerHeight * 0.5);
-        
+
         // Calculate aspect ratio (4:3)
         const aspectRatio = 4 / 3;
         let newWidth = containerWidth - 20; // Account for padding
         let newHeight = newWidth / aspectRatio;
-        
+
         // If height is too large, constrain by height
         if (newHeight > containerHeight) {
           newHeight = containerHeight;
           newWidth = newHeight * aspectRatio;
         }
-        
-        setCanvasSize({ width: Math.floor(newWidth), height: Math.floor(newHeight) });
+
+        setCanvasSize({
+          width: Math.floor(newWidth),
+          height: Math.floor(newHeight),
+        });
       }
     };
 
@@ -78,22 +85,24 @@ export function SeatingPlanBuilder({ eventId, onSave, initialSeatmap }: SeatingP
   };
 
   const addSeat = (x: number, y: number) => {
-    const section = sections.find(s => s.name === selectedSection);
+    const section = sections.find((s) => s.name === selectedSection);
     if (!section) return;
 
-    const seatId = `${section.name}-${seats.filter(s => s.section === section.name).length + 1}`;
+    const seatId = `${section.name}-${seats.filter((s) => s.section === section.name).length + 1}`;
     const newSeat: Seat = {
       seatId,
       section: section.name,
       row: 'A',
-      number: (seats.filter(s => s.section === section.name).length + 1).toString(),
+      number: (
+        seats.filter((s) => s.section === section.name).length + 1
+      ).toString(),
       priceModifier: 0,
       accessible: false,
       x,
       y,
     };
 
-    setSeats(prev => [...prev, newSeat]);
+    setSeats((prev) => [...prev, newSeat]);
   };
 
   const addSection = () => {
@@ -102,31 +111,33 @@ export function SeatingPlanBuilder({ eventId, onSave, initialSeatmap }: SeatingP
 
     const newSection: Section = {
       name: sectionName,
-      color: `#${Math.floor(Math.random()*16777215).toString(16)}`,
+      color: `#${Math.floor(Math.random() * 16777215).toString(16)}`,
       x: 50,
       y: 50,
       width: 200,
       height: 100,
     };
 
-    setSections(prev => [...prev, newSection]);
+    setSections((prev) => [...prev, newSection]);
     setSelectedSection(sectionName);
   };
 
   const deleteSeat = (seatId: string) => {
-    setSeats(prev => prev.filter(s => s.seatId !== seatId));
+    setSeats((prev) => prev.filter((s) => s.seatId !== seatId));
   };
 
   const deleteSection = (sectionName: string) => {
-    setSections(prev => prev.filter(s => s.name !== sectionName));
-    setSeats(prev => prev.filter(s => s.section !== sectionName));
+    setSections((prev) => prev.filter((s) => s.name !== sectionName));
+    setSeats((prev) => prev.filter((s) => s.section !== sectionName));
     if (selectedSection === sectionName) {
       setSelectedSection('');
     }
   };
 
   const updateSeat = (seatId: string, updates: Partial<Seat>) => {
-    setSeats(prev => prev.map(s => s.seatId === seatId ? { ...s, ...updates } : s));
+    setSeats((prev) =>
+      prev.map((s) => (s.seatId === seatId ? { ...s, ...updates } : s)),
+    );
   };
 
   const generateSeatingPlan = () => {
@@ -157,7 +168,7 @@ export function SeatingPlanBuilder({ eventId, onSave, initialSeatmap }: SeatingP
     const stageX = (canvas.width - stageWidth) / 2;
     const stageY = 50;
     const stageHeight = 60;
-    
+
     ctx.fillStyle = '#e5e7eb';
     ctx.fillRect(stageX, stageY, stageWidth, stageHeight);
     ctx.fillStyle = '#374151';
@@ -166,23 +177,29 @@ export function SeatingPlanBuilder({ eventId, onSave, initialSeatmap }: SeatingP
     ctx.fillText(stageLabel, canvas.width / 2, stageY + 40);
 
     // Draw sections
-    sections.forEach(section => {
+    sections.forEach((section) => {
       ctx.fillStyle = section.color + '40';
       ctx.fillRect(section.x, section.y, section.width, section.height);
       ctx.fillStyle = '#374151';
       ctx.font = '14px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText(section.name, section.x + section.width/2, section.y + section.height/2);
+      ctx.fillText(
+        section.name,
+        section.x + section.width / 2,
+        section.y + section.height / 2,
+      );
     });
 
     // Draw seats
-    seats.forEach(seat => {
-      const section = sections.find(s => s.name === seat.section);
+    seats.forEach((seat) => {
+      const section = sections.find((s) => s.name === seat.section);
       if (!section) return;
 
-      ctx.fillStyle = selectedSeats.includes(seat.seatId) ? '#3b82f6' : '#6b7280';
+      ctx.fillStyle = selectedSeats.includes(seat.seatId)
+        ? '#3b82f6'
+        : '#6b7280';
       ctx.fillRect(seat.x - 5, seat.y - 5, 10, 10);
-      
+
       // Draw seat label
       ctx.fillStyle = '#374151';
       ctx.font = '10px Arial';
@@ -195,12 +212,11 @@ export function SeatingPlanBuilder({ eventId, onSave, initialSeatmap }: SeatingP
     drawCanvas();
   }, [seats, sections, selectedSeats, stageLabel]);
 
-
   return (
     <div className="space-y-6">
       <Card className="p-6">
         <h3 className="text-lg font-semibold mb-4">Seating Plan Builder</h3>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Controls */}
           <div className="space-y-4">
@@ -210,7 +226,9 @@ export function SeatingPlanBuilder({ eventId, onSave, initialSeatmap }: SeatingP
               </label>
               <select
                 value={seatmapType}
-                onChange={(e) => setSeatmapType(e.target.value as 'reserved' | 'ga')}
+                onChange={(e) =>
+                  setSeatmapType(e.target.value as 'reserved' | 'ga')
+                }
                 className="w-full p-2 border border-gray-300 rounded-md"
               >
                 <option value="reserved">Reserved Seating</option>
@@ -234,11 +252,14 @@ export function SeatingPlanBuilder({ eventId, onSave, initialSeatmap }: SeatingP
                 Sections
               </label>
               <div className="space-y-2">
-                {sections.map(section => (
-                  <div key={section.name} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                {sections.map((section) => (
+                  <div
+                    key={section.name}
+                    className="flex items-center justify-between p-2 bg-gray-50 rounded"
+                  >
                     <div className="flex items-center space-x-2">
-                      <div 
-                        className="w-4 h-4 rounded" 
+                      <div
+                        className="w-4 h-4 rounded"
                         style={{ backgroundColor: section.color }}
                       />
                       <span>{section.name}</span>
@@ -269,7 +290,7 @@ export function SeatingPlanBuilder({ eventId, onSave, initialSeatmap }: SeatingP
                   className="w-full p-2 border border-gray-300 rounded-md"
                 >
                   <option value="">Select a section</option>
-                  {sections.map(section => (
+                  {sections.map((section) => (
                     <option key={section.name} value={section.name}>
                       {section.name}
                     </option>
@@ -281,7 +302,7 @@ export function SeatingPlanBuilder({ eventId, onSave, initialSeatmap }: SeatingP
             <div className="flex space-x-2">
               <Button
                 onClick={() => setIsDrawing(!isDrawing)}
-                variant={isDrawing ? "primary" : "outline"}
+                variant={isDrawing ? 'primary' : 'outline'}
                 size="sm"
               >
                 {isDrawing ? 'Stop Drawing' : 'Start Drawing'}
@@ -316,8 +337,11 @@ export function SeatingPlanBuilder({ eventId, onSave, initialSeatmap }: SeatingP
         <Card className="p-6">
           <h3 className="text-lg font-semibold mb-4">Seats ({seats.length})</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {seats.map(seat => (
-              <div key={seat.seatId} className="p-3 border border-gray-200 rounded">
+            {seats.map((seat) => (
+              <div
+                key={seat.seatId}
+                className="p-3 border border-gray-200 rounded"
+              >
                 <div className="flex items-center justify-between mb-2">
                   <span className="font-medium">{seat.seatId}</span>
                   <Button
@@ -330,11 +354,17 @@ export function SeatingPlanBuilder({ eventId, onSave, initialSeatmap }: SeatingP
                 </div>
                 <div className="space-y-1">
                   <div className="flex items-center space-x-2">
-                    <label className="text-sm text-gray-600">Price Modifier:</label>
+                    <label className="text-sm text-gray-600">
+                      Price Modifier:
+                    </label>
                     <Input
                       type="number"
                       value={seat.priceModifier}
-                      onChange={(e) => updateSeat(seat.seatId, { priceModifier: parseInt(e.target.value) || 0 })}
+                      onChange={(e) =>
+                        updateSeat(seat.seatId, {
+                          priceModifier: parseInt(e.target.value) || 0,
+                        })
+                      }
                       className="w-20 h-6 text-xs"
                     />
                   </div>
@@ -342,7 +372,11 @@ export function SeatingPlanBuilder({ eventId, onSave, initialSeatmap }: SeatingP
                     <input
                       type="checkbox"
                       checked={seat.accessible}
-                      onChange={(e) => updateSeat(seat.seatId, { accessible: e.target.checked })}
+                      onChange={(e) =>
+                        updateSeat(seat.seatId, {
+                          accessible: e.target.checked,
+                        })
+                      }
                     />
                     <label className="text-sm text-gray-600">Accessible</label>
                   </div>

@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Ticket, TicketDocument, TicketStatus } from '../schemas/ticket.schema';
@@ -6,7 +11,7 @@ import { Order, OrderDocument } from '../schemas/order.schema';
 import { Event, EventDocument } from '../schemas/event.schema';
 import { User, UserDocument } from '../schemas/user.schema';
 import { TransferTicketDto } from './dto/transfer-ticket.dto';
-import { RefundTicketDto, RefundReason } from './dto/refund-ticket.dto';
+import { RefundTicketDto } from './dto/refund-ticket.dto';
 import { EmailService } from '../email/email.service';
 
 @Injectable()
@@ -19,10 +24,15 @@ export class TicketsService {
     private emailService: EmailService,
   ) {}
 
-  async findByUserId(userId: string, page: number = 1, limit: number = 10, status?: string) {
+  async findByUserId(
+    userId: string,
+    page: number = 1,
+    limit: number = 10,
+    status?: string,
+  ) {
     const skip = (page - 1) * limit;
     const query: any = { orderId: { $in: await this.getUserOrderIds(userId) } };
-    
+
     if (status) {
       query.status = status;
     }
@@ -37,7 +47,7 @@ export class TicketsService {
         .skip(skip)
         .limit(limit)
         .exec(),
-      this.ticketModel.countDocuments(query)
+      this.ticketModel.countDocuments(query),
     ]);
 
     return {
@@ -46,8 +56,8 @@ export class TicketsService {
         page,
         limit,
         total,
-        pages: Math.ceil(total / limit)
-      }
+        pages: Math.ceil(total / limit),
+      },
     };
   }
 
@@ -72,7 +82,11 @@ export class TicketsService {
     return ticket;
   }
 
-  async transferTicket(ticketId: string, transferDto: TransferTicketDto, userId: string) {
+  async transferTicket(
+    ticketId: string,
+    transferDto: TransferTicketDto,
+    userId: string,
+  ) {
     const ticket = await this.findOne(ticketId, userId);
 
     if (ticket.status !== TicketStatus.ISSUED) {
@@ -80,7 +94,9 @@ export class TicketsService {
     }
 
     // Check if recipient exists
-    const recipient = await this.userModel.findOne({ email: transferDto.recipientEmail });
+    const recipient = await this.userModel.findOne({
+      email: transferDto.recipientEmail,
+    });
     if (!recipient) {
       throw new BadRequestException('Recipient not found');
     }
@@ -94,7 +110,7 @@ export class TicketsService {
     await this.emailService.sendTicketTransferNotification(
       transferDto.recipientEmail,
       ticket,
-      transferDto.message
+      transferDto.message,
     );
 
     return { message: 'Ticket transferred successfully' };
@@ -116,7 +132,11 @@ export class TicketsService {
     return { message: 'Ticket status updated successfully' };
   }
 
-  async requestRefund(ticketId: string, refundDto: RefundTicketDto, userId: string) {
+  async requestRefund(
+    ticketId: string,
+    refundDto: RefundTicketDto,
+    userId: string,
+  ) {
     const ticket = await this.findOne(ticketId, userId);
 
     if (ticket.status === TicketStatus.USED) {
@@ -140,7 +160,7 @@ export class TicketsService {
       reason: refundDto.reason,
       description: refundDto.description,
       status: 'pending',
-      requestedAt: new Date()
+      requestedAt: new Date(),
     };
 
     // Send refund request notification to organizers
@@ -149,7 +169,7 @@ export class TicketsService {
       await this.emailService.sendRefundRequestNotification(
         event.organizerId.toString(),
         ticket,
-        refundRequest
+        refundRequest,
       );
     }
 
@@ -163,7 +183,7 @@ export class TicketsService {
 
   async getPDF(ticketId: string, userId: string) {
     const ticket = await this.findOne(ticketId, userId);
-    
+
     if (!ticket.pdfUrl) {
       throw new NotFoundException('PDF not available for this ticket');
     }
@@ -188,7 +208,9 @@ export class TicketsService {
   }
 
   async generateTicketsForOrder(orderId: string): Promise<Ticket[]> {
-    const order = await this.orderModel.findById(orderId).populate('items.ticketTypeId');
+    const order = await this.orderModel
+      .findById(orderId)
+      .populate('items.ticketTypeId');
     if (!order) {
       throw new NotFoundException('Order not found');
     }
@@ -217,23 +239,28 @@ export class TicketsService {
   }
 
   private generateUUID(): string {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-      const r = Math.random() * 16 | 0;
-      const v = c === 'x' ? r : (r & 0x3 | 0x8);
-      return v.toString(16);
-    });
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(
+      /[xy]/g,
+      function (c) {
+        const r = (Math.random() * 16) | 0;
+        const v = c === 'x' ? r : (r & 0x3) | 0x8;
+        return v.toString(16);
+      },
+    );
   }
 
   private generateQRPayload(): string {
     // Generate a simple QR payload - in production, this would be more secure
-    return Buffer.from(JSON.stringify({
-      timestamp: Date.now(),
-      random: Math.random().toString(36).substring(7)
-    })).toString('base64');
+    return Buffer.from(
+      JSON.stringify({
+        timestamp: Date.now(),
+        random: Math.random().toString(36).substring(7),
+      }),
+    ).toString('base64');
   }
 
   private async getUserOrderIds(userId: string) {
     const orders = await this.orderModel.find({ userId }).select('_id');
-    return orders.map(order => order._id);
+    return orders.map((order) => order._id);
   }
 }

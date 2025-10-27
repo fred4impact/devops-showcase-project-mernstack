@@ -1,12 +1,12 @@
-import { 
-  Controller, 
-  Get, 
-  Post, 
-  Put, 
-  Delete, 
-  Param, 
-  Body, 
-  Query 
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Param,
+  Body,
+  Query,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { CartService } from './cart.service';
@@ -32,7 +32,7 @@ export class CartController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   async addToCart(
     @Body() addToCartDto: AddToCartDto,
-    @Query('sessionId') sessionId: string
+    @Query('sessionId') sessionId: string,
   ) {
     return this.cartService.addToCart(sessionId, addToCartDto);
   }
@@ -45,19 +45,27 @@ export class CartController {
     @Param('ticketTypeId') ticketTypeId: string,
     @Body() updateDto: UpdateCartItemDto,
     @Query('sessionId') sessionId: string,
-    @Query('seatId') seatId?: string
+    @Query('seatId') seatId?: string,
   ) {
-    return this.cartService.updateCartItem(sessionId, ticketTypeId, seatId, updateDto);
+    return this.cartService.updateCartItem(
+      sessionId,
+      ticketTypeId,
+      seatId,
+      updateDto,
+    );
   }
 
   @Delete('item/:ticketTypeId')
   @ApiOperation({ summary: 'Remove item from cart' })
-  @ApiResponse({ status: 200, description: 'Item removed from cart successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Item removed from cart successfully',
+  })
   @ApiResponse({ status: 404, description: 'Cart item not found' })
   async removeFromCart(
     @Param('ticketTypeId') ticketTypeId: string,
     @Query('sessionId') sessionId: string,
-    @Query('seatId') seatId?: string
+    @Query('seatId') seatId?: string,
   ) {
     return this.cartService.removeFromCart(sessionId, ticketTypeId, seatId);
   }

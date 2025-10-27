@@ -46,10 +46,10 @@ export class Order {
   @Prop({ default: 0 })
   taxCents: number;
 
-  @Prop({ 
-    type: String, 
-    enum: Object.values(OrderStatus), 
-    default: OrderStatus.PENDING 
+  @Prop({
+    type: String,
+    enum: Object.values(OrderStatus),
+    default: OrderStatus.PENDING,
   })
   status: OrderStatus;
 
