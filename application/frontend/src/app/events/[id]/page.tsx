@@ -216,7 +216,7 @@ export default function EventDetails() {
             Event not found
           </h1>
           <p className="text-gray-600 mb-4">
-            The event you're looking for doesn't exist.
+            The event you&apos;re looking for doesn&apos;t exist.
           </p>
           <Button onClick={() => router.push('/events')}>Browse Events</Button>
         </div>

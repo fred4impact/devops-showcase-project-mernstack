@@ -11,7 +11,7 @@ export default function TestPage() {
     // Test backend connection
     api
       .get('/health')
-      .then((response) => {
+      .then(() => {
         setBackendStatus('✅ Backend connected');
         setStatus('✅ All systems working');
       })

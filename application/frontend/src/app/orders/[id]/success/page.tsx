@@ -316,7 +316,7 @@ export default function OrderSuccess() {
                       Check your email
                     </p>
                     <p className="text-sm text-gray-500">
-                      We've sent your tickets to your email address
+                      We&apos;ve sent your tickets to your email address
                     </p>
                   </div>
                 </div>

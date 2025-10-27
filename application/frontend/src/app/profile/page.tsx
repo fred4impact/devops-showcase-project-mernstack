@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -312,9 +313,11 @@ export default function Profile() {
                     <div className="relative">
                       <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center overflow-hidden">
                         {user.profilePicture ? (
-                          <img
+                          <Image
                             src={user.profilePicture}
                             alt="Profile"
+                            width={64}
+                            height={64}
                             className="w-full h-full object-cover"
                           />
                         ) : (
@@ -520,7 +523,7 @@ export default function Profile() {
                 <div className="space-y-4">
                   <p className="text-gray-600 text-sm">
                     Upgrade to organizer to create and manage your own events.
-                    As an organizer, you'll have access to:
+                    As an organizer, you&apos;ll have access to:
                   </p>
                   <ul className="text-sm text-gray-600 space-y-1">
                     <li>• Create and manage events</li>

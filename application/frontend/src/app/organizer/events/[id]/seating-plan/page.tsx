@@ -95,7 +95,7 @@ export default function SeatingPlanManagement() {
                 Event Not Found
               </h1>
               <p className="text-gray-600 mb-6">
-                The event you're looking for doesn't exist.
+                The event you&apos;re looking for doesn&apos;t exist.
               </p>
               <Button onClick={() => router.push('/organizer/events')}>
                 Back to Events
@@ -224,7 +224,7 @@ export default function SeatingPlanManagement() {
               accessibility options for individual seats.
             </div>
             <div>
-              <strong>5. Save:</strong> Click "Generate Plan" to save your
+              <strong>5. Save:</strong> Click &ldquo;Generate Plan&rdquo; to save your
               seating configuration.
             </div>
           </div>

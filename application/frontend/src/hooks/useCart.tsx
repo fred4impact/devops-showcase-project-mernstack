@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { Cart, CartItem } from '@/types';
+import { Cart } from '@/types';
 import { cartApi } from '@/lib/api';
 import { generateSessionId } from '@/lib/utils';
 import toast from 'react-hot-toast';

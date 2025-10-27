@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
 import { X, AlertTriangle, DollarSign } from 'lucide-react';
@@ -160,7 +159,7 @@ export function TicketRefundModal({
             <div className="text-sm text-blue-800">
               <p className="font-medium mb-1">Refund Policy</p>
               <p>
-                Refund requests are subject to the event organizer's refund
+                Refund requests are subject to the event organizer&apos;s refund
                 policy. You will be notified once your request is reviewed.
               </p>
             </div>

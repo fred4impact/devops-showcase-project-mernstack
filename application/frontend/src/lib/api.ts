@@ -1,4 +1,4 @@
-import axios, { AxiosResponse } from 'axios';
+import axios from 'axios';
 import {
   Event,
   TicketType,
@@ -6,7 +6,6 @@ import {
   Order,
   Ticket,
   User,
-  ApiResponse,
 } from '@/types';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';

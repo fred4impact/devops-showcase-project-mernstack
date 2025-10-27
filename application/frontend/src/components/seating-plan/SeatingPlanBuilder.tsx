@@ -4,10 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Badge } from '@/components/ui/Badge';
 import { Seat, Section } from '@/types';
-import api from '@/lib/api';
-import toast from 'react-hot-toast';
 
 interface SeatingPlanBuilderProps {
   eventId: string;
@@ -16,13 +13,11 @@ interface SeatingPlanBuilderProps {
 }
 
 export function SeatingPlanBuilder({
-  eventId,
   onSave,
   initialSeatmap,
 }: SeatingPlanBuilderProps) {
   const [seats, setSeats] = useState<Seat[]>([]);
   const [sections, setSections] = useState<Section[]>([]);
-  const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
   const [selectedSection, setSelectedSection] = useState<string>('');
   const [isDrawing, setIsDrawing] = useState(false);
   const [seatmapType, setSeatmapType] = useState<'reserved' | 'ga'>('reserved');
@@ -195,9 +190,7 @@ export function SeatingPlanBuilder({
       const section = sections.find((s) => s.name === seat.section);
       if (!section) return;
 
-      ctx.fillStyle = selectedSeats.includes(seat.seatId)
-        ? '#3b82f6'
-        : '#6b7280';
+      ctx.fillStyle = '#6b7280';
       ctx.fillRect(seat.x - 5, seat.y - 5, 10, 10);
 
       // Draw seat label
@@ -210,7 +203,7 @@ export function SeatingPlanBuilder({
 
   useEffect(() => {
     drawCanvas();
-  }, [seats, sections, selectedSeats, stageLabel]);
+  }, [seats, sections, stageLabel, drawCanvas]);
 
   return (
     <div className="space-y-6">

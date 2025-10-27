@@ -11,16 +11,12 @@ import api from '@/lib/api';
 import toast from 'react-hot-toast';
 import {
   Search,
-  Filter,
   Download,
   Share2,
   RefreshCw,
-  QrCode,
   Calendar,
   MapPin,
   User,
-  DollarSign,
-  Clock,
   Plus,
   Palette,
   Settings,

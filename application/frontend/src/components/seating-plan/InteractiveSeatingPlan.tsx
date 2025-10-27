@@ -20,7 +20,6 @@ interface InteractiveSeatingPlanProps {
 
 export function InteractiveSeatingPlan({
   eventId,
-  ticketTypeId,
   onSeatSelect,
   onSeatDeselect,
   selectedSeats,
@@ -127,20 +126,6 @@ export function InteractiveSeatingPlan({
     }
   };
 
-  const getSeatColor = (seat: Seat) => {
-    if (seat.status === 'sold') return 'bg-red-500';
-    if (seat.status === 'locked') return 'bg-yellow-500';
-    if (selectedSeats.includes(seat.seatId)) return 'bg-blue-500';
-    if (seat.accessible) return 'bg-green-400';
-    return 'bg-gray-300';
-  };
-
-  const getSeatIcon = (seat: Seat) => {
-    if (seat.status === 'sold') return '✕';
-    if (seat.status === 'locked') return '🔒';
-    if (seat.accessible) return '♿';
-    return seat.number;
-  };
 
   const drawCanvas = () => {
     const canvas = canvasRef.current;

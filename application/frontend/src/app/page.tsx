@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import {
@@ -11,7 +10,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
 import { useAuth } from '@/hooks/useAuth';
 import {
   Calendar,
@@ -22,7 +20,6 @@ import {
   Globe,
   ArrowRight,
   Star,
-  CheckCircle,
   Plus,
   BarChart3,
 } from 'lucide-react';
@@ -313,7 +310,7 @@ export default function HomePage() {
                     ))}
                   </div>
                   <p className="text-secondary-600 mb-4 italic">
-                    "{testimonial.content}"
+                    &ldquo;{testimonial.content}&rdquo;
                   </p>
                   <div>
                     <div className="font-semibold text-secondary-900">

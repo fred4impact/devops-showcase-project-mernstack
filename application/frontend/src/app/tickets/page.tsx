@@ -53,19 +53,6 @@ export default function Tickets() {
     }
   }, [user, loading, router]);
 
-  const fetchTickets = async () => {
-    try {
-      setLoadingTickets(true);
-      const response = await api.get('/tickets/my-tickets');
-      setTickets(response.data);
-    } catch (error) {
-      console.error('Error fetching tickets:', error);
-      toast.error('Failed to load tickets');
-    } finally {
-      setLoadingTickets(false);
-    }
-  };
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -142,7 +129,7 @@ export default function Tickets() {
               No tickets yet
             </h3>
             <p className="text-gray-500 mb-6">
-              You haven't purchased any tickets yet. Start exploring events!
+              You haven&apos;t purchased any tickets yet. Start exploring events!
             </p>
             <Button
               onClick={() => router.push('/events')}

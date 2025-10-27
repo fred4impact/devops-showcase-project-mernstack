@@ -612,7 +612,7 @@ export default function CreateEvent() {
                 you to set up different pricing tiers and availability.
               </p>
               <p className="text-sm text-gray-500">
-                After creating the event, you'll be able to manage ticket types
+                After creating the event, you&apos;ll be able to manage ticket types
                 from the event management page.
               </p>
             </div>

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
@@ -28,7 +27,6 @@ interface SeatMapProps {
 
 export function SeatMap({
   eventId,
-  ticketTypeId,
   onSeatSelect,
   onSeatDeselect,
   selectedSeats,
