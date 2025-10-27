@@ -13,10 +13,10 @@ on:
         type: string
 
 env:
-  REGISTRY: runtesting
-  IMAGE_NAME_BACKEND: ticketnow-backend
-  IMAGE_NAME_FRONTEND: ticketnow-frontend
-  DOCKERHUB_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+  REGISTRY: docker.io
+  IMAGE_NAME_BACKEND: ${{ secrets.DOCKER_USERNAME }}/ticketnow-backend
+  IMAGE_NAME_FRONTEND: ${{ secrets.DOCKER_USERNAME }}/ticketnow-frontend
+  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
 
 jobs:
   # Stage 1: Checkout
@@ -302,7 +302,6 @@ jobs:
       - name: Log in to Docker Registry
         uses: docker/login-action@v3
         with:
-          registry: ${{ env.REGISTRY }}
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
@@ -310,7 +309,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ matrix.service == 'backend' && env.IMAGE_NAME_BACKEND || env.IMAGE_NAME_FRONTEND }}
+          images: ${{ matrix.service == 'backend' && env.IMAGE_NAME_BACKEND || env.IMAGE_NAME_FRONTEND }}
           tags: |
             type=raw,value=${{ needs.checkout.outputs.version }}
             type=raw,value=latest,enable={{is_default_branch}}
@@ -342,7 +341,7 @@ jobs:
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ env.REGISTRY }}/${{ matrix.service == 'backend' && env.IMAGE_NAME_BACKEND || env.IMAGE_NAME_FRONTEND }}:${{ needs.checkout.outputs.version }}
+          image-ref: ${{ matrix.service == 'backend' && env.IMAGE_NAME_BACKEND || env.IMAGE_NAME_FRONTEND }}:${{ needs.checkout.outputs.version }}
           format: "sarif"
           output: "trivy-results-${{ matrix.service }}.sarif"
 
@@ -355,7 +354,7 @@ jobs:
       - name: Run Trivy for high/critical vulnerabilities
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ env.REGISTRY }}/${{ matrix.service == 'backend' && env.IMAGE_NAME_BACKEND || env.IMAGE_NAME_FRONTEND }}:${{ needs.checkout.outputs.version }}
+          image-ref: ${{ matrix.service == 'backend' && env.IMAGE_NAME_BACKEND || env.IMAGE_NAME_FRONTEND }}:${{ needs.checkout.outputs.version }}
           format: "table"
           severity: "HIGH,CRITICAL"
           exit-code: "1"
@@ -391,6 +390,6 @@ jobs:
       - name: Notification
         run: |
           echo "Pipeline completed successfully!"
-          echo "Images pushed to: ${{ env.REGISTRY }}"
+          echo "Images pushed to Docker Hub:"
           echo "Backend: ${{ env.IMAGE_NAME_BACKEND }}:${{ needs.checkout.outputs.version }}"
           echo "Frontend: ${{ env.IMAGE_NAME_FRONTEND }}:${{ needs.checkout.outputs.version }}"
