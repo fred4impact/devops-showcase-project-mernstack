@@ -4,7 +4,7 @@ on:
   push:
     branches: [main, develop]
   pull_request:
-    branches: [main, develop]
+    branches: [main]
   workflow_dispatch:
     inputs:
       version:
@@ -284,7 +284,7 @@ jobs:
             kill $(cat application/frontend/frontend.pid) || true
           fi
 
-  # Stage 5: Build Docker Images
+  # Stage 5: Build Docker Images (Local Only)
   build-docker:
     name: Build Docker Images
     runs-on: ubuntu-latest
@@ -299,12 +299,6 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Log in to Docker Registry
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
@@ -314,17 +308,31 @@ jobs:
             type=raw,value=${{ needs.checkout.outputs.version }}
             type=raw,value=latest,enable={{is_default_branch}}
 
-      - name: Build and push Docker image
+      - name: Build Docker image (local only)
         uses: docker/build-push-action@v5
         with:
           context: application/${{ matrix.service }}
           file: application/${{ matrix.service }}/Dockerfile
-          push: true
+          push: false
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64,linux/arm64
+
+      - name: Save Docker image
+        run: |
+          IMAGE_NAME="${{ matrix.service == 'backend' && env.IMAGE_NAME_BACKEND || env.IMAGE_NAME_FRONTEND }}:${{ needs.checkout.outputs.version }}"
+          echo "Saving Docker image: $IMAGE_NAME"
+          docker save $IMAGE_NAME | gzip > ${{ matrix.service }}-image.tar.gz
+          echo "Image saved successfully"
+
+      - name: Upload Docker image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.service }}-docker-image
+          path: ${{ matrix.service }}-image.tar.gz
+          retention-days: 1
 
   # Stage 6: Security Scan of Images
   security-scan:
@@ -341,21 +349,19 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Log in to Docker Registry
-        uses: docker/login-action@v3
+      - name: Download Docker image artifact
+        uses: actions/download-artifact@v4
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          name: ${{ matrix.service }}-docker-image
+          path: ./
 
-      - name: Pull Docker image for scanning
+      - name: Load Docker image
         run: |
+          echo "Loading Docker image from artifact..."
+          gunzip -c ${{ matrix.service }}-image.tar.gz | docker load
           IMAGE_NAME="${{ matrix.service == 'backend' && env.IMAGE_NAME_BACKEND || env.IMAGE_NAME_FRONTEND }}:${{ needs.checkout.outputs.version }}"
-          echo "Pulling image: $IMAGE_NAME"
-          docker pull $IMAGE_NAME
-          echo "Image pulled successfully"
+          echo "Image loaded: $IMAGE_NAME"
+          docker images | grep ${{ matrix.service }}
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
@@ -393,14 +399,60 @@ jobs:
           format: "table"
           severity: "HIGH,CRITICAL"
 
-  # Stage 7: Push to DockerHub (already done in build-docker stage)
-  # This stage is for documentation and potential additional registry pushes
+  # Stage 7: Push to DockerHub
+  push-docker:
+    name: Push Docker Images to Registry
+    runs-on: ubuntu-latest
+    needs: [build-docker, security-scan]
+    strategy:
+      matrix:
+        service: [backend, frontend]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Registry
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Download Docker image artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ matrix.service }}-docker-image
+          path: ./
+
+      - name: Load Docker image
+        run: |
+          echo "Loading Docker image from artifact..."
+          gunzip -c ${{ matrix.service }}-image.tar.gz | docker load
+          IMAGE_NAME="${{ matrix.service == 'backend' && env.IMAGE_NAME_BACKEND || env.IMAGE_NAME_FRONTEND }}:${{ needs.checkout.outputs.version }}"
+          echo "Image loaded: $IMAGE_NAME"
+
+      - name: Push Docker image to registry
+        run: |
+          IMAGE_NAME="${{ matrix.service == 'backend' && env.IMAGE_NAME_BACKEND || env.IMAGE_NAME_FRONTEND }}:${{ needs.checkout.outputs.version }}"
+          echo "Pushing image: $IMAGE_NAME"
+          docker push $IMAGE_NAME
+          echo "Image pushed successfully"
+
+      - name: Push latest tag if on main branch
+        if: github.ref == 'refs/heads/main'
+        run: |
+          IMAGE_NAME="${{ matrix.service == 'backend' && env.IMAGE_NAME_BACKEND || env.IMAGE_NAME_FRONTEND }}"
+          docker tag $IMAGE_NAME:${{ needs.checkout.outputs.version }} $IMAGE_NAME:latest
+          docker push $IMAGE_NAME:latest
+          echo "Latest tag pushed successfully"
 
   # Stage 8: Cleanup
   cleanup:
     name: Cleanup
     runs-on: ubuntu-latest
-    needs: [build-docker, security-scan]
+    needs: [build-docker, security-scan, push-docker]
     if: always()
     steps:
       - name: Clean up Docker images

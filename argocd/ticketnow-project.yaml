@@ -1,0 +1,42 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: ticketnow-project
+  namespace: argocd
+spec:
+  description: TicketNow Application Project
+  sourceRepos:
+    - https://github.com/fred4impact/devops-showcase-project-mernstack
+  destinations:
+    - namespace: ticketnow
+      server: https://kubernetes.default.svc
+    - namespace: ticketnow-dev
+      server: https://kubernetes.default.svc
+    - namespace: ticketnow-staging
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+  namespaceResourceWhitelist:
+    - group: ""
+      kind: ConfigMap
+    - group: ""
+      kind: Secret
+    - group: apps
+      kind: Deployment
+    - group: apps
+      kind: StatefulSet
+    - group: ""
+      kind: Service
+    - group: networking.k8s.io
+      kind: Ingress
+    - group: policy
+      kind: PodDisruptionBudget
+  roles:
+    - name: ticketnow-admin
+      description: TicketNow Admin Role
+      policies:
+        - p, proj:ticketnow-project:ticketnow-admin, applications, *, ticketnow-project/*, allow
+        - p, proj:ticketnow-project:ticketnow-admin, repositories, *, *, allow
+      groups:
+        - ticketnow-admins

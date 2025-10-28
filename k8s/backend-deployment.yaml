@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: backend
-        image: runtesting/ticketnow-backend:latest
+        image: YOUR_DOCKER_USERNAME/ticketnow-backend:latest
         ports:
         - containerPort: 3001
         env:
