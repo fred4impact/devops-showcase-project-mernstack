@@ -367,18 +367,53 @@ jobs:
           format: "sarif"
           output: "trivy-results-${{ matrix.service }}.sarif"
 
-      - name: Check SARIF file exists
+      - name: Check SARIF file exists and fix if needed
         run: |
           if [ -f "trivy-results-${{ matrix.service }}.sarif" ]; then
             echo "✅ SARIF file exists: trivy-results-${{ matrix.service }}.sarif"
             ls -la trivy-results-${{ matrix.service }}.sarif
             echo "File size: $(wc -c < trivy-results-${{ matrix.service }}.sarif) bytes"
+            
+            # Check if SARIF file has the required "tool" property
+            if ! jq -e '.runs[0].tool' "trivy-results-${{ matrix.service }}.sarif" > /dev/null 2>&1; then
+              echo "⚠️ SARIF file missing 'tool' property, fixing..."
+              # Create a properly formatted SARIF file with tool information
+              jq '.runs[0].tool = {
+                "driver": {
+                  "name": "Trivy",
+                  "version": "latest",
+                  "informationUri": "https://github.com/aquasecurity/trivy",
+                  "rules": []
+                }
+              }' "trivy-results-${{ matrix.service }}.sarif" > "trivy-results-${{ matrix.service }}-fixed.sarif"
+              mv "trivy-results-${{ matrix.service }}-fixed.sarif" "trivy-results-${{ matrix.service }}.sarif"
+              echo "✅ SARIF file fixed"
+            else
+              echo "✅ SARIF file has required 'tool' property"
+            fi
           else
             echo "❌ SARIF file does not exist: trivy-results-${{ matrix.service }}.sarif"
             echo "Available files:"
             ls -la *.sarif || echo "No SARIF files found"
-            echo "Creating empty SARIF file for upload..."
-            echo '{"version": "2.1.0", "runs": [{"results": []}]}' > trivy-results-${{ matrix.service }}.sarif
+            echo "Creating valid SARIF file for upload..."
+            cat > "trivy-results-${{ matrix.service }}.sarif" << 'EOF'
+{
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "Trivy",
+          "version": "latest",
+          "informationUri": "https://github.com/aquasecurity/trivy",
+          "rules": []
+        }
+      },
+      "results": []
+    }
+  ]
+}
+EOF
           fi
 
       - name: Upload Trivy scan results to GitHub Security tab
