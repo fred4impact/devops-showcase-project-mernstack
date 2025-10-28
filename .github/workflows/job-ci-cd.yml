@@ -319,7 +319,6 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64,linux/arm64
-          outputs: type=docker
 
   # Stage 6: Security Scan of Images
   security-scan:
@@ -359,7 +358,6 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64,linux/arm64
-          outputs: type=docker
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
