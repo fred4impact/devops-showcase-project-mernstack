@@ -319,20 +319,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64,linux/arm64
-
-      - name: Save Docker image
-        run: |
-          IMAGE_NAME="${{ matrix.service == 'backend' && env.IMAGE_NAME_BACKEND || env.IMAGE_NAME_FRONTEND }}:${{ needs.checkout.outputs.version }}"
-          echo "Saving Docker image: $IMAGE_NAME"
-          docker save $IMAGE_NAME | gzip > ${{ matrix.service }}-image.tar.gz
-          echo "Image saved successfully"
-
-      - name: Upload Docker image artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.service }}-docker-image
-          path: ${{ matrix.service }}-image.tar.gz
-          retention-days: 1
+          outputs: type=docker
 
   # Stage 6: Security Scan of Images
   security-scan:
@@ -349,19 +336,30 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download Docker image artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: ${{ matrix.service }}-docker-image
-          path: ./
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      - name: Load Docker image
-        run: |
-          echo "Loading Docker image from artifact..."
-          gunzip -c ${{ matrix.service }}-image.tar.gz | docker load
-          IMAGE_NAME="${{ matrix.service == 'backend' && env.IMAGE_NAME_BACKEND || env.IMAGE_NAME_FRONTEND }}:${{ needs.checkout.outputs.version }}"
-          echo "Image loaded: $IMAGE_NAME"
-          docker images | grep ${{ matrix.service }}
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ matrix.service == 'backend' && env.IMAGE_NAME_BACKEND || env.IMAGE_NAME_FRONTEND }}
+          tags: |
+            type=raw,value=${{ needs.checkout.outputs.version }}
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build Docker image for scanning
+        uses: docker/build-push-action@v5
+        with:
+          context: application/${{ matrix.service }}
+          file: application/${{ matrix.service }}/Dockerfile
+          push: false
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64,linux/arm64
+          outputs: type=docker
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
@@ -420,33 +418,26 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Download Docker image artifact
-        uses: actions/download-artifact@v4
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
         with:
-          name: ${{ matrix.service }}-docker-image
-          path: ./
+          images: ${{ matrix.service == 'backend' && env.IMAGE_NAME_BACKEND || env.IMAGE_NAME_FRONTEND }}
+          tags: |
+            type=raw,value=${{ needs.checkout.outputs.version }}
+            type=raw,value=latest,enable={{is_default_branch}}
 
-      - name: Load Docker image
-        run: |
-          echo "Loading Docker image from artifact..."
-          gunzip -c ${{ matrix.service }}-image.tar.gz | docker load
-          IMAGE_NAME="${{ matrix.service == 'backend' && env.IMAGE_NAME_BACKEND || env.IMAGE_NAME_FRONTEND }}:${{ needs.checkout.outputs.version }}"
-          echo "Image loaded: $IMAGE_NAME"
-
-      - name: Push Docker image to registry
-        run: |
-          IMAGE_NAME="${{ matrix.service == 'backend' && env.IMAGE_NAME_BACKEND || env.IMAGE_NAME_FRONTEND }}:${{ needs.checkout.outputs.version }}"
-          echo "Pushing image: $IMAGE_NAME"
-          docker push $IMAGE_NAME
-          echo "Image pushed successfully"
-
-      - name: Push latest tag if on main branch
-        if: github.ref == 'refs/heads/main'
-        run: |
-          IMAGE_NAME="${{ matrix.service == 'backend' && env.IMAGE_NAME_BACKEND || env.IMAGE_NAME_FRONTEND }}"
-          docker tag $IMAGE_NAME:${{ needs.checkout.outputs.version }} $IMAGE_NAME:latest
-          docker push $IMAGE_NAME:latest
-          echo "Latest tag pushed successfully"
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: application/${{ matrix.service }}
+          file: application/${{ matrix.service }}/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64,linux/arm64
 
   # Stage 8: Cleanup
   cleanup:
