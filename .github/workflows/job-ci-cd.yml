@@ -396,24 +396,7 @@ jobs:
             echo "Available files:"
             ls -la *.sarif || echo "No SARIF files found"
             echo "Creating valid SARIF file for upload..."
-            cat > "trivy-results-${{ matrix.service }}.sarif" << 'EOF'
-{
-  "version": "2.1.0",
-  "runs": [
-    {
-      "tool": {
-        "driver": {
-          "name": "Trivy",
-          "version": "latest",
-          "informationUri": "https://github.com/aquasecurity/trivy",
-          "rules": []
-        }
-      },
-      "results": []
-    }
-  ]
-}
-EOF
+            echo '{"version":"2.1.0","runs":[{"tool":{"driver":{"name":"Trivy","version":"latest","informationUri":"https://github.com/aquasecurity/trivy","rules":[]}},"results":[]}]}' > "trivy-results-${{ matrix.service }}.sarif"
           fi
 
       - name: Upload Trivy scan results to GitHub Security tab
