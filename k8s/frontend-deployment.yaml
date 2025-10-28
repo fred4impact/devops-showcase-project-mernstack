@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: runtesting/ticketnow-frontend:latest
+        image: YOUR_DOCKER_USERNAME/ticketnow-frontend:latest
         ports:
         - containerPort: 3000
         env:

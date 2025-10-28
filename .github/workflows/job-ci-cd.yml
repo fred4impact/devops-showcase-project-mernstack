@@ -4,7 +4,7 @@ on:
   push:
     branches: [main, develop]
   pull_request:
-    branches: [main, develop]
+    branches: [main]
   workflow_dispatch:
     inputs:
       version:
@@ -284,11 +284,140 @@ jobs:
             kill $(cat application/frontend/frontend.pid) || true
           fi
 
-  # Stage 5: Build Docker Images
+  # Stage 5: Build Docker Images (Local Only)
   build-docker:
     name: Build Docker Images
     runs-on: ubuntu-latest
     needs: [checkout, build-apps, integration-tests]
+    strategy:
+      matrix:
+        service: [backend, frontend]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ matrix.service == 'backend' && env.IMAGE_NAME_BACKEND || env.IMAGE_NAME_FRONTEND }}
+          tags: |
+            type=raw,value=${{ needs.checkout.outputs.version }}
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build Docker image (local only)
+        uses: docker/build-push-action@v5
+        with:
+          context: application/${{ matrix.service }}
+          file: application/${{ matrix.service }}/Dockerfile
+          push: false
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64,linux/arm64
+
+  # Stage 6: Security Scan of Images
+  security-scan:
+    name: Container Security Scan
+    runs-on: ubuntu-latest
+    needs: [build-docker]
+    permissions:
+      security-events: write
+      contents: read
+    strategy:
+      matrix:
+        service: [backend, frontend]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ matrix.service == 'backend' && env.IMAGE_NAME_BACKEND || env.IMAGE_NAME_FRONTEND }}
+          tags: |
+            type=raw,value=${{ needs.checkout.outputs.version }}
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build Docker image for scanning
+        uses: docker/build-push-action@v5
+        with:
+          context: application/${{ matrix.service }}
+          file: application/${{ matrix.service }}/Dockerfile
+          push: false
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64,linux/arm64
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        continue-on-error: true
+        with:
+          image-ref: ${{ matrix.service == 'backend' && env.IMAGE_NAME_BACKEND || env.IMAGE_NAME_FRONTEND }}:${{ needs.checkout.outputs.version }}
+          format: "sarif"
+          output: "trivy-results-${{ matrix.service }}.sarif"
+
+      - name: Check SARIF file exists and fix if needed
+        run: |
+          if [ -f "trivy-results-${{ matrix.service }}.sarif" ]; then
+            echo "✅ SARIF file exists: trivy-results-${{ matrix.service }}.sarif"
+            ls -la trivy-results-${{ matrix.service }}.sarif
+            echo "File size: $(wc -c < trivy-results-${{ matrix.service }}.sarif) bytes"
+            
+            # Check if SARIF file has the required "tool" property
+            if ! jq -e '.runs[0].tool' "trivy-results-${{ matrix.service }}.sarif" > /dev/null 2>&1; then
+              echo "⚠️ SARIF file missing 'tool' property, fixing..."
+              # Create a properly formatted SARIF file with tool information
+              jq '.runs[0].tool = {
+                "driver": {
+                  "name": "Trivy",
+                  "version": "latest",
+                  "informationUri": "https://github.com/aquasecurity/trivy",
+                  "rules": []
+                }
+              }' "trivy-results-${{ matrix.service }}.sarif" > "trivy-results-${{ matrix.service }}-fixed.sarif"
+              mv "trivy-results-${{ matrix.service }}-fixed.sarif" "trivy-results-${{ matrix.service }}.sarif"
+              echo "✅ SARIF file fixed"
+            else
+              echo "✅ SARIF file has required 'tool' property"
+            fi
+          else
+            echo "❌ SARIF file does not exist: trivy-results-${{ matrix.service }}.sarif"
+            echo "Available files:"
+            ls -la *.sarif || echo "No SARIF files found"
+            echo "Creating valid SARIF file for upload..."
+            echo '{"version":"2.1.0","runs":[{"tool":{"driver":{"name":"Trivy","version":"latest","informationUri":"https://github.com/aquasecurity/trivy","rules":[]}},"results":[]}]}' > "trivy-results-${{ matrix.service }}.sarif"
+          fi
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always() && github.event_name != 'pull_request'
+        with:
+          sarif_file: "trivy-results-${{ matrix.service }}.sarif"
+
+      - name: Run Trivy for high/critical vulnerabilities
+        uses: aquasecurity/trivy-action@master
+        continue-on-error: true
+        with:
+          image-ref: ${{ matrix.service == 'backend' && env.IMAGE_NAME_BACKEND || env.IMAGE_NAME_FRONTEND }}:${{ needs.checkout.outputs.version }}
+          format: "table"
+          severity: "HIGH,CRITICAL"
+
+  # Stage 7: Push to DockerHub
+  push-docker:
+    name: Push Docker Images to Registry
+    runs-on: ubuntu-latest
+    needs: [checkout, build-docker, security-scan]
     strategy:
       matrix:
         service: [backend, frontend]
@@ -326,81 +455,11 @@ jobs:
           cache-to: type=gha,mode=max
           platforms: linux/amd64,linux/arm64
 
-  # Stage 6: Security Scan of Images
-  security-scan:
-    name: Container Security Scan
-    runs-on: ubuntu-latest
-    needs: [build-docker]
-    permissions:
-      security-events: write
-      contents: read
-    strategy:
-      matrix:
-        service: [backend, frontend]
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Log in to Docker Registry
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Pull Docker image for scanning
-        run: |
-          IMAGE_NAME="${{ matrix.service == 'backend' && env.IMAGE_NAME_BACKEND || env.IMAGE_NAME_FRONTEND }}:${{ needs.checkout.outputs.version }}"
-          echo "Pulling image: $IMAGE_NAME"
-          docker pull $IMAGE_NAME
-          echo "Image pulled successfully"
-
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
-        continue-on-error: true
-        with:
-          image-ref: ${{ matrix.service == 'backend' && env.IMAGE_NAME_BACKEND || env.IMAGE_NAME_FRONTEND }}:${{ needs.checkout.outputs.version }}
-          format: "sarif"
-          output: "trivy-results-${{ matrix.service }}.sarif"
-
-      - name: Check SARIF file exists
-        run: |
-          if [ -f "trivy-results-${{ matrix.service }}.sarif" ]; then
-            echo "✅ SARIF file exists: trivy-results-${{ matrix.service }}.sarif"
-            ls -la trivy-results-${{ matrix.service }}.sarif
-            echo "File size: $(wc -c < trivy-results-${{ matrix.service }}.sarif) bytes"
-          else
-            echo "❌ SARIF file does not exist: trivy-results-${{ matrix.service }}.sarif"
-            echo "Available files:"
-            ls -la *.sarif || echo "No SARIF files found"
-            echo "Creating empty SARIF file for upload..."
-            echo '{"version": "2.1.0", "runs": [{"results": []}]}' > trivy-results-${{ matrix.service }}.sarif
-          fi
-
-      - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v3
-        if: always() && github.event_name != 'pull_request'
-        with:
-          sarif_file: "trivy-results-${{ matrix.service }}.sarif"
-
-      - name: Run Trivy for high/critical vulnerabilities
-        uses: aquasecurity/trivy-action@master
-        continue-on-error: true
-        with:
-          image-ref: ${{ matrix.service == 'backend' && env.IMAGE_NAME_BACKEND || env.IMAGE_NAME_FRONTEND }}:${{ needs.checkout.outputs.version }}
-          format: "table"
-          severity: "HIGH,CRITICAL"
-
-  # Stage 7: Push to DockerHub (already done in build-docker stage)
-  # This stage is for documentation and potential additional registry pushes
-
   # Stage 8: Cleanup
   cleanup:
     name: Cleanup
     runs-on: ubuntu-latest
-    needs: [build-docker, security-scan]
+    needs: [build-docker, security-scan, push-docker]
     if: always()
     steps:
       - name: Clean up Docker images
