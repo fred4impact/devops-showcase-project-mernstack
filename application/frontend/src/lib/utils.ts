@@ -44,3 +44,24 @@ export function debounce<T extends (...args: any[]) => any>(
     timeout = setTimeout(() => func(...args), wait);
   };
 }
+
+/**
+ * Get the full image URL for an event image
+ * Handles both relative paths and full URLs
+ */
+export function getImageUrl(imageUrl: string | undefined | null): string | null {
+  if (!imageUrl) return null;
+  
+  // If it's already a full URL (starts with http:// or https://), return as is
+  if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+    return imageUrl;
+  }
+  
+  // If it's a relative path, construct the full URL
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+  
+  // Remove leading slash if present to avoid double slashes
+  const cleanPath = imageUrl.startsWith('/') ? imageUrl.slice(1) : imageUrl;
+  
+  return `${apiBaseUrl}/${cleanPath}`;
+}

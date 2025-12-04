@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import { eventsApi } from '@/lib/api';
 import { Event } from '@/types';
-import { formatDate, formatDateTime, formatPrice } from '@/lib/utils';
+import { formatDate, formatDateTime, formatPrice, getImageUrl } from '@/lib/utils';
 
 export default function EventsPage() {
   const [events, setEvents] = useState<Event[]>([]);
@@ -83,11 +83,15 @@ export default function EventsPage() {
   const EventCard = ({ event }: { event: Event }) => (
     <Card className="hover:shadow-lg transition-all duration-300 group">
       <div className="aspect-video bg-gradient-to-br from-primary-100 to-secondary-100 rounded-t-xl flex items-center justify-center">
-        {event.images && event.images.length > 0 ? (
+        {event.images && event.images.length > 0 && getImageUrl(event.images[0]) ? (
           <img
-            src={event.images[0]}
+            src={getImageUrl(event.images[0]) || ''}
             alt={event.title}
             className="w-full h-full object-cover rounded-t-xl"
+            onError={(e) => {
+              console.error('Image failed to load:', event.images[0]);
+              e.currentTarget.style.display = 'none';
+            }}
           />
         ) : (
           <Calendar className="w-16 h-16 text-primary-400" />
@@ -142,9 +146,13 @@ export default function EventsPage() {
           <div className="w-24 h-24 bg-gradient-to-br from-primary-100 to-secondary-100 rounded-lg flex items-center justify-center flex-shrink-0">
             {event.images && event.images.length > 0 ? (
               <img
-                src={event.images[0]}
+                src={getImageUrl(event.images[0]) || ''}
                 alt={event.title}
                 className="w-full h-full object-cover rounded-lg"
+                onError={(e) => {
+                  console.error('Image failed to load:', event.images[0]);
+                  e.currentTarget.style.display = 'none';
+                }}
               />
             ) : (
               <Calendar className="w-8 h-8 text-primary-400" />

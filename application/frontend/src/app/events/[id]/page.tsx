@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/Input';
 import { SeatMap } from '@/components/seatmap/SeatMap';
 import api from '@/lib/api';
 import { useCart } from '@/hooks/useCart';
+import { getImageUrl } from '@/lib/utils';
 import toast from 'react-hot-toast';
 
 interface TicketType {
@@ -285,16 +286,19 @@ export default function EventDetails() {
         </div>
 
         {/* Event Image */}
-        {event.images && event.images.length > 0 && (
+        {event.images && event.images.length > 0 && getImageUrl(event.images[0]) && (
           <div className="mb-8">
             <div className="aspect-video bg-gradient-to-br from-primary-100 to-secondary-100 rounded-xl overflow-hidden">
               <img
-                src={event.images[0]}
+                src={getImageUrl(event.images[0]) || ''}
                 alt={event.title}
                 className="w-full h-full object-cover"
                 onError={(e) => {
-                  console.error('Image failed to load:', event.images[0]);
+                  console.error('Image failed to load:', event.images[0], 'Constructed URL:', getImageUrl(event.images[0]));
                   e.currentTarget.style.display = 'none';
+                }}
+                onLoad={() => {
+                  console.log('Image loaded successfully:', getImageUrl(event.images[0]));
                 }}
               />
             </div>
